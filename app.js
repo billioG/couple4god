@@ -148,55 +148,50 @@ function generateCoupleCode() {
 
 
 createCoupleBtn.onclick = async () => {
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabase.auth.getSession();
 
-    if (!sessionData.session) {
-      alert("Sesión expirada, vuelve a iniciar sesión");
-      location.reload();
-      return;
-    }
-
-    const currentUser = sessionData.session.user;
-
-    const { data: couple, error: coupleError } = await supabase
-      .from("couples")
-      .insert({
-        code: generateCoupleCode(),
-        plan: "free"
-      })
-      .select()
-      .single();
-
-    if (coupleError) {
-      console.error("Error creando pareja:", coupleError);
-      alert("No se pudo crear la pareja");
-      return;
-    }
-
-    const { error: memberError } = await supabase
-      .from("couple_members")
-      .insert({
-        couple_id: couple.id,
-        user_id: currentUser.id
-      });
-
-    if (memberError) {
-      console.error("Error creando miembro:", memberError);
-      alert("No se pudo unir a la pareja");
-      return;
-    }
-
-    coupleId = couple.id;
-
-    coupleSetup.classList.add("hidden");
-    app.classList.remove("hidden");
-
-    initApp();
-
-  } catch (e) {
-    console.error("Error inesperado:", e);
+  if (!sessionData.session) {
+    alert("Sesión expirada");
+    location.reload();
+    return;
   }
+
+  const currentUser = sessionData.session.user;
+
+  const { data: couple, error } = await supabase
+    .from("couples")
+    .insert({
+      code: generateCoupleCode(),
+      plan: "free",
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creando pareja:", error);
+    alert("No se pudo crear la pareja");
+    return;
+  }
+
+  const { error: memberError } = await supabase
+    .from("couple_members")
+    .insert({
+      couple_id: couple.id,
+      user_id: currentUser.id,
+    });
+
+  if (memberError) {
+    console.error("Error creando miembro:", memberError);
+    alert("Pareja creada pero no se pudo asociar usuario");
+    return;
+  }
+
+  coupleId = couple.id;
+
+  coupleSetup.classList.add("hidden");
+  app.classList.remove("hidden");
+
+  initApp();
 };
 
 
