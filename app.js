@@ -8,6 +8,9 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 let user = null;
 let partnerId = null;
 let currentDay = null;
+let myPause = null;
+let partnerPause = null;
+
 
 /* ===============================
    DOM ELEMENTS
@@ -460,6 +463,57 @@ function showDopamine(msg) {
   document.body.appendChild(d);
   setTimeout(() => d.remove(), 1200);
 }
+
+async function loadPauseStatus() {
+  const { data: mine } = await supabase
+    .from("pause_status")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  myPause = mine?.[0] || null;
+
+  const { data: partner } = await supabase
+    .from("pause_status")
+    .select("*")
+    .eq("user_id", partnerId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  partnerPause = partner?.[0] || null;
+}
+const pauseBtn = document.getElementById("pauseBtn");
+
+pauseBtn.onclick = async () => {
+  const hours = prompt("¿Cuántas horas necesitas? (ej: 12, 24)");
+  if (!hours) return;
+
+  const reason = prompt(
+    "Si quieres, escribe una razón (opcional):",
+    "Necesito ordenar mis emociones"
+  );
+
+  const until = new Date(Date.now() + hours * 3600000).toISOString();
+
+  await supabase.from("pause_status").insert({
+    user_id: user.id,
+    active: true,
+    until,
+    reason
+  });
+
+  notifyPartner(`⏸ Tu pareja activó una pausa consciente (${hours}h)`);
+
+  alert("🕊️ Pausa activada. El vínculo sigue aquí.");
+  loadPauseStatus();
+};
+
+function isPauseActive(pause) {
+  if (!pause || !pause.active) return false;
+  return new Date(pause.until) > new Date();
+}
+
 
 /* ===============================
    PWA
