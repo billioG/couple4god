@@ -200,11 +200,11 @@ async function loadFeed() {
 
   for (const e of data) {
     if (e.user_id !== user.id) {
-      const unlocked = await bothCompleted(e.day);
+      const unlocked = await bothCompleted(entry.day);
       if (!unlocked) {
         feedList.innerHTML += `
           <div class="feed-card locked">
-            🔒 Completa el día ${e.day} para ver esto
+            🔒 Completa el día ${entry.day} para compartir este momento juntos 💙
           </div>`;
         continue;
       }
@@ -212,8 +212,25 @@ async function loadFeed() {
 
     const c = document.createElement("div");
     c.className = "feed-card";
-    c.innerHTML = `<strong>Día ${e.day}</strong><br>${e.type}`;
+    c.innerHTML = `<strong>Día ${entry.day}</strong><br>${e.type}`;
     feedList.appendChild(c);
+    const reactionsDiv = document.createElement("div");
+reactionsDiv.className = "reactions";
+
+["❤️","🔥","🥹","🙏"].forEach(e => {
+  const b = document.createElement("span");
+  b.className = "reaction-btn";
+  b.textContent = e;
+  b.onclick = () => react(entry.id, e);
+  reactionsDiv.appendChild(b);
+});
+
+c.appendChild(reactionsDiv);
+
+const summary = document.createElement("div");
+c.appendChild(summary);
+loadReactions(entry.id, summary);
+
   }
 }
 
@@ -351,4 +368,27 @@ async function bothCompleted(day) {
   return data.length === 2;
 }
 
+async function react(entryId, emoji) {
+  await supabase.from("reactions").insert({
+    entry_id: entryId,
+    user_id: user.id,
+    emoji
+  });
+
+  showDopamine(emoji);
+}
+
+async function loadReactions(entryId, container) {
+  const { data } = await supabase
+    .from("reactions")
+    .select("emoji")
+    .eq("entry_id", entryId);
+
+  const summary = {};
+  data.forEach(r => summary[r.emoji] = (summary[r.emoji] || 0) + 1);
+
+  container.innerHTML = Object.keys(summary)
+    .map(e => `${e} ${summary[e]}`)
+    .join(" ");
+}
 
