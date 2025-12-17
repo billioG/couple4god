@@ -158,6 +158,11 @@ function completeInstant() {
 
 function finishTask() {
   showDopamine(dayData[currentDay].dopamine);
+
+  notifyPartner(
+    `💌 Tu pareja completó el día ${currentDay}: ${dayData[currentDay].title}`
+  );
+
   closeModal();
   loadFeed();
   checkBadges();
@@ -216,6 +221,37 @@ async function loadBadges() {
   });
 }
 
+async function notifyPartner(message) {
+  // En este MVP notificamos a todos menos al usuario actual
+  const { data: users } = await supabase.from("profiles").select("id");
 
+  users
+    .filter(u => u.id !== user.id)
+    .forEach(async u => {
+      await supabase.from("notifications").insert({
+        user_id: u.id,
+        message
+      });
+    });
+}
+
+const notifBell = document.getElementById("notifBell");
+
+notifBell.onclick = async () => {
+  const { data } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  alert(
+    data.map(n => "• " + n.message).join("\n")
+  );
+
+  await supabase
+    .from("notifications")
+    .update({ seen: true })
+    .eq("user_id", user.id);
+};
 
 
