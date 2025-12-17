@@ -3,6 +3,7 @@
   --primary: #e91e63;
   --secondary: #3f51b5;
   --text: #333;
+  --locked: #c0c0c0;
 }
 body {
   margin: 0;
@@ -43,40 +44,100 @@ input {
   text-align: center;
   max-width: 360px;
 }
+
+/* GRID DE ADVIENTO */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-  gap: 0.5rem;
-  max-width: 360px;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  max-width: 800px;
+  padding: 1rem;
 }
 .day {
-  background: #e0e0e0;
-  border-radius: 50%;
-  line-height: 60px;
-  text-align: center;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   font-weight: bold;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+  background: #fff;
+  border: 2px solid var(--primary);
+}
+.day:hover {
+  transform: scale(1.05);
+}
+.day.locked {
+  background: var(--locked);
+  border-color: var(--locked);
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 .day.done {
-  background: var(--primary);
+  background: var(--secondary);
   color: #fff;
 }
-.hidden {
-  display: none;
+.day.today {
+  border: 3px solid gold;
+  animation: pulse 1.5s infinite;
 }
-/* Colores temáticos por hito */
-.surprise {
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 5px gold; }
+  50% { box-shadow: 0 0 20px gold; }
+}
+
+/* ICONOS EN LAS TARJETAS */
+.day::after {
+  content: "";
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+.day.locked::after {
+  content: "🔒";
+}
+.day.done::after {
+  content: "✅";
+}
+
+/* MODAL */
+.modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
   background: #fff;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  text-align: center;
-  animation: pop .6s ease;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
 }
-@keyframes pop {
-  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+.hidden {
+  display: none !important;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
