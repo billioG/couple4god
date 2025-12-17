@@ -89,3 +89,62 @@ async function showReward(day) {
     rewardBox.classList.remove("hidden");
   }
 }
+// ===== HITOS Y NOTIFICACIONES =====
+async function checkMilestone() {
+  // Obtener pareja
+  const { data: allProg } = await supabase.from("progress").select("user_id, day");
+  const users = [...new Set(allProg.map((x) => x.user_id))];
+  if (users.length !== 2) return;
+  const [u1, u2] = users;
+  const { data: mile } = await supabase.from("milestones")
+    .select("*")
+    .or(`and(user1_id.eq.${u1},user2_id.eq.${u2}),and(user1_id.eq.${u2},user2_id.eq.${u1})`)
+    .single();
+  if (!mile) {
+    await supabase.from("milestones").insert({ user1_id: u1, user2_id: u2 });
+    return;
+  }
+  // Calcular racha actual
+  const daysBoth = allProg
+    .filter((p) => users.includes(p.user_id))
+    .reduce((acc, p) => {
+      acc[p.day] = (acc[p.day] || 0) + 1;
+      return acc;
+    }, {});
+  const bothDays = Object.keys(daysBoth).filter((d) => daysBoth[d] === 2).length;
+  const { streak, notified7, notified14, notified21 } = mile;
+  if (bothDays >= 7 && !notified7) {
+    await notifyHit(7, "¡Media semana de amor! 🍣", "Llevan 7 días seguidos, ¡sushi gratis este fin!");
+    await supabase.from("milestones").update({ notified7: true }).eq("id", mile.id);
+  }
+  if (bothDays >= 14 && !notified14) {
+    await notifyHit(14, "¡Dos semanas firmes! 🍕", "Se ganan una cabaña + pizza orilla de queso");
+    await supabase.from("milestones").update({ notified14: true }).eq("id", mile.id);
+  }
+  if (bothDays >= 21 && !notified21) {
+    await notifyHit(21, "¡Meta lograda! 🌴", "Elige playita: El Salvador o México");
+    await supabase.from("milestones").update({ notified21: true }).eq("id", mile.id);
+  }
+}
+
+async function notifyHit(day, title, body) {
+  // Notificación push
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, { body, icon: "https://i.ibb.co/6y4n5wL/icon.png" });
+  }
+  // Mensaje sorpresa en pantalla
+  const card = document.createElement("div");
+  card.className = "surprise";
+  card.innerHTML = `<h2>${title}</h2><p>${body}</p>`;
+  document.body.appendChild(card);
+  // Sonido
+  const audio = new Audio(`hit${day}.mp3`);
+  audio.volume = 0.3;
+  audio.play().catch(() => {});
+  setTimeout(() => card.remove(), 5000);
+}
+
+// Pedir permiso de notificación al login
+if ("Notification" in window && Notification.permission === "default") {
+  Notification.requestPermission();
+}
