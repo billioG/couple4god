@@ -152,30 +152,27 @@ async function checkCouple() {
 
 
 createCoupleBtn.onclick = async () => {
-  const { data: sessionData, error: sessionError } =
-    await supabase.auth.getSession();
-
-  if (sessionError || !sessionData.session) {
-    alert("Tu sesión expiró. Vuelve a iniciar sesión.");
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    alert("Sesión expirada");
     location.reload();
     return;
   }
 
   const currentUser = sessionData.session.user;
 
- const { data: couple, error } = await supabase
-  .from("couples")
-  .insert({
-    code: generateCoupleCode(),
-    plan: "free"
-  })
-  .select()
-  .single();
-
+  const { data: couple, error } = await supabase
+    .from("couples")
+    .insert({
+      code: generateCoupleCode(),
+      plan: "free"
+    })
+    .select()
+    .single();
 
   if (error) {
-    alert("Error creando la pareja");
-    console.error(error);
+    console.error("Error creando pareja:", error);
+    alert("No se pudo crear la pareja");
     return;
   }
 
@@ -183,12 +180,12 @@ createCoupleBtn.onclick = async () => {
     .from("couple_members")
     .insert({
       couple_id: couple.id,
-      user_id: currentUser.id,
+      user_id: currentUser.id
     });
 
   if (memberError) {
-    alert("Error uniéndote a la pareja");
-    console.error(memberError);
+    console.error("Error uniéndose:", memberError);
+    alert("Error al unirse a la pareja");
     return;
   }
 
@@ -199,6 +196,7 @@ createCoupleBtn.onclick = async () => {
 
   initApp();
 };
+
 
 
 joinCoupleBtn.onclick = async () => {
