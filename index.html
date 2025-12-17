@@ -2,47 +2,60 @@
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
-  <title>21 Días – Relación sin máscaras</title>
+  <title>21 Días</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <header>
-    <h1>💕 21 Días – Relación sin máscaras</h1>
-    <button id="logoutBtn" class="hidden">Cerrar sesión</button>
-  </header>
 
-  <section id="auth" class="card">
-    <h2>Iniciar sesión</h2>
-    <input id="email" type="email" placeholder="Tu email"/>
+<header class="topbar">
+  <h1>21 Días – Relación sin máscaras</h1>
+  <button id="logoutBtn" class="hidden ghost">Salir</button>
+</header>
+
+<main>
+
+  <!-- AUTH -->
+  <section id="auth" class="auth-card">
+    <h2>Acceso</h2>
+    <input id="email" type="email" placeholder="Correo"/>
     <input id="password" type="password" placeholder="Contraseña"/>
-    <button id="loginBtn">Entrar</button>
+    <button id="loginBtn" class="primary">Entrar</button>
     <p id="authMsg"></p>
   </section>
 
+  <!-- APP -->
   <section id="app" class="hidden">
-    <h2 id="welcome"></h2>
-    <div id="days" class="grid"></div>
-    <div id="reward" class="card hidden">
-      <h3>🎉 Recompensa del día</h3>
+    <h2 id="welcome" class="welcome"></h2>
+
+    <!-- GRID -->
+    <div id="days" class="advent-grid"></div>
+
+    <!-- REWARD -->
+    <div id="reward" class="reward-card hidden">
+      <h3>🎁 Recompensa desbloqueada</h3>
       <p id="rewardText"></p>
-      <img id="rewardImg" alt=""/>
+      <img id="rewardImg" />
     </div>
   </section>
 
-  <!-- Modal del día -->
-  <div id="dayModal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <h3 id="modalTitle"></h3>
-      <p><strong>📖 Lectura:</strong> <span id="modalReading"></span></p>
-      <p><strong>🙏 Oración:</strong> <span id="modalPrayer"></span></p>
-      <p><strong>✅ Tarea:</strong> <span id="modalTask"></span></p>
-      <button id="modalDoneBtn" class="hidden" onclick="markDayFromModal()">Marcar como hecho</button>
-      <p id="modalStatus"></p>
-    </div>
-  </div>
+</main>
 
-  <script type="module" src="app.js"></script>
+<!-- MODAL -->
+<div id="dayModal" class="modal hidden">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal()">×</span>
+    <h3 id="modalTitle"></h3>
+
+    <p><strong>📖 Lectura</strong><br><span id="modalReading"></span></p>
+    <p><strong>🙏 Oración</strong><br><span id="modalPrayer"></span></p>
+    <p><strong>✅ Tarea</strong><br><span id="modalTask"></span></p>
+
+    <button id="modalDoneBtn" class="primary hidden">Marcar como hecho</button>
+    <p id="modalStatus"></p>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
 </body>
 </html>
