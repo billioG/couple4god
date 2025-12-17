@@ -173,6 +173,9 @@ function finishTask() {
   closeModal();
   loadFeed();
   checkBadges();
+  calculateWeeklyInsight();
+loadInsights();
+
 }
 
 function showDopamine(msg) {
@@ -390,5 +393,64 @@ async function loadReactions(entryId, container) {
   container.innerHTML = Object.keys(summary)
     .map(e => `${e} ${summary[e]}`)
     .join(" ");
+}
+
+function generateInsight(stats) {
+  if (stats.audio >= 2 && stats.text >= 2)
+    return "💬 Esta semana hubo apertura y comunicación sincera. Eso construye confianza.";
+
+  if (stats.text >= 3)
+    return "✍️ Expresarte por escrito muestra claridad emocional. Vas en buen camino.";
+
+  if (stats.audio >= 2)
+    return "🎙 Hablar desde la voz es un acto de valentía emocional.";
+
+  if (stats.photo + stats.video >= 2)
+    return "📸 Estuviste presente y consciente. Eso fortalece el vínculo.";
+
+  return "🌱 Pequeños pasos también son progreso. La constancia importa más que la perfección.";
+}
+
+async function calculateWeeklyInsight() {
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data } = await supabase
+    .from("entries")
+    .select("type")
+    .eq("user_id", user.id)
+    .gte("created_at", since);
+
+  if (!data || data.length === 0) return;
+
+  const stats = { text:0, audio:0, photo:0, video:0 };
+  data.forEach(e => stats[e.type]++);
+
+  const message = generateInsight(stats);
+  const week = Math.ceil((Date.now() - new Date(data[0].created_at)) / (7 * 24 * 60 * 60 * 1000));
+
+  await supabase.from("insights").insert({
+    user_id: user.id,
+    week,
+    message
+  });
+}
+
+async function loadInsights() {
+  const { data } = await supabase
+    .from("insights")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (!data || !data.length) return;
+
+  const card = document.createElement("div");
+  card.className = "feed-card";
+  card.innerHTML = `
+    <strong>🧠 Insight semanal</strong>
+    <p>${data[0].message}</p>
+  `;
+
+  feedList.prepend(card);
 }
 
