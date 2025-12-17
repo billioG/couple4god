@@ -143,9 +143,7 @@ async function checkCouple() {
 function generateCoupleCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
-
 ///
-
 
 createCoupleBtn.onclick = async () => {
   const { data: sessionData } = await supabase.auth.getSession();
