@@ -151,11 +151,15 @@ createCoupleBtn.onclick = async () => {
 
   const currentUser = sessionData.session.user;
 
-  const { data: couple, error } = await supabase
-    .from("couples")
-    .insert({})
-    .select()
-    .single();
+ const { data: couple, error } = await supabase
+  .from("couples")
+  .insert({
+    code: generateCoupleCode(),
+    plan: "free"
+  })
+  .select()
+  .single();
+
 
   if (error) {
     alert("Error creando la pareja");
@@ -202,10 +206,11 @@ joinCoupleBtn.onclick = async () => {
     return;
   }
 
-  await supabase.from("couple_members").insert({
-    couple_id: couple.id,
-    user_id: user.id
-  });
+await supabase.from("couple_members").insert({
+  couple_id: couple.id,
+  user_id: currentUser.id
+});
+
 
   coupleMsg.textContent = "💙 Conectados";
   setTimeout(() => location.reload(), 1500);
