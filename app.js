@@ -29,13 +29,71 @@ const dayData = {
   21: { reading: "Revelación 21:5", prayer: "He aquí que todo lo nuevo.", task: "Evalúa: ¿Ella está dispuesta a cambiar? Decide con oración y consejo pastoral.", color: "#ffb74d" }
 };
 
-// ===== RESTO DEL CÓDIGO (igual que antes) =====
-// ... (todo el código de login, logout, etc. desde checkUser hasta notifyHit) ...
-// PEGA AQUÍ TODO EL CÓDIGO DE app.js QUE TE DI ANTES (después de la constante dayData)
+// ===== ELEMENTOS DOM =====
+const authSection = document.getElementById("auth");
+const appSection = document.getElementById("app");
+const logoutBtn = document.getElementById("logoutBtn");
+const loginBtn = document.getElementById("loginBtn");
+const emailInp = document.getElementById("email");
+const passInp = document.getElementById("password");
+const authMsg = document.getElementById("authMsg");
+const welcome = document.getElementById("welcome");
+const daysBox = document.getElementById("days");
+const rewardBox = document.getElementById("reward");
+const rewardText = document.getElementById("rewardText");
+const rewardImg = document.getElementById("rewardImg");
+const modal = document.getElementById("dayModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalReading = document.getElementById("modalReading");
+const modalPrayer = document.getElementById("modalPrayer");
+const modalTask = document.getElementById("modalTask");
+const modalDoneBtn = document.getElementById("modalDoneBtn");
+const modalStatus = document.getElementById("modalStatus");
 
-// ===== MODIFICACIONES CLAVE =====
+let user = null; // ✅ DECLARACIÓN GLOBAL CORRECTA
 
-// Reemplaza la función loadProgress COMPLETA por esta:
+// ===== INICIO =====
+checkUser();
+async function checkUser() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) console.error("Auth error:", error);
+  user = data?.session?.user ?? null;
+  if (user) {
+    authSection.classList.add("hidden");
+    appSection.classList.remove("hidden");
+    logoutBtn.classList.remove("hidden");
+    welcome.textContent = `Hola, ${user.email}`;
+    loadProgress();
+  } else {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }
+}
+
+// ===== LOGIN =====
+loginBtn.onclick = async () => {
+  const email = emailInp.value.trim();
+  const pass = passInp.value.trim();
+  if (!email || !pass) return (authMsg.textContent = "Completa ambos campos");
+  
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    const { data: signup, error: signUpErr } = await supabase.auth.signUp({ email, password: pass });
+    if (signUpErr) return (authMsg.textContent = "Error: " + signUpErr.message);
+    authMsg.textContent = "Cuenta creada. Revisa tu email.";
+    setTimeout(checkUser, 1500);
+    return;
+  }
+  checkUser();
+};
+
+logoutBtn.onclick = async () => {
+  await supabase.auth.signOut();
+  location.reload();
+};
+
+// ===== CARGAR PROGRESO =====
 async function loadProgress() {
   daysBox.innerHTML = "";
   rewardBox.classList.add("hidden");
@@ -66,7 +124,7 @@ async function loadProgress() {
   const partners = all?.filter((x) => x.user_id !== user.id) || [];
   const partnerDays = new Set(partners.map((x) => x.day));
   
-  // DÍA ACTUAL (para bloquear futuros)
+  // DÍA ACTUAL
   const today = new Date().getDate() % 21 || 21;
   
   for (let d = 1; d <= 21; d++) {
@@ -75,7 +133,6 @@ async function loadProgress() {
     div.textContent = d;
     div.style.borderColor = dayData[d].color;
     
-    // Estado del día
     const isLocked = d > today;
     const isDone = myDays.has(d);
     const isToday = d === today;
@@ -84,7 +141,6 @@ async function loadProgress() {
     if (isDone) div.classList.add("done");
     if (isToday && !isDone) div.classList.add("today");
     
-    // Evento click
     div.onclick = () => openModal(d, partnerDays);
     daysBox.appendChild(div);
   }
@@ -92,41 +148,33 @@ async function loadProgress() {
   checkMilestone();
 }
 
-// ===== FUNCIONES DEL MODAL =====
+// ===== MODAL =====
 function openModal(day, partnerDays) {
-  const modal = document.getElementById("dayModal");
-  const title = document.getElementById("modalTitle");
-  const reading = document.getElementById("modalReading");
-  const prayer = document.getElementById("modalPrayer");
-  const task = document.getElementById("modalTask");
-  const btn = document.getElementById("modalDoneBtn");
-  const status = document.getElementById("modalStatus");
-  
   const today = new Date().getDate() % 21 || 21;
   const isLocked = day > today;
   const isDone = document.querySelector(`.day:nth-child(${day})`)?.classList.contains("done") || false;
   const partnerHasIt = partnerDays.has(day);
   
-  if (isLocked) {
-    status.textContent = "⏰ Este día aún no está disponible. Espera a la fecha.";
-    btn.classList.add("hidden");
-  } else {
-    status.innerHTML = isDone ? "✅ Ya completaste este día" : "📅 Disponible";
-    status.innerHTML += partnerHasIt ? "<br>💕 Tu pareja ya lo hizo" : "<br>⏳ Tu pareja aún no lo hace";
-    btn.classList.toggle("hidden", isDone);
-    btn.onclick = () => markDayFromModal(day);
-  }
+  modalTitle.textContent = `Día ${day}`;
+  modalReading.textContent = dayData[day].reading;
+  modalPrayer.textContent = dayData[day].prayer;
+  modalTask.textContent = dayData[day].task;
   
-  title.textContent = `Día ${day}`;
-  reading.textContent = dayData[day].reading;
-  prayer.textContent = dayData[day].prayer;
-  task.textContent = dayData[day].task;
+  if (isLocked) {
+    modalStatus.innerHTML = "⏰ Este día aún no está disponible.";
+    modalDoneBtn.classList.add("hidden");
+  } else {
+    modalStatus.innerHTML = isDone ? "✅ Ya completaste este día" : "📅 Disponible";
+    modalStatus.innerHTML += partnerHasIt ? "<br>💕 Tu pareja ya lo hizo" : "<br>⏳ Tu pareja aún no lo hace";
+    modalDoneBtn.classList.toggle("hidden", isDone);
+    modalDoneBtn.onclick = () => markDayFromModal(day);
+  }
   
   modal.classList.remove("hidden");
 }
 
 function closeModal() {
-  document.getElementById("dayModal").classList.add("hidden");
+  modal.classList.add("hidden");
 }
 
 async function markDayFromModal(day) {
@@ -134,20 +182,124 @@ async function markDayFromModal(day) {
   closeModal();
 }
 
-// ===== MODIFICACIÓN EN toggleDay =====
-// Añade al final de toggleDay (después de loadProgress()):
-// Verificar si ambos completaron y mostrar recompensa
-const { data: all, error: errAll } = await supabase
-  .from("progress")
-  .select("user_id, day");
-
-if (!errAll) {
-  const partners = all.filter((x) => x.user_id !== user.id);
-  const partnerHasDay = partners.some((p) => p.day === day);
-  const iHaveDay = !data; // true si acabo de insertar
+// ===== TOGGLE DÍA =====
+async function toggleDay(day) {
+  const { data, error: fetchErr } = await supabase
+    .from("progress")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("day", day)
+    .single();
   
-  if (iHaveDay && partnerHasDay) {
-    showReward(day);
-    checkMilestone();
+  if (fetchErr && fetchErr.code !== 'PGRST116') {
+    console.error("Error consultando día:", fetchErr);
+    return;
   }
+  
+  if (data) {
+    await supabase.from("progress").delete().eq("id", data.id);
+  } else {
+    await supabase.from("progress").insert({ user_id: user.id, day });
+  }
+  
+  await loadProgress();
+  
+  const { data: all, error: errAll } = await supabase
+    .from("progress")
+    .select("user_id, day");
+  
+  if (!errAll) {
+    const partners = all.filter((x) => x.user_id !== user.id);
+    const partnerHasDay = partners.some((p) => p.day === day);
+    const iHaveDay = !data;
+    
+    if (iHaveDay && partnerHasDay) {
+      showReward(day);
+      checkMilestone();
+    }
+  }
+}
+
+// ===== MOSTRAR RECOMPENSA =====
+async function showReward(day) {
+  const { data, error } = await supabase
+    .from("rewards")
+    .select("*")
+    .eq("day", day)
+    .single();
+  
+  if (error) {
+    console.error("Error recompensa:", error);
+    return;
+  }
+  
+  rewardText.textContent = data.message;
+  rewardImg.src = data.image_url;
+  rewardBox.classList.remove("hidden");
+  rewardBox.scrollIntoView({ behavior: "smooth" });
+}
+
+// ===== HITOS =====
+async function checkMilestone() {
+  const { data: allProg, error } = await supabase
+    .from("progress")
+    .select("user_id, day");
+  
+  if (error) {
+    console.error("Error hitos:", error);
+    return;
+  }
+  
+  const users = [...new Set(allProg?.map((x) => x.user_id) || [])];
+  if (users.length !== 2) return;
+  
+  const [u1, u2] = users.sort();
+  
+  const { data: mile, error: err2 } = await supabase
+    .from("milestones")
+    .select("*")
+    .or(`and(user1_id.eq.${u1},user2_id.eq.${u2}),and(user1_id.eq.${u2},user2_id.eq.${u1})`)
+    .single();
+  
+  if (!mile) {
+    await supabase.from("milestones").insert({ user1_id: u1, user2_id: u2 });
+    return;
+  }
+  
+  const daysBoth = allProg.reduce((acc, p) => {
+    acc[p.day] = (acc[p.day] || 0) + 1;
+    return acc;
+  }, {});
+  const bothCount = Object.keys(daysBoth).filter((d) => daysBoth[d] === 2).length;
+  
+  const { notified7, notified14, notified21 } = mile;
+  
+  if (bothCount >= 7 && !notified7) {
+    await notifyHit(7, "¡Media semana de amor! 🍣", "Llevan 7 días seguidos, ¡sushi gratis este fin!");
+    await supabase.from("milestones").update({ notified7: true }).eq("id", mile.id);
+  }
+  if (bothCount >= 14 && !notified14) {
+    await notifyHit(14, "¡Dos semanas firmes! 🍕", "Se ganan una cabaña + pizza orilla de queso");
+    await supabase.from("milestones").update({ notified14: true }).eq("id", mile.id);
+  }
+  if (bothCount >= 21 && !notified21) {
+    await notifyHit(21, "¡Meta lograda! 🌴", "Elige playita: El Salvador o México");
+    await supabase.from("milestones").update({ notified21: true }).eq("id", mile.id);
+  }
+}
+
+async function notifyHit(day, title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(title, { body, icon: "https://i.ibb.co/6y4n5wL/icon.png" });
+  }
+  const card = document.createElement("div");
+  card.className = "surprise";
+  card.innerHTML = `<h2>${title}</h2><p>${body}</p>`;
+  document.body.appendChild(card);
+  
+  const audio = new Audio(`hit${day}.mp3`);
+  audio.volume = 0.3;
+  audio.play().catch(() => {});
+  
+  setTimeout(() => card.remove(), 5000);
 }
