@@ -30,6 +30,19 @@
     </div>
   </section>
 
+  <!-- Modal del día -->
+  <div id="dayModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <p><strong>📖 Lectura:</strong> <span id="modalReading"></span></p>
+      <p><strong>🙏 Oración:</strong> <span id="modalPrayer"></span></p>
+      <p><strong>✅ Tarea:</strong> <span id="modalTask"></span></p>
+      <button id="modalDoneBtn" class="hidden" onclick="markDayFromModal()">Marcar como hecho</button>
+      <p id="modalStatus"></p>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>
