@@ -80,38 +80,64 @@ logoutBtn.onclick = async () => {
   location.reload();
 };
 
-async function checkUser() {
-  const { data } = await supabase.auth.getSession();
-  user = data.session?.user;
-  if (!user) return;
+///Debug
+document.querySelectorAll(".modal").forEach(m => {
+  m.classList.add("hidden");
+});
 
+///
+async function checkUser() {
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error || !data.session) {
+    auth.classList.remove("hidden");
+    app.classList.add("hidden");
+    coupleSetup.classList.add("hidden");
+    return;
+  }
+
+  user = data.session.user;
+
+  // MOSTRAR ALGO SIEMPRE
   auth.classList.add("hidden");
+  coupleSetup.classList.remove("hidden");
+  app.classList.add("hidden");
+
   await checkCouple();
 }
+
 checkUser();
 
 /* =====================================================
    COUPLE SETUP
 ===================================================== */
 async function checkCouple() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("couple_members")
     .select("couple_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+    .eq("user_id", user.id);
 
-  if (!data) {
+  if (error) {
+    console.error("Error checkCouple:", error);
     coupleSetup.classList.remove("hidden");
     app.classList.add("hidden");
     return;
   }
 
-  coupleId = data.couple_id;
+  if (!data || data.length === 0) {
+    coupleSetup.classList.remove("hidden");
+    app.classList.add("hidden");
+    return;
+  }
+
+  coupleId = data[0].couple_id;
+
   coupleSetup.classList.add("hidden");
   app.classList.remove("hidden");
 
   initApp();
 }
+
 
 createCoupleBtn.onclick = async () => {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
