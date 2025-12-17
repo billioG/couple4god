@@ -1,63 +1,75 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <title>21 Días</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <link rel="stylesheet" href="styles.css"/>
-  <link rel="manifest" href="manifest.json">
+  <meta charset="utf-8" />
+  <title>Couple4God</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header class="topbar">
-  <h1>21 Días</h1>
-  <div>
-    <span id="notifBell">🔔</span>
-    <button id="logoutBtn" class="ghost hidden">Salir</button>
+<header>
+  <h1>💙 Couple4God</h1>
+  <div class="header-actions">
+    <button id="notifBell">🔔</button>
+    <button id="pauseBtn">⏸ Pausa</button>
+    <button id="logoutBtn" class="ghost">Salir</button>
   </div>
-  <button id="pauseBtn" class="ghost">⏸ Pausa</button>
-
 </header>
 
-<main>
-
-<section id="auth" class="auth-card">
-  <h2>Acceso</h2>
-  <input id="email" placeholder="Correo">
-  <input id="password" type="password" placeholder="Contraseña">
+<!-- LOGIN -->
+<section id="auth" class="card">
+  <h2>Iniciar sesión</h2>
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Contraseña" />
   <button id="loginBtn" class="primary">Entrar</button>
-  <p id="authMsg"></p>
 </section>
 
+<!-- CREAR / UNIRSE -->
+<section id="coupleSetup" class="card hidden">
+  <h2>💑 Crear espacio</h2>
+
+  <button id="createCoupleBtn" class="primary">
+    Crear nuestra pareja
+  </button>
+
+  <hr />
+
+  <p>¿Ya tienes un código?</p>
+  <input id="joinCode" placeholder="CÓDIGO" />
+  <button id="joinCoupleBtn" class="secondary">
+    Unirme con código
+  </button>
+
+  <p id="coupleMsg" class="muted"></p>
+</section>
+
+<!-- APP -->
 <section id="app" class="hidden">
-  <h2 id="welcome"></h2>
 
-  <div id="days" class="advent-grid"></div>
+  <div id="storiesRow" class="stories"></div>
 
-  <section id="stories">
-  <h3>Momentos (24h)</h3>
-  <div id="storiesRow"></div>
+  <h2>📆 Progreso</h2>
+  <div id="days" class="grid"></div>
+
+  <h2>🧠 Feed</h2>
+  <div id="feedList"></div>
+
+  <h2>🏅 Badges</h2>
+  <div id="badges" class="badges"></div>
+
 </section>
-
-  <section id="feed" class="feed hidden">
-    <h3>Momentos</h3>
-    <div id="feedList"></div>
-  </section>
-
-  <section id="badges" class="badges"></section>
-</section>
-
-</main>
 
 <!-- MODAL -->
 <div id="dayModal" class="modal hidden">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal()">×</span>
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
     <h3 id="modalTitle"></h3>
-    <p id="modalTask"></p>
+    <div id="modalTask"></div>
     <div id="taskArea"></div>
-    <button id="modalDoneBtn" class="primary hidden">Listo</button>
+    <button id="modalDoneBtn" class="primary hidden">Guardar</button>
   </div>
 </div>
 
