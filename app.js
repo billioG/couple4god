@@ -127,8 +127,10 @@ async function loadProgress() {
   const today = new Date().getDate() % 21 || 21;
   
   for (let d = 1; d <= 21; d++) {
-    const div = document.createElement("div");
-    div.className = "day";
+const div = document.createElement("div");
+div.className = "day";
+div.setAttribute("aria-label", `Día ${d}`);
+
     div.textContent = d;
     div.style.borderColor = dayData[d].color;
     
