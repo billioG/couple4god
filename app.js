@@ -254,4 +254,8 @@ notifBell.onclick = async () => {
     .eq("user_id", user.id);
 };
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
 
