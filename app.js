@@ -66,6 +66,7 @@ async function checkUser() {
   loadDays();
   loadFeed();
   loadBadges();
+  loadStories();
 }
 checkUser();
 
@@ -261,6 +262,54 @@ notifBell.onclick = async () => {
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
+}
+
+const storiesRow = document.getElementById("storiesRow");
+
+async function loadStories() {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const { data } = await supabase
+    .from("entries")
+    .select("*")
+    .eq("is_story", true)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false });
+
+  storiesRow.innerHTML = "";
+
+  data.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "story";
+    div.textContent = s.type === "audio" ? "🎙" :
+                      s.type === "photo" ? "📸" :
+                      s.type === "video" ? "🎥" : "💬";
+
+    div.onclick = () => openStory(s);
+    storiesRow.appendChild(div);
+  });
+}
+
+function openStory(story) {
+  let content = "";
+
+  if (story.type === "photo")
+    content = `<img src="${story.content_url}" style="width:100%">`;
+
+  if (story.type === "video")
+    content = `<video src="${story.content_url}" autoplay controls style="width:100%"></video>`;
+
+  if (story.type === "audio")
+    content = `<audio src="${story.content_url}" autoplay controls></audio>`;
+
+  if (story.type === "text")
+    content = `<p>${story.content_text}</p>`;
+
+  modalTitle.textContent = "Momento";
+  taskArea.innerHTML = content;
+  modalTask.textContent = "";
+  modalDoneBtn.classList.add("hidden");
+  modal.classList.remove("hidden");
 }
 
 
