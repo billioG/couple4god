@@ -19,6 +19,7 @@ let currentDay = null;
 let myPause = null;
 let partnerPause = null;
 
+
 /* =====================================================
    DOM
 ===================================================== */
@@ -61,7 +62,18 @@ const dayData = {
   12:{reading:"La belleza habita en lo simple.",prayer:"Gracias por la paz.",taskType:"photo",prompt:"Foto de algo que te dio paz.",dopamine:"📸 Presencia",story:true},
   18:{reading:"Decir amor lo multiplica.",prayer:"Enséñame a valorar.",taskType:"video",prompt:"Video de 15s agradeciendo a tu pareja.",dopamine:"🎥 Aprecio",story:true}
 };
+//Crear codigo
+function generateCoupleCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
 
+
+///
 /* =====================================================
    AUTH
 ===================================================== */
