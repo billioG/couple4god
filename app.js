@@ -14,18 +14,18 @@ const dayData = {
   4:{title:"Espacio personal",taskType:"reflection",prompt:"Haz algo solo para ti hoy.",dopamine:"🧘 Autonomía"},
   5:{title:"Necesidad",taskType:"text",prompt:"¿Qué necesitas hoy?",dopamine:"🧭 Claridad"},
   6:{title:"Escucha",taskType:"choice",prompt:"¿Escuchaste sin interrumpir?",options:["Sí","Me costó","Lo intento"],dopamine:"👂 Escucha"},
-  7:{title:"Semana 1",taskType:"audio",prompt:"Graba cómo te sentiste esta semana.",dopamine:"🎙 Voz auténtica"},
+  7:{title:"Semana 1",taskType:"audio",prompt:"Graba cómo te sentiste esta semana.",dopamine:"🎙 Voz auténtica",story:true},
   8:{title:"Hablar desde el yo",taskType:"text",prompt:"Redacta: Yo siento…",dopamine:"💬 Comunicación"},
   9:{title:"Respetar límite",taskType:"reflection",prompt:"Respeta un límite hoy.",dopamine:"🤝 Respeto"},
   10:{title:"No reaccionar",taskType:"scroll_stop",prompt:"Espera 60s antes de responder.",dopamine:"⏸ Dominio"},
   11:{title:"Reconocer",taskType:"text",prompt:"Algo que valoras del otro.",dopamine:"❤️ Aprecio"},
-  12:{title:"Paz",taskType:"photo",prompt:"Foto de algo que te dio paz.",dopamine:"📸 Presencia"},
+  12:{title:"Paz",taskType:"photo",prompt:"Foto de algo que te dio paz.",dopamine:"📸 Presencia",story:true},
   13:{title:"Verdad",taskType:"audio",prompt:"Graba algo importante.",dopamine:"🕊 Verdad"},
   14:{title:"Revisión",taskType:"choice",prompt:"¿Qué cambió más?",options:["Comunicación","Control","Claridad"],dopamine:"🌿 Progreso"},
   15:{title:"Límite",taskType:"text",prompt:"Escribe un límite sano.",dopamine:"🧱 Límite"},
   16:{title:"Humildad",taskType:"reflection",prompt:"Reconoce una falla propia.",dopamine:"🙇 Humildad"},
   17:{title:"Empatía",taskType:"choice",prompt:"¿Pensaste en el otro?",options:["Sí","Un poco","Ahora sí"],dopamine:"🧠 Empatía"},
-  18:{title:"Aprecio",taskType:"video",prompt:"Video de 15s valorando al otro.",dopamine:"🎥 Aprecio"},
+ 18:{title:"Aprecio",taskType:"video",prompt:"Video de 15s valorando al otro.",dopamine:"🎥 Aprecio",story:true},
   19:{title:"Soltar",taskType:"text",prompt:"¿Qué decides soltar hoy?",dopamine:"🙏 Confianza"},
   20:{title:"Reparar",taskType:"audio",prompt:"Disculpa breve si es sincera.",dopamine:"🩹 Reparación"},
   21:{title:"Cierre",taskType:"choice",prompt:"¿Cómo te sientes?",options:["Paz","Claridad","Discernimiento"],dopamine:"🌟 Completado"}
@@ -131,15 +131,18 @@ async function saveText(text) {
     day: currentDay,
     type: "text",
     content_text: text,
-    dopamine: dayData[currentDay].dopamine
+    dopamine: dayData[currentDay].dopamine,
+    is_story: !!dayData[currentDay].story
   });
   finishTask();
 }
+
 
 async function saveFile(file, type) {
   const bucket = `entries-${type}s`;
   const path = `${user.id}/${Date.now()}-${file.name}`;
   await supabase.storage.from(bucket).upload(path, file);
+
   const url = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 
   await supabase.from("entries").insert({
@@ -147,10 +150,12 @@ async function saveFile(file, type) {
     day: currentDay,
     type,
     content_url: url,
-    dopamine: dayData[currentDay].dopamine
+    dopamine: dayData[currentDay].dopamine,
+    is_story: !!dayData[currentDay].story
   });
   finishTask();
 }
+
 
 function completeInstant() {
   saveText("Hecho conscientemente");
