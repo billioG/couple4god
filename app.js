@@ -63,6 +63,7 @@ async function checkUser() {
   if (!user) return;
   auth.classList.add("hidden");
   app.classList.remove("hidden");
+  await loadPartner();
   loadDays();
   loadFeed();
   loadBadges();
@@ -190,16 +191,32 @@ function showDopamine(msg) {
 }
 
 async function loadFeed() {
-  const { data } = await supabase.from("entries").select("*").order("created_at",{ascending:false});
+  const { data } = await supabase
+    .from("entries")
+    .select("*")
+    .order("created_at",{ascending:false});
+
   feedList.innerHTML = "";
 
-  data.forEach(e => {
+  for (const e of data) {
+    if (e.user_id !== user.id) {
+      const unlocked = await bothCompleted(e.day);
+      if (!unlocked) {
+        feedList.innerHTML += `
+          <div class="feed-card locked">
+            🔒 Completa el día ${e.day} para ver esto
+          </div>`;
+        continue;
+      }
+    }
+
     const c = document.createElement("div");
     c.className = "feed-card";
     c.innerHTML = `<strong>Día ${e.day}</strong><br>${e.type}`;
     feedList.appendChild(c);
-  });
+  }
 }
+
 
 async function checkBadges() {
   const { data } = await supabase.from("entries").select("type").eq("user_id", user.id);
@@ -310,6 +327,28 @@ function openStory(story) {
   modalTask.textContent = "";
   modalDoneBtn.classList.add("hidden");
   modal.classList.remove("hidden");
+}
+
+let partnerId = null;
+
+async function loadPartner() {
+  const { data } = await supabase
+    .from("couples")
+    .select("*")
+    .or(`user1.eq.${user.id},user2.eq.${user.id}`)
+    .single();
+
+  partnerId = data.user1 === user.id ? data.user2 : data.user1;
+}
+
+async function bothCompleted(day) {
+  const { data } = await supabase
+    .from("entries")
+    .select("user_id")
+    .eq("day", day)
+    .in("user_id", [user.id, partnerId]);
+
+  return data.length === 2;
 }
 
 
