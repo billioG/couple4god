@@ -50,7 +50,7 @@ const modalTask = document.getElementById("modalTask");
 const modalDoneBtn = document.getElementById("modalDoneBtn");
 const modalStatus = document.getElementById("modalStatus");
 
-let user = null; // ✅ DECLARACIÓN GLOBAL CORRECTA
+let user = null;
 
 // ===== INICIO =====
 checkUser();
@@ -124,7 +124,6 @@ async function loadProgress() {
   const partners = all?.filter((x) => x.user_id !== user.id) || [];
   const partnerDays = new Set(partners.map((x) => x.day));
   
-  // DÍA ACTUAL
   const today = new Date().getDate() % 21 || 21;
   
   for (let d = 1; d <= 21; d++) {
@@ -173,9 +172,11 @@ function openModal(day, partnerDays) {
   modal.classList.remove("hidden");
 }
 
+// ✅ EXPONER LA FUNCIÓN AL HTML
 function closeModal() {
   modal.classList.add("hidden");
 }
+window.closeModal = closeModal; // <-- ESTO LO HACE GLOBAL
 
 async function markDayFromModal(day) {
   await toggleDay(day);
