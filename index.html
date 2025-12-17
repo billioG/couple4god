@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>21 Días – Relación sin máscaras</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header>
+    <h1>💕 21 Días – Relación sin máscaras</h1>
+    <button id="logoutBtn" class="hidden">Cerrar sesión</button>
+  </header>
+
+  <section id="auth" class="card">
+    <h2>Iniciar sesión</h2>
+    <input id="email" type="email" placeholder="Tu email"/>
+    <input id="password" type="password" placeholder="Contraseña"/>
+    <button id="loginBtn">Entrar</button>
+    <p id="authMsg"></p>
+  </section>
+
+  <section id="app" class="hidden">
+    <h2 id="welcome"></h2>
+    <div id="days" class="grid"></div>
+    <div id="reward" class="card hidden">
+      <h3>🎉 Recompensa del día</h3>
+      <p id="rewardText"></p>
+      <img id="rewardImg" alt=""/>
+    </div>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
