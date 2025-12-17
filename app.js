@@ -18,7 +18,6 @@ const rewardText = document.getElementById("rewardText");
 const rewardImg = document.getElementById("rewardImg");
 
 let user = null;
-let partner = null;
 
 checkUser();
 async function checkUser() {
@@ -30,18 +29,26 @@ async function checkUser() {
     logoutBtn.classList.remove("hidden");
     welcome.textContent = `Hola, ${user.email}`;
     loadProgress();
+  } else {
+    // Solicitar permiso de notificaciones
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
   }
 }
 
 loginBtn.onclick = async () => {
   const email = emailInp.value.trim();
   const pass = passInp.value.trim();
+  if (!email || !pass) return (authMsg.textContent = "Completa ambos campos");
   const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
   if (error) {
+    // Si no existe, crear cuenta
     const { error: signUpErr } = await supabase.auth.signUp({ email, password: pass });
-    if (signUpErr) return (authMsg.textContent = signUpErr.message);
+    if (signUpErr) return (authMsg.textContent = "Error: " + signUpErr.message);
+    authMsg.textContent = "Cuenta creada. Revisa tu email para confirmar.";
   }
-  checkUser();
+  setTimeout(checkUser, 1000);
 };
 
 logoutBtn.onclick = async () => {
@@ -52,12 +59,23 @@ logoutBtn.onclick = async () => {
 async function loadProgress() {
   daysBox.innerHTML = "";
   // Obtener progreso propio
-  const { data: me } = await supabase.from("progress").select("day").eq("user_id", user.id);
-  const myDays = new Set(me.map((x) => x.day));
-  // Obtener pareja (cualquier otro usuario)
-  const { data: all } = await supabase.from("progress").select("user_id, day");
-  const partners = all.filter((x) => x.user_id !== user.id);
+  const { data: me, error: err1 } = await supabase
+    .from("progress")
+    .select("day")
+    .eq("user_id", user.id);
+  if (err1) console.error("Error progreso propio:", err1);
+  const myDays = new Set(me?.map((x) => x.day) || []);
+  
+  // Obtener TODOS los usuarios (serán solo 2)
+  const { data: all, error: err2 } = await supabase
+    .from("progress")
+    .select("user_id, day");
+  if (err2) console.error("Error progreso general:", err2);
+  
+  const partners = all?.filter((x) => x.user_id !== user.id) || [];
   const partnerDays = new Set(partners.map((x) => x.day));
+  
+  // Renderizar días
   for (let d = 1; d <= 21; d++) {
     const div = document.createElement("div");
     div.className = "day";
@@ -66,13 +84,25 @@ async function loadProgress() {
     div.onclick = () => toggleDay(d);
     daysBox.appendChild(div);
   }
+  
   // Recompensa si ambos hoy
   const today = new Date().getDate() % 21 || 21;
-  if (myDays.has(today) && partnerDays.has(today)) showReward(today);
+  if (myDays.has(today) && partnerDays.has(today)) {
+    showReward(today);
+  }
+  
+  // Verificar hitos
+  checkMilestone();
 }
 
 async function toggleDay(day) {
-  const { data } = await supabase.from("progress").select().eq("user_id", user.id).eq("day", day).single();
+  const { data } = await supabase
+    .from("progress")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("day", day)
+    .single();
+  
   if (data) {
     await supabase.from("progress").delete().eq("id", data.id);
   } else {
@@ -82,69 +112,73 @@ async function toggleDay(day) {
 }
 
 async function showReward(day) {
-  const { data } = await supabase.from("rewards").select().eq("day", day).single();
-  if (data) {
-    rewardText.textContent = data.message;
-    rewardImg.src = data.image_url;
-    rewardBox.classList.remove("hidden");
-  }
+  const { data, error } = await supabase
+    .from("rewards")
+    .select("*")
+    .eq("day", day)
+    .single();
+  if (error) return console.error("Error recompensa:", error);
+  rewardText.textContent = data.message;
+  rewardImg.src = data.image_url;
+  rewardBox.classList.remove("hidden");
 }
+
 // ===== HITOS Y NOTIFICACIONES =====
 async function checkMilestone() {
-  // Obtener pareja
-  const { data: allProg } = await supabase.from("progress").select("user_id, day");
-  const users = [...new Set(allProg.map((x) => x.user_id))];
+  const { data: allProg, error } = await supabase
+    .from("progress")
+    .select("user_id, day");
+  if (error) return console.error("Error hitos:", error);
+  
+  const users = [...new Set(allProg?.map((x) => x.user_id) || [])];
   if (users.length !== 2) return;
+  
   const [u1, u2] = users;
-  const { data: mile } = await supabase.from("milestones")
+  const mileId = u1 < u2 ? `${u1}-${u2}` : `${u2}-${u1}`;
+  
+  const { data: mile, error: err2 } = await supabase
+    .from("milestones")
     .select("*")
     .or(`and(user1_id.eq.${u1},user2_id.eq.${u2}),and(user1_id.eq.${u2},user2_id.eq.${u1})`)
     .single();
+  
   if (!mile) {
     await supabase.from("milestones").insert({ user1_id: u1, user2_id: u2 });
     return;
   }
-  // Calcular racha actual
-  const daysBoth = allProg
-    .filter((p) => users.includes(p.user_id))
-    .reduce((acc, p) => {
-      acc[p.day] = (acc[p.day] || 0) + 1;
-      return acc;
-    }, {});
-  const bothDays = Object.keys(daysBoth).filter((d) => daysBoth[d] === 2).length;
-  const { streak, notified7, notified14, notified21 } = mile;
-  if (bothDays >= 7 && !notified7) {
+  
+  // Calcular días completados AMBOS
+  const daysBoth = allProg.reduce((acc, p) => {
+    acc[p.day] = (acc[p.day] || 0) + 1;
+    return acc;
+  }, {});
+  const bothCount = Object.keys(daysBoth).filter((d) => daysBoth[d] === 2).length;
+  
+  const { notified7, notified14, notified21 } = mile;
+  if (bothCount >= 7 && !notified7) {
     await notifyHit(7, "¡Media semana de amor! 🍣", "Llevan 7 días seguidos, ¡sushi gratis este fin!");
     await supabase.from("milestones").update({ notified7: true }).eq("id", mile.id);
   }
-  if (bothDays >= 14 && !notified14) {
+  if (bothCount >= 14 && !notified14) {
     await notifyHit(14, "¡Dos semanas firmes! 🍕", "Se ganan una cabaña + pizza orilla de queso");
     await supabase.from("milestones").update({ notified14: true }).eq("id", mile.id);
   }
-  if (bothDays >= 21 && !notified21) {
+  if (bothCount >= 21 && !notified21) {
     await notifyHit(21, "¡Meta lograda! 🌴", "Elige playita: El Salvador o México");
     await supabase.from("milestones").update({ notified21: true }).eq("id", mile.id);
   }
 }
 
 async function notifyHit(day, title, body) {
-  // Notificación push
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(title, { body, icon: "https://i.ibb.co/6y4n5wL/icon.png" });
   }
-  // Mensaje sorpresa en pantalla
   const card = document.createElement("div");
   card.className = "surprise";
   card.innerHTML = `<h2>${title}</h2><p>${body}</p>`;
   document.body.appendChild(card);
-  // Sonido
   const audio = new Audio(`hit${day}.mp3`);
   audio.volume = 0.3;
   audio.play().catch(() => {});
   setTimeout(() => card.remove(), 5000);
-}
-
-// Pedir permiso de notificación al login
-if ("Notification" in window && Notification.permission === "default") {
-  Notification.requestPermission();
 }
