@@ -9,35 +9,35 @@
 <body>
 
 <header class="topbar">
-  <h1>21 Días – Relación sin máscaras</h1>
-  <button id="logoutBtn" class="hidden ghost">Salir</button>
+  <h1>21 Días</h1>
+  <div>
+    <span id="notifBell">🔔</span>
+    <button id="logoutBtn" class="ghost hidden">Salir</button>
+  </div>
 </header>
 
 <main>
 
-  <!-- AUTH -->
-  <section id="auth" class="auth-card">
-    <h2>Acceso</h2>
-    <input id="email" type="email" placeholder="Correo"/>
-    <input id="password" type="password" placeholder="Contraseña"/>
-    <button id="loginBtn" class="primary">Entrar</button>
-    <p id="authMsg"></p>
+<section id="auth" class="auth-card">
+  <h2>Acceso</h2>
+  <input id="email" placeholder="Correo">
+  <input id="password" type="password" placeholder="Contraseña">
+  <button id="loginBtn" class="primary">Entrar</button>
+  <p id="authMsg"></p>
+</section>
+
+<section id="app" class="hidden">
+  <h2 id="welcome"></h2>
+
+  <div id="days" class="advent-grid"></div>
+
+  <section id="feed" class="feed hidden">
+    <h3>Momentos</h3>
+    <div id="feedList"></div>
   </section>
 
-  <!-- APP -->
-  <section id="app" class="hidden">
-    <h2 id="welcome" class="welcome"></h2>
-
-    <!-- GRID -->
-    <div id="days" class="advent-grid"></div>
-
-    <!-- REWARD -->
-    <div id="reward" class="reward-card hidden">
-      <h3>🎁 Recompensa desbloqueada</h3>
-      <p id="rewardText"></p>
-      <img id="rewardImg" />
-    </div>
-  </section>
+  <section id="badges" class="badges"></section>
+</section>
 
 </main>
 
@@ -46,13 +46,9 @@
   <div class="modal-box">
     <span class="close" onclick="closeModal()">×</span>
     <h3 id="modalTitle"></h3>
-
-    <p><strong>📖 Lectura</strong><br><span id="modalReading"></span></p>
-    <p><strong>🙏 Oración</strong><br><span id="modalPrayer"></span></p>
-    <p><strong>✅ Tarea</strong><br><span id="modalTask"></span></p>
-
-    <button id="modalDoneBtn" class="primary hidden">Marcar como hecho</button>
-    <p id="modalStatus"></p>
+    <p id="modalTask"></p>
+    <div id="taskArea"></div>
+    <button id="modalDoneBtn" class="primary hidden">Listo</button>
   </div>
 </div>
 
