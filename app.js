@@ -62,18 +62,7 @@ const dayData = {
   12:{reading:"La belleza habita en lo simple.",prayer:"Gracias por la paz.",taskType:"photo",prompt:"Foto de algo que te dio paz.",dopamine:"📸 Presencia",story:true},
   18:{reading:"Decir amor lo multiplica.",prayer:"Enséñame a valorar.",taskType:"video",prompt:"Video de 15s agradeciendo a tu pareja.",dopamine:"🎥 Aprecio",story:true}
 };
-//Crear codigo
-function generateCoupleCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
 
-
-///
 /* =====================================================
    AUTH
 ===================================================== */
@@ -150,52 +139,66 @@ async function checkCouple() {
   initApp();
 }
 
+//Crear codigo
+function generateCoupleCode() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+///
+
 
 createCoupleBtn.onclick = async () => {
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) {
-    alert("Sesión expirada");
-    location.reload();
-    return;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    if (!sessionData.session) {
+      alert("Sesión expirada, vuelve a iniciar sesión");
+      location.reload();
+      return;
+    }
+
+    const currentUser = sessionData.session.user;
+
+    const { data: couple, error: coupleError } = await supabase
+      .from("couples")
+      .insert({
+        code: generateCoupleCode(),
+        plan: "free"
+      })
+      .select()
+      .single();
+
+    if (coupleError) {
+      console.error("Error creando pareja:", coupleError);
+      alert("No se pudo crear la pareja");
+      return;
+    }
+
+    const { error: memberError } = await supabase
+      .from("couple_members")
+      .insert({
+        couple_id: couple.id,
+        user_id: currentUser.id
+      });
+
+    if (memberError) {
+      console.error("Error creando miembro:", memberError);
+      alert("No se pudo unir a la pareja");
+      return;
+    }
+
+    coupleId = couple.id;
+
+    coupleSetup.classList.add("hidden");
+    app.classList.remove("hidden");
+
+    initApp();
+
+  } catch (e) {
+    console.error("Error inesperado:", e);
   }
-
-  const currentUser = sessionData.session.user;
-
-  const { data: couple, error } = await supabase
-    .from("couples")
-    .insert({
-      code: generateCoupleCode(),
-      plan: "free"
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Error creando pareja:", error);
-    alert("No se pudo crear la pareja");
-    return;
-  }
-
-  const { error: memberError } = await supabase
-    .from("couple_members")
-    .insert({
-      couple_id: couple.id,
-      user_id: currentUser.id
-    });
-
-  if (memberError) {
-    console.error("Error uniéndose:", memberError);
-    alert("Error al unirse a la pareja");
-    return;
-  }
-
-  coupleId = couple.id;
-
-  coupleSetup.classList.add("hidden");
-  app.classList.remove("hidden");
-
-  initApp();
 };
+
 
 
 
