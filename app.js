@@ -4,6 +4,7 @@ const supabaseUrl = "https://dsiuuymgyzkcksaqtoqk.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// REGISTRO PWA
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.error);
 
 // STATE
@@ -18,7 +19,7 @@ let selectedDay = 1;
 const dateIdeas = ["Cocinar juntos 🍝", "Ver estrellas ✨", "Juegos mesa 🎲", "Ver fotos viejas 📸", "Orar juntos 🙏", "Masajes 🦶", "Cartas amor 💌", "Desayuno cama 🥐"];
 const content21Days = {
   1: { tema: "Identidad", lectura: "Salmo 139:14", oracion: "Ayúdame a amarme.", tarea: "Escribe 3 cualidades tuyas." },
-  // ... Pega tus 21 días aquí ...
+  // ... (Pega aquí el resto de tus 21 días) ...
   7: { tema: "Hito 1", lectura: "Mat 7:24", oracion: "Gracias.", tarea: "Celebrar.", premio: "¡Helado juntos! 🍦" },
   14: { tema: "Hito 2", lectura: "Neh 2:18", oracion: "Construir.", tarea: "Check-in.", premio: "Noche de cine 🎬" },
   21: { tema: "FINAL", lectura: "Rut 1:16", oracion: "Pacto.", tarea: "Promesa.", premio: "Luna de Miel ❤️" }
@@ -75,13 +76,18 @@ function resetUI() {
   document.getElementById("toolsBar").classList.add("hidden");
 }
 
-// --- INIT APP (FIXED) ---
+// --- INIT APP ---
 async function initApp() {
   try {
-    const { data: member } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
-    document.getElementById("globalLoader").classList.add("hidden");
+    document.getElementById("auth").classList.add("hidden");
+    
+    // Consulta segura
+    const { data: member, error } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
+    
+    if (error && error.code !== 'PGRST116') throw error;
 
     if (!member) {
+      document.getElementById("globalLoader").classList.add("hidden");
       document.getElementById("coupleSetup").classList.remove("hidden");
       document.getElementById("setupActions").classList.remove("hidden");
       document.getElementById("waitingRoom").classList.add("hidden");
@@ -95,7 +101,11 @@ async function initApp() {
         document.getElementById("streakBadge").style.display = 'block';
     }
 
-    // CHECK PARTNER
+    // Mood Check
+    const today = new Date().toISOString().split('T')[0];
+    if(member.last_mood_date !== today) document.getElementById("moodModal").classList.remove("hidden");
+    else document.getElementById("myMoodDisplay").textContent = member.current_mood;
+
     const { data: partner } = await supabase.from("couple_members").select("user_id").eq("couple_id", coupleId).neq("user_id", user.id).maybeSingle();
 
     if (partner) {
@@ -108,28 +118,42 @@ async function initApp() {
       document.getElementById("coupleSetup").classList.add("hidden");
       document.getElementById("app").classList.remove("hidden");
       document.getElementById("toolsBar").classList.remove("hidden");
+      
+      setupRealtime(); // NOTIFICACIONES REALTIME
       await loadData();
-
-      // MOOD CHECK (Al final para no bloquear)
-      const today = new Date().toISOString().split('T')[0];
-      if(member.last_mood_date !== today) {
-        setTimeout(() => document.getElementById("moodModal").classList.remove("hidden"), 1000);
-      } else {
-        document.getElementById("myMoodDisplay").textContent = member.current_mood;
-      }
-
     } else {
       const { data: cp } = await supabase.from("couples").select("code").eq("id", coupleId).single();
       showWaitingRoom(cp.code);
     }
   } catch(err) {
     console.error(err);
+    showToast("Error de conexión. Intenta recargar.", "error");
+  } finally {
+    // SIEMPRE OCULTAR LOADER PARA EVITAR CONGELAMIENTO
     document.getElementById("globalLoader").classList.add("hidden");
-    showToast("Error de conexión.", "error");
   }
 }
 
+// --- REALTIME NOTIFICATIONS ---
+function setupRealtime() {
+  const channel = supabase.channel('room1')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'prayers', filter: `couple_id=eq.${coupleId}` }, payload => {
+      if (payload.new.user_id !== user.id) {
+        showToast("🔔 Tu pareja publicó una oración", "success");
+        if (!document.getElementById("prayerModal").classList.contains("hidden")) loadPrayers();
+      }
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entries', filter: `couple_id=eq.${coupleId}` }, payload => {
+      if (payload.new.user_id !== user.id) {
+        showToast("⚡ Tu pareja completó un reto", "success");
+        loadData();
+      }
+    })
+    .subscribe();
+}
+
 function showWaitingRoom(code) {
+  document.getElementById("globalLoader").classList.add("hidden");
   document.getElementById("coupleSetup").classList.remove("hidden");
   document.getElementById("setupActions").classList.add("hidden");
   document.getElementById("waitingRoom").classList.remove("hidden");
@@ -179,21 +203,14 @@ async function loadData() {
   }
 }
 
-// --- NEW FEATURES (Fixed Logic) ---
+// --- FEATURES ---
 window.saveMood = async (emoji) => {
   try {
     const today = new Date().toISOString().split('T')[0];
-    const { error } = await supabase.from("couple_members").update({ current_mood: emoji, last_mood_date: today }).eq("user_id", user.id);
-    
-    if (error) throw error;
-
+    await supabase.from("couple_members").update({ current_mood: emoji, last_mood_date: today }).eq("user_id", user.id);
     document.getElementById("moodModal").classList.add("hidden");
     document.getElementById("myMoodDisplay").textContent = emoji;
-    showToast("Estado actualizado", "success");
-  } catch (err) {
-    console.error(err);
-    showToast("Error guardando estado (Verifica permisos SQL)", "error");
-  }
+  } catch (e) { console.error(e); }
 };
 
 document.getElementById("openPrayerBtn").onclick = async () => {
@@ -248,18 +265,10 @@ document.getElementById("sendFeedbackBtn").onclick = async () => {
 // --- AUTH UI ---
 document.getElementById("toggleAuth").onclick = () => {
   isRegistering = !isRegistering;
-  const title = document.getElementById("authTitle");
-  const btn = document.getElementById("authBtn");
-  const reg = document.getElementById("registerFields");
-  const tog = document.getElementById("toggleAuth");
-
-  if(isRegistering) {
-    title.textContent="Crear Cuenta"; btn.textContent="Registrarse"; reg.classList.remove("hidden");
-    tog.textContent="¿Ya tienes cuenta? Ingresa";
-  } else {
-    title.textContent="Iniciar Sesión"; btn.textContent="Ingresar"; reg.classList.add("hidden");
-    tog.textContent="¿Crear cuenta nueva?";
-  }
+  document.getElementById("authTitle").textContent = isRegistering ? "Crear Cuenta" : "Iniciar Sesión";
+  document.getElementById("authBtn").textContent = isRegistering ? "Registrarse" : "Ingresar";
+  document.getElementById("registerFields").classList.toggle("hidden");
+  document.getElementById("toggleAuth").textContent = isRegistering ? "¿Ya tienes cuenta? Ingresa" : "¿Crear cuenta nueva?";
 };
 
 document.getElementById("authBtn").onclick = async () => {
@@ -276,7 +285,7 @@ document.getElementById("authBtn").onclick = async () => {
     else showToast("Cuenta creada. Ingresa.", "success");
   } else {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error) showToast("Credenciales incorrectas", "error");
+    if(error) showToast("Error de acceso", "error");
   }
   document.getElementById("globalLoader").classList.add("hidden");
 };
@@ -337,7 +346,6 @@ document.getElementById("saveDayBtn").onclick = async () => {
   } else showToast("Error", "error");
 };
 
-// Utils
 document.getElementById("logoutBtn").onclick = async () => { await supabase.auth.signOut(); window.location.reload(); };
 document.getElementById("removeAdsBtn").onclick = async () => { if(confirm("¿Pagar?")) { await supabase.from("couples").update({ is_premium: true }).eq("id", coupleId); initApp(); } };
 window.closeModals = () => document.querySelectorAll(".modal-overlay").forEach(m => m.classList.add("hidden"));
