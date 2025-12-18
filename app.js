@@ -4,24 +4,21 @@ const supabaseUrl = "https://dsiuuymgyzkcksaqtoqk.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- PWA ---
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.error);
 
-// ESTADO
+// STATE
 let user = null;
 let coupleId = null;
 let partnerId = null;
 let isRegistering = false;
 let pollingInterval = null;
 let selectedDay = 1;
-let isPremium = false;
 
-// DATE IDEAS
-const dateIdeas = ["Cocinar juntos 🍝", "Caminar bajo estrellas ✨", "Juegos de mesa 🎲", "Ver fotos viejas 📸", "Orar juntos 🙏", "Masajes 🦶", "Cartas de amor 💌", "Desayuno en cama 🥐"];
-
+// CONTENT
+const dateIdeas = ["Cocinar juntos 🍝", "Ver estrellas ✨", "Juegos mesa 🎲", "Ver fotos viejas 📸", "Orar juntos 🙏", "Masajes 🦶", "Cartas amor 💌", "Desayuno cama 🥐"];
 const content21Days = {
   1: { tema: "Identidad", lectura: "Salmo 139:14", oracion: "Ayúdame a amarme.", tarea: "Escribe 3 cualidades tuyas." },
-  // ... (Completa)
+  // ... (Completa los días)
   7: { tema: "Hito 1", lectura: "Mat 7:24", oracion: "Gracias.", tarea: "Celebrar.", premio: "¡Helado juntos! 🍦" },
   14: { tema: "Hito 2", lectura: "Neh 2:18", oracion: "Construir.", tarea: "Check-in.", premio: "Noche de cine 🎬" },
   21: { tema: "FINAL", lectura: "Rut 1:16", oracion: "Pacto.", tarea: "Promesa.", premio: "Luna de Miel ❤️" }
@@ -32,9 +29,9 @@ let slideIndex = 1;
 function checkOnboarding() {
   if (!localStorage.getItem("intro_done")) {
     document.getElementById("onboarding").classList.remove("hidden");
-    document.getElementById("auth").classList.add("hidden"); 
-    document.getElementById("globalLoader").classList.add("hidden"); // Esconder loader si hay onboarding
-    return true; 
+    document.getElementById("auth").classList.add("hidden");
+    document.getElementById("globalLoader").classList.add("hidden");
+    return true;
   }
   return false;
 }
@@ -55,13 +52,10 @@ document.getElementById("startAppBtn").onclick = () => {
 
 // --- AUTH ---
 supabase.auth.onAuthStateChange(async (e, session) => {
-  if (checkOnboarding()) return; // Si hay onboarding, salir y dejar que el usuario lo termine
-
   if (session) {
     user = session.user;
-    const name = user.user_metadata?.first_name || "Amigo/a";
-    document.getElementById("userNameDisplay").textContent = `Hola, ${name}`;
-    document.getElementById("auth").classList.add("hidden");
+    if (checkOnboarding()) return; // Esperar
+    document.getElementById("userNameDisplay").textContent = `Hola, ${user.user_metadata?.first_name || 'Amigo'}`;
     document.getElementById("globalLoader").classList.remove("hidden");
     await initApp();
   } else {
@@ -70,7 +64,7 @@ supabase.auth.onAuthStateChange(async (e, session) => {
 });
 
 function resetUI() {
-  if (!localStorage.getItem("intro_done")) return; // No mostrar auth si el onboarding no ha terminado
+  if(checkOnboarding()) return;
   user = null;
   document.getElementById("globalLoader").classList.add("hidden");
   document.getElementById("auth").classList.remove("hidden");
@@ -80,16 +74,13 @@ function resetUI() {
   document.getElementById("toolsBar").classList.add("hidden");
 }
 
-// --- INIT APP (REPARADO) ---
+// --- INIT APP ---
 async function initApp() {
   try {
-    // Intentar obtener miembro
-    const { data: member, error } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
+    document.getElementById("auth").classList.add("hidden");
+    const { data: member } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
     
-    // Si falla la consulta, lanzar error para ir al catch
-    if (error && error.code !== 'PGRST116') throw error;
-
-    document.getElementById("globalLoader").classList.add("hidden"); // Asegurar que se oculte
+    document.getElementById("globalLoader").classList.add("hidden");
 
     if (!member) {
       document.getElementById("coupleSetup").classList.remove("hidden");
@@ -100,9 +91,12 @@ async function initApp() {
 
     coupleId = member.couple_id;
     document.getElementById("userHeader").classList.remove("hidden");
-    if(member.current_streak > 0) document.getElementById("streakBadge").textContent = `🔥 ${member.current_streak}`;
+    if(member.current_streak > 0) {
+        document.getElementById("streakBadge").textContent = `🔥 ${member.current_streak}`;
+        document.getElementById("streakBadge").style.display = 'block';
+    }
 
-    // MOOD
+    // Check Mood
     const today = new Date().toISOString().split('T')[0];
     if(member.last_mood_date !== today) document.getElementById("moodModal").classList.remove("hidden");
     else document.getElementById("myMoodDisplay").textContent = member.current_mood;
@@ -125,9 +119,9 @@ async function initApp() {
       showWaitingRoom(cp.code);
     }
   } catch(err) {
-    console.error("Error initApp:", err);
+    console.error(err);
     document.getElementById("globalLoader").classList.add("hidden");
-    alert("Hubo un error cargando tus datos. Revisa tu conexión.");
+    alert("Error de conexión. Recarga.");
   }
 }
 
@@ -147,7 +141,6 @@ async function loadData() {
 
   const myMax = myEntries.length ? Math.max(...myEntries.map(e => e.day)) : 0;
   const pMax = pEntries.length ? Math.max(...pEntries.map(e => e.day)) : 0;
-  
   const joint = Math.min(myMax, pMax);
   const unlockable = joint + 1;
 
@@ -182,7 +175,7 @@ async function loadData() {
   }
 }
 
-// --- NEW FEATURES ---
+// --- FEATURES ---
 window.saveMood = async (emoji) => {
   const today = new Date().toISOString().split('T')[0];
   await supabase.from("couple_members").update({ current_mood: emoji, last_mood_date: today }).eq("user_id", user.id);
@@ -239,38 +232,34 @@ document.getElementById("sendFeedbackBtn").onclick = async () => {
   }
 };
 
-// --- AUTH UI ---
+// --- AUTH BUTTONS ---
 document.getElementById("toggleAuth").onclick = () => {
   isRegistering = !isRegistering;
-  const title = document.getElementById("authTitle");
-  const btn = document.getElementById("authBtn");
-  const reg = document.getElementById("registerFields");
-  const tog = document.getElementById("toggleAuth");
-
-  if(isRegistering) {
-    title.textContent="Crear Cuenta"; btn.textContent="Registrarse"; reg.classList.remove("hidden");
-    tog.textContent="¿Ya tienes cuenta? Ingresa";
-  } else {
-    title.textContent="Iniciar Sesión"; btn.textContent="Ingresar"; reg.classList.add("hidden");
-    tog.textContent="¿Crear cuenta nueva?";
-  }
+  document.getElementById("authTitle").textContent = isRegistering ? "Crear Cuenta" : "Iniciar Sesión";
+  document.getElementById("authBtn").textContent = isRegistering ? "Registrarse" : "Ingresar";
+  document.getElementById("registerFields").classList.toggle("hidden");
+  document.getElementById("toggleAuth").textContent = isRegistering ? "¿Ya tienes cuenta? Ingresa" : "¿Crear cuenta nueva?";
 };
 
 document.getElementById("authBtn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   if(!email || !password) return showToast("Faltan datos", "error");
+  
   document.getElementById("globalLoader").classList.remove("hidden");
 
   if(isRegistering) {
     const name = document.getElementById("userNameInput").value;
-    if(!name) { document.getElementById("globalLoader").classList.add("hidden"); return showToast("Falta nombre", "error"); }
+    if(!name) {
+       document.getElementById("globalLoader").classList.add("hidden");
+       return showToast("Falta nombre", "error");
+    }
     const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } });
     if(error) showToast(error.message, "error");
-    else showToast("Cuenta creada. Ingresa.", "success");
+    else showToast("Creado. Ingresa.", "success");
   } else {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error) showToast("Credenciales incorrectas", "error");
+    if(error) showToast("Error al ingresar", "error");
   }
   document.getElementById("globalLoader").classList.add("hidden");
 };
