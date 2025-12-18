@@ -32,9 +32,9 @@
     <p>Nadie avanza solo. Deben completar el día <strong>juntos</strong> para desbloquear el siguiente.</p>
   </div>
   <div id="slide3" class="slide">
-    <div style="font-size:4rem; margin-bottom:20px;">✍️</div>
-    <h2>3. Reflexión</h2>
-    <p>Para validar el día, es obligatorio escribir una breve reflexión personal.</p>
+    <div style="font-size:4rem; margin-bottom:20px;">✨</div>
+    <h2>3. Conexión Profunda</h2>
+    <p>Usen las herramientas diarias: Preguntas del Alma, Oración y Citas.</p>
     <button id="startAppBtn" style="margin-top:30px; background:#10b981;">¡Entendido!</button>
   </div>
   <div class="dots">
@@ -59,7 +59,7 @@
 <section id="auth" class="hidden">
   <div style="margin-bottom:30px;">
     <h1 style="font-size:2.5rem; margin-bottom:5px;">Couple4God 💙</h1>
-    <p style="color:#94a3b8;">Tu relación, un equipo.</p>
+    <p style="color:#94a3b8;">Tu relación, nivel Dios.</p>
   </div>
   <h3 id="authTitle">Iniciar Sesión</h3>
   <div id="registerFields" class="hidden">
@@ -100,8 +100,9 @@
 </section>
 
 <div id="toolsBar" class="tools-bar hidden">
-  <button class="tool-btn" id="openPrayerBtn" title="Muro de Oración">🙏</button>
-  <button class="tool-btn" id="openDateBtn" title="Cita del Día">📅</button>
+  <button class="tool-btn" id="openPrayerBtn" title="Orar">🙏</button>
+  <button class="tool-btn" id="openQuestionsBtn" title="Pregunta del Alma" style="font-size: 1.8rem;">✨</button>
+  <button class="tool-btn" id="openDateBtn" title="Cita">📅</button>
   <button class="tool-btn" id="openFeedbackBtn" title="Ayuda">💬</button>
 </div>
 
@@ -174,6 +175,31 @@
         <div id="dateIdea" style="font-size:1.3rem; font-weight:bold; color:#fff;">...</div>
     </div>
     <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cerrar</button>
+  </div>
+</div>
+
+<div id="questionsModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0; color:#fbbf24;">Pregunta del Alma ✨</h3>
+      <button class="close-modal" onclick="closeModals()" style="color:#fff; background:none; border:none; font-size:1.5rem;">&times;</button>
+    </div>
+    
+    <div class="question-card" style="margin-top:15px; background:linear-gradient(135deg, #1e293b, #0f172a); border:1px solid #3b82f6; padding:15px; border-radius:10px;">
+      <p id="soulQuestionText" style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">Cargando...</p>
+      <small style="color:#94a3b8;">Pregunta del día</small>
+    </div>
+
+    <div id="answersContainer" class="chat-container" style="display:flex; flex-direction:column; gap:10px; margin:15px 0; max-height:250px; overflow-y:auto;"></div>
+
+    <div id="answerInputSection" class="hidden">
+      <textarea id="myAnswer" rows="3" placeholder="Responde con el corazón..."></textarea>
+      <button id="sendAnswerBtn" style="margin-top:10px; background:#8b5cf6;">Enviar Respuesta</button>
+    </div>
+    
+    <p id="waitingMessage" class="hidden" style="color:#fbbf24; font-size:0.9rem; margin-top:10px;">
+      ✅ Tú ya respondiste. Esperando a tu pareja para revelar su respuesta...
+    </p>
   </div>
 </div>
 
