@@ -1,18 +1,19 @@
 {
-  "name": "21 Días – Relación consciente",
-  "short_name": "21 Días",
+  "name": "Couple4God",
+  "short_name": "C4G",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0b0b0b",
-  "theme_color": "#ffffff",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
+  "description": "Conexión espiritual diaria para parejas.",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2503/2503508.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2503/2503508.png",
       "sizes": "512x512",
       "type": "image/png"
     }
