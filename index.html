@@ -14,32 +14,26 @@
 
 <div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
   <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p style="color:#94a3b8;">Cargando...</p>
+  <p style="color:#94a3b8;">Conectando corazones...</p>
 </div>
 
 <div id="onboarding" class="onboarding-overlay hidden">
-  
   <div id="slide1" class="slide active">
-    <div class="tutorial-icon">📱 ↔️ 📱</div>
+    <div style="font-size:4rem;">📱</div>
     <h2>1. Sincronícense</h2>
-    <p>Esto se juega en equipo. <strong>Uno crea</strong> un código secreto y <strong>el otro lo ingresa</strong> para unirse a la sala.</p>
-    <div class="instruction-tag">No pueden jugar solos</div>
+    <p>Uno crea el código, el otro se une. ¡Es un equipo!</p>
   </div>
-
   <div id="slide2" class="slide">
-    <div class="tutorial-icon">🔒 ➡️ 🔓</div>
-    <h2>2. Regla de Oro</h2>
-    <p>El siguiente día está bloqueado hasta que <strong>AMBOS</strong> completen el día actual. Si tú acabas y tu pareja no, ¡anímala!</p>
-    <div class="instruction-tag">Nadie se queda atrás</div>
+    <div style="font-size:4rem;">🔒</div>
+    <h2>2. Sin trampas</h2>
+    <p>Nadie avanza solo. Deben completar el día juntos para desbloquear el siguiente.</p>
   </div>
-
   <div id="slide3" class="slide">
-    <div class="tutorial-icon">✍️ ✅</div>
-    <h2>3. Valida tu día</h2>
-    <p>Lee la lectura, haz la micro-tarea y <strong>escribe una reflexión</strong> en la app. Sin reflexión, el botón de completar no funciona.</p>
-    <button id="startAppBtn" style="margin-top:20px;">¡Entendido, vamos!</button>
+    <div style="font-size:4rem;">❤️</div>
+    <h2>3. Herramientas</h2>
+    <p>Usen el Muro de Oración y el Check-in Emocional diariamente.</p>
+    <button id="startAppBtn" style="margin-top:20px;">¡Entendido!</button>
   </div>
-
   <div class="dots">
     <div class="dot active" id="dot1"></div>
     <div class="dot" id="dot2"></div>
@@ -49,47 +43,44 @@
 </div>
 
 <div id="userHeader" class="hidden">
-  <div>
+  <div style="display:flex; align-items:center;">
     <span id="userNameDisplay" style="font-weight:bold; display:block;">Usuario</span>
-    <div id="streakBadge" class="streak-fire hidden">🔥 0 días</div>
+    <span id="myMoodDisplay" class="mood-indicator"></span>
   </div>
-  <button id="logoutBtn" style="width:auto; padding:5px 12px; background:#ef4444; font-size:0.8rem;">Salir</button>
+  <div style="display:flex; gap:10px;">
+    <div id="streakBadge" style="color:#f59e0b; font-weight:bold;">🔥 0</div>
+    <button id="logoutBtn" style="width:auto; padding:5px 10px; background:#ef4444; font-size:0.75rem; margin:0;">Salir</button>
+  </div>
 </div>
 
 <section id="auth" class="hidden">
   <div style="margin-bottom:30px;">
     <h1 style="font-size:2.5rem; margin-bottom:5px;">Couple4God 💙</h1>
-    <p style="color:#94a3b8;">Conexión real, un día a la vez.</p>
+    <p style="color:#94a3b8;">Tu relación, nivel Dios.</p>
   </div>
-
   <h3 id="authTitle">Iniciar Sesión</h3>
-  
   <div id="registerFields" class="hidden">
     <input id="userNameInput" type="text" placeholder="Tu Nombre (Ej. Alex)" />
   </div>
   <input id="email" type="email" placeholder="Correo electrónico" />
   <input id="password" type="password" placeholder="Contraseña" />
-  
   <button id="authBtn">Ingresar</button>
   <p id="toggleAuth" style="color:#60a5fa; cursor:pointer; margin-top:20px; text-decoration:underline;">¿Crear cuenta nueva?</p>
 </section>
 
 <section id="coupleSetup" class="hidden">
   <h2>Tu Equipo</h2>
-  
   <div id="setupActions">
     <button id="createCoupleBtn" style="background:#8b5cf6;">🔮 Crear Código Nuevo</button>
     <div style="margin:20px 0; opacity:0.5;">— O —</div>
-    <input id="joinCode" placeholder="CÓDIGO DE TU PAREJA" style="text-align:center; text-transform:uppercase; letter-spacing:2px; font-weight:bold;" />
-    <button id="joinCoupleBtn" style="background:#10b981;">Unirse a Pareja</button>
+    <input id="joinCode" placeholder="CÓDIGO" style="text-align:center; text-transform:uppercase; font-weight:bold;" />
+    <button id="joinCoupleBtn" style="background:#10b981;">Unirse</button>
   </div>
-
   <div id="waitingRoom" class="hidden" style="margin-top:30px;">
-    <div style="border:2px dashed #60a5fa; padding:20px; border-radius:15px; background:#1e293b;">
-      <p style="margin:0; color:#94a3b8;">Tu código es:</p>
-      <h1 id="displayCode" style="font-size:3rem; margin:10px 0; letter-spacing:5px; color:#fff;">...</h1>
-      <p style="color:#fbbf24; animation:pulse 2s infinite; font-weight:bold;">⏳ Esperando a tu pareja...</p>
-      <small style="display:block; margin-top:10px; opacity:0.7;">No cierres, te redirigiremos al entrar.</small>
+    <div style="border:2px dashed #60a5fa; padding:20px; border-radius:15px;">
+      <p style="margin:0;">Código:</p>
+      <h1 id="displayCode" style="font-size:3rem; margin:10px 0; letter-spacing:5px;">...</h1>
+      <p style="color:#fbbf24; animation:pulse 2s infinite;">⏳ Esperando pareja...</p>
     </div>
   </div>
 </section>
@@ -101,28 +92,27 @@
     <div id="m14" class="milestone m-14">🎁</div>
     <div id="m21" class="milestone m-21">❤️</div>
   </div>
-
   <h2 style="text-align:left; margin-left:10px;">Tu Calendario</h2>
   <div id="calendarGrid" class="calendar-grid"></div>
 </section>
 
-<div id="adBanner" class="ad-banner hidden">
-  <div style="text-align:left;">
-    <span style="display:block; font-weight:bold; font-size:0.9rem;">Curso "Matrimonio Sano"</span>
-    <span style="font-size:0.75rem; color:#94a3b8;">Patrocinado</span>
-  </div>
-  <button id="removeAdsBtn" class="remove-ads">Quitar Anuncios</button>
+<div id="toolsBar" class="tools-bar hidden">
+  <button class="tool-btn" id="openPrayerBtn" title="Oración">🙏</button>
+  <button class="tool-btn" id="openDateBtn" title="Cita Sorpresa">📅</button>
+  <button class="tool-btn" id="openFeedbackBtn" title="Ayuda">💬</button>
 </div>
 
-<div id="feedbackBtn" class="feedback-btn hidden">💬</div>
+<div id="adBanner" class="ad-banner hidden">
+  <span>Anuncio: Curso "Amor Sano" 🛡️</span>
+  <span id="removeAdsBtn" style="color:#f59e0b; font-weight:bold; margin-left:10px; cursor:pointer;">Quitar</span>
+</div>
 
 <div id="dayModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 id="modalTitle" style="margin:0; color:#60a5fa;">Día X</h2>
+    <div style="display:flex; justify-content:space-between;">
+      <h2 id="modalTitle" style="margin:0; color:#60a5fa;"></h2>
       <button class="close-modal" onclick="closeModals()">&times;</button>
     </div>
-    
     <div style="margin:20px 0; text-align:left;">
       <p><strong>📖 Lectura:</strong> <span id="modalLectura"></span></p>
       <p><strong>🙏 Oración:</strong> <span id="modalOracion"></span></p>
@@ -130,20 +120,55 @@
         <p style="margin:0;"><strong>🎯 Misión:</strong> <span id="modalTarea"></span></p>
       </div>
     </div>
-
     <div id="evidenceSection">
-      <p style="font-size:0.9rem; text-align:left; margin-bottom:5px;">✍️ Reflexión personal (Obligatorio):</p>
-      <textarea id="dayReflection" rows="3" placeholder="¿Cómo te sentiste al hacerlo?"></textarea>
+      <p style="font-size:0.9rem;">✍️ Reflexión personal:</p>
+      <textarea id="dayReflection" rows="3" placeholder="¿Qué sentiste?"></textarea>
     </div>
+    <button id="saveDayBtn" style="margin-top:15px; background:#10b981;">✅ Completar</button>
+  </div>
+</div>
 
-    <button id="saveDayBtn" style="margin-top:15px; background:#10b981;">✅ Completar Reto</button>
+<div id="moodModal" class="modal-overlay hidden">
+  <div class="modal-content" style="text-align:center;">
+    <h3>¿Cómo te sientes hoy?</h3>
+    <p style="color:#94a3b8; font-size:0.9rem;">Tu pareja verá esto para apoyarte.</p>
+    <div class="mood-grid">
+      <button class="mood-btn" onclick="saveMood('🤩')">🤩</button>
+      <button class="mood-btn" onclick="saveMood('🙂')">🙂</button>
+      <button class="mood-btn" onclick="saveMood('😐')">😐</button>
+      <button class="mood-btn" onclick="saveMood('😢')">😢</button>
+      <button class="mood-btn" onclick="saveMood('😡')">😡</button>
+      <button class="mood-btn" onclick="saveMood('😴')">😴</button>
+    </div>
+  </div>
+</div>
+
+<div id="prayerModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between;">
+      <h3>Muro de Oración 🙏</h3>
+      <button class="close-modal" onclick="closeModals()">&times;</button>
+    </div>
+    <div id="prayerList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;">
+      </div>
+    <textarea id="newPrayerText" rows="2" placeholder="Escribe tu petición..."></textarea>
+    <button id="addPrayerBtn">Publicar</button>
+  </div>
+</div>
+
+<div id="dateModal" class="modal-overlay hidden">
+  <div class="modal-content" style="text-align:center;">
+    <h3>Cita Sorpresa 📅</h3>
+    <div id="dateIdea" style="font-size:1.2rem; margin:20px 0; color:#60a5fa;">...</div>
+    <button onclick="generateDate()">Otra idea</button>
+    <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cerrar</button>
   </div>
 </div>
 
 <div id="feedbackModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <h3>Sugerencias / Errores</h3>
-    <textarea id="feedbackText" rows="4" placeholder="Cuéntanos qué podemos mejorar..."></textarea>
+    <h3>Sugerencias</h3>
+    <textarea id="feedbackText" rows="4"></textarea>
     <button id="sendFeedbackBtn">Enviar</button>
     <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cancelar</button>
   </div>
@@ -153,7 +178,7 @@
   <div class="modal-content" style="text-align:center; border-color:#fbbf24;">
     <div style="font-size:5rem;">🏆</div>
     <h2 style="color:#fbbf24;">¡Nivel Desbloqueado!</h2>
-    <p id="rewardText" style="font-size:1.1rem; line-height:1.5;"></p>
+    <p id="rewardText"></p>
     <button onclick="closeModals()">¡Genial!</button>
   </div>
 </div>
