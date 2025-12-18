@@ -12,14 +12,47 @@ let user = null;
 let coupleId = null;
 let partnerId = null;
 let isRegistering = false;
-let pollingInterval = null;
+let pollingInterval = null; // Backup para realtime
 let selectedDay = 1;
 
-// CONTENT
-const dateIdeas = ["Cocinar juntos 🍝", "Ver estrellas ✨", "Juegos mesa 🎲", "Ver fotos viejas 📸", "Orar juntos 🙏", "Masajes 🦶", "Cartas amor 💌", "Desayuno cama 🥐"];
+// 3. CITAS DINÁMICAS (31 Opciones)
+const dateIdeas = [
+  "🍝 Cocinar juntos una receta nueva", 
+  "✨ Caminar bajo las estrellas o ver el atardecer", 
+  "🎲 Noche de juegos de mesa (sin pantallas)", 
+  "📸 Ver fotos viejas y recordar el inicio", 
+  "🙏 Orar juntos tomados de la mano", 
+  "🦶 Masajes de pies o espalda mutuos", 
+  "💌 Escribirse cartas de amor y leerlas", 
+  "🥐 Desayuno en la cama el fin de semana",
+  "🍦 Salir solo por un postre/helado",
+  "🎬 Noche de película con palomitas caseras",
+  "🎤 Karaoke en casa (con canciones cursis)",
+  "🧹 Limpiar la casa juntos con música a tope",
+  "🗺️ Planear el próximo viaje soñado",
+  "🚲 Paseo en bicicleta o caminata larga",
+  "🍫 Cata de chocolates o dulces a ciegas",
+  "🖌️ Pintar o dibujar algo juntos (arte feo vale)",
+  "🧘 Clase de estiramiento o yoga juntos (YouTube)",
+  "📚 Leer un capítulo de un libro en voz alta",
+  "🛁 Baño relajante o spa en casa",
+  "🍕 Pizza casera (amasar juntos)",
+  "❓ Jugar a preguntas profundas (busquen lista online)",
+  "🌅 Ver el amanecer (si se animan a madrugar)",
+  "📵 Tarde totalmente libre de tecnología",
+  "🕺 Bailar en la sala (lento o rápido)",
+  "🧺 Picnic en la sala o el jardín",
+  "🍷 Noche de quesos y bebidas",
+  "📝 Hacer una lista de agradecimientos mutuos",
+  "🎢 Visitar un lugar nuevo de la ciudad",
+  "🧩 Armar un rompecabezas juntos",
+  "🍪 Hornear galletas o un pastel",
+  "💕 Renovación de votos informal en casa"
+];
+
 const content21Days = {
   1: { tema: "Identidad", lectura: "Salmo 139:14", oracion: "Ayúdame a amarme.", tarea: "Escribe 3 cualidades tuyas." },
-  // ... (Pega aquí el resto de tus 21 días) ...
+  // ... (Tus 21 días) ...
   7: { tema: "Hito 1", lectura: "Mat 7:24", oracion: "Gracias.", tarea: "Celebrar.", premio: "¡Helado juntos! 🍦" },
   14: { tema: "Hito 2", lectura: "Neh 2:18", oracion: "Construir.", tarea: "Check-in.", premio: "Noche de cine 🎬" },
   21: { tema: "FINAL", lectura: "Rut 1:16", oracion: "Pacto.", tarea: "Promesa.", premio: "Luna de Miel ❤️" }
@@ -80,8 +113,6 @@ function resetUI() {
 async function initApp() {
   try {
     document.getElementById("auth").classList.add("hidden");
-    
-    // Consulta segura
     const { data: member, error } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
     
     if (error && error.code !== 'PGRST116') throw error;
@@ -110,7 +141,6 @@ async function initApp() {
 
     if (partner) {
       partnerId = partner.user_id;
-      if (pollingInterval) clearInterval(pollingInterval);
       
       const { data: couple } = await supabase.from("couples").select("is_premium").eq("id", coupleId).single();
       if(!couple?.is_premium) document.getElementById("adBanner").classList.remove("hidden");
@@ -119,8 +149,13 @@ async function initApp() {
       document.getElementById("app").classList.remove("hidden");
       document.getElementById("toolsBar").classList.remove("hidden");
       
-      setupRealtime(); // NOTIFICACIONES REALTIME
+      setupRealtime(); 
       await loadData();
+      
+      // FALLBACK: Polling cada 10s por si falla Realtime
+      if(pollingInterval) clearInterval(pollingInterval);
+      pollingInterval = setInterval(loadData, 10000); 
+
     } else {
       const { data: cp } = await supabase.from("couples").select("code").eq("id", coupleId).single();
       showWaitingRoom(cp.code);
@@ -129,14 +164,19 @@ async function initApp() {
     console.error(err);
     showToast("Error de conexión. Intenta recargar.", "error");
   } finally {
-    // SIEMPRE OCULTAR LOADER PARA EVITAR CONGELAMIENTO
     document.getElementById("globalLoader").classList.add("hidden");
   }
 }
 
-// --- REALTIME NOTIFICATIONS ---
+// --- REALTIME (Punto 1 y 2) ---
 function setupRealtime() {
   const channel = supabase.channel('room1')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'prayers', filter: `couple_id=eq.${coupleId}` }, payload => {
+        // Alguien actualizó una oración (marcó "Orando")
+        if (document.getElementById("prayerModal").classList.contains("hidden") === false) {
+            loadPrayers();
+        }
+    })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'prayers', filter: `couple_id=eq.${coupleId}` }, payload => {
       if (payload.new.user_id !== user.id) {
         showToast("🔔 Tu pareja publicó una oración", "success");
@@ -158,6 +198,7 @@ function showWaitingRoom(code) {
   document.getElementById("setupActions").classList.add("hidden");
   document.getElementById("waitingRoom").classList.remove("hidden");
   document.getElementById("displayCode").textContent = code;
+  // Polling para esperar pareja
   if (!pollingInterval) pollingInterval = setInterval(initApp, 5000);
 }
 
@@ -217,23 +258,42 @@ document.getElementById("openPrayerBtn").onclick = async () => {
   document.getElementById("prayerModal").classList.remove("hidden");
   loadPrayers();
 };
+
+// 2. ORACIÓN SYNC
 async function loadPrayers() {
   const { data } = await supabase.from("prayers").select("*").eq("couple_id", coupleId).order("created_at", {ascending:false});
   const list = document.getElementById("prayerList");
   list.innerHTML = "";
   if(data) data.forEach(p => {
     const isMine = p.user_id === user.id;
+    // Si yo le doy click a una oracion de mi pareja, marco que estoy orando
+    const actionHtml = !isMine 
+        ? `<span class="pray-action ${p.partner_praying ? 'active' : ''}" onclick="prayFor('${p.id}')">
+             ${p.partner_praying ? '🙏 Estamos orando' : 'Orar por esto'}
+           </span>` 
+        : (p.partner_praying ? '<span style="font-size:0.8rem; color:#10b981;">✅ Tu pareja ora por esto</span>' : '');
+
     const div = document.createElement("div");
     div.className = "prayer-item";
-    div.innerHTML = `<span>${isMine?'Yo':'Pareja'}: ${p.content}</span> ${!isMine ? `<span class="pray-action ${p.partner_praying?'active':''}" onclick="prayFor('${p.id}')">${p.partner_praying ? '🙏 Orando' : 'Orar'}</span>` : ''}`;
+    div.innerHTML = `
+        <div style="flex:1; padding-right:10px;">
+            <strong style="color:#60a5fa; font-size:0.8rem;">${isMine?'Yo':'Pareja'}:</strong> 
+            <span style="font-size:0.9rem;">${p.content}</span>
+        </div> 
+        ${actionHtml}`;
     list.appendChild(div);
   });
 }
+
 window.prayFor = async (id) => {
-  await supabase.from("prayers").update({ partner_praying: true }).eq("id", id);
-  loadPrayers();
-  showToast("Marcado como orando", "success");
+  // Actualizar DB
+  const { error } = await supabase.from("prayers").update({ partner_praying: true }).eq("id", id);
+  if(!error) {
+      loadPrayers(); // Actualizar mi UI inmediatamente
+      showToast("Le avisaremos a tu pareja 🙏", "success");
+  }
 };
+
 document.getElementById("addPrayerBtn").onclick = async () => {
   const txt = document.getElementById("newPrayerText").value;
   if(txt) {
@@ -243,13 +303,17 @@ document.getElementById("addPrayerBtn").onclick = async () => {
   }
 };
 
+// 3. CITAS DINÁMICAS (Algoritmo Diario)
 document.getElementById("openDateBtn").onclick = () => {
   document.getElementById("dateModal").classList.remove("hidden");
-  window.generateDate();
-};
-window.generateDate = () => {
-  const idea = dateIdeas[Math.floor(Math.random() * dateIdeas.length)];
-  document.getElementById("dateIdea").textContent = idea;
+  
+  // Usar la fecha para elegir siempre la misma cita del array para ambos
+  const today = new Date();
+  const dayOfMonth = today.getDate(); // 1 al 31
+  // Usar modulo por si el array es menor a 31 (aunque lo cubrimos)
+  const index = (dayOfMonth - 1) % dateIdeas.length;
+  
+  document.getElementById("dateIdea").textContent = dateIdeas[index];
 };
 
 document.getElementById("openFeedbackBtn").onclick = () => document.getElementById("feedbackModal").classList.remove("hidden");
@@ -285,7 +349,7 @@ document.getElementById("authBtn").onclick = async () => {
     else showToast("Cuenta creada. Ingresa.", "success");
   } else {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error) showToast("Error de acceso", "error");
+    if(error) showToast("Credenciales incorrectas", "error");
   }
   document.getElementById("globalLoader").classList.add("hidden");
 };
