@@ -4,143 +4,46 @@
 }
 
 body {
-  margin: 0;
+  font-family: Arial, sans-serif;
   background: #0f172a;
-  color: #e5e7eb;
+  color: #fff;
+  text-align: center;
+  padding: 20px;
 }
 
-header {
-  padding: 1rem;
-  background: #020617;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-actions button {
-  margin-left: 0.5rem;
-}
-
-h1, h2 {
-  margin: 0.5rem 0;
-}
-
-.card {
-  background: #020617;
-  margin: 1rem;
-  padding: 1.5rem;
-  border-radius: 16px;
-}
-
-input, textarea {
+input, button {
   width: 100%;
-  padding: 0.8rem;
-  margin: 0.4rem 0;
-  border-radius: 12px;
+  max-width: 300px;
+  padding: 12px;
+  margin: 8px auto;
+  display: block;
+  border-radius: 8px;
   border: none;
 }
 
-.primary {
-  background: #ec4899;
+button {
+  background: #3b82f6;
   color: white;
-  padding: 0.9rem;
-  width: 100%;
-  border-radius: 14px;
-  border: none;
-  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.secondary {
-  background: transparent;
-  border: 2px solid #ec4899;
-  color: #ec4899;
-  padding: 0.8rem;
-  width: 100%;
-  border-radius: 14px;
-}
-
-.ghost {
-  background: transparent;
-  color: #94a3b8;
-  border: none;
+button:hover {
+  background: #2563eb;
 }
 
 .hidden {
-  display: none !important;
+  display: none;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.6rem;
-}
-
-.day {
-  background: #020617;
-  padding: 1rem;
-  text-align: center;
-  border-radius: 14px;
-  cursor: pointer;
-}
-
-.feed-card {
-  background: #020617;
-  padding: 1rem;
-  border-radius: 14px;
-  margin-bottom: 0.5rem;
-}
-
-.feed-card.locked {
-  opacity: 0.5;
-}
-
-.badges span {
-  background: #334155;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  margin-right: 0.3rem;
-}
-
-.stories {
-  display: flex;
-  overflow-x: auto;
-  padding: 0.5rem;
-}
-
-.story {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg,#ec4899,#f472b6);
-  border-radius: 50%;
-  margin-right: 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background: #020617;
-  padding: 1.5rem;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 420px;
-}
-
-.close {
-  float: right;
-  cursor: pointer;
-}
-
-.muted {
+.divider {
+  margin: 15px 0;
   opacity: 0.6;
+}
+
+#dayContent {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
 }
