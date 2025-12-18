@@ -5,7 +5,6 @@ const supabaseUrl = "https://dsiuuymgyzkcksaqtoqk.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// ESTADO GLOBAL
 let user = null;
 let coupleId = null;
 let currentDay = 1;
@@ -35,90 +34,114 @@ const content21Days = {
 };
 
 // --- AUTH ---
-supabase.auth.onAuthStateChange((event, session) => {
+supabase.auth.onAuthStateChange(async (event, session) => {
   if (session) {
     user = session.user;
-    initApp();
+    await checkStatus();
   } else {
     showSection("auth");
   }
 });
 
-async function initApp() {
-  const { data: member } = await supabase.from("couple_members").select("couple_id").eq("user_id", user.id).single();
-  if (member) {
-    coupleId = member.couple_id;
-    await syncProgress();
+async function checkStatus() {
+  // Buscamos si el usuario ya tiene pareja asignada
+  const { data, error } = await supabase
+    .from("couple_members")
+    .select("couple_id")
+    .eq("user_id", user.id)
+    .maybeSingle(); // Usamos maybeSingle para evitar el error 500 si no hay nada
+
+  if (data) {
+    coupleId = data.couple_id;
+    await loadProgress();
     showSection("app");
   } else {
     showSection("coupleSetup");
   }
 }
 
-async function syncProgress() {
-  const { data: entries } = await supabase.from("entries").select("day").eq("couple_id", coupleId).order("day", { ascending: false });
+async function loadProgress() {
+  const { data: entries } = await supabase
+    .from("entries")
+    .select("day")
+    .eq("user_id", user.id)
+    .order("day", { ascending: false });
+
   if (entries && entries.length > 0) {
-    // Lógica: El día actual es el último día completado por AMBOS + 1
-    // Simplificado para el MVP: El día más alto registrado por el usuario
-    const userEntries = entries.filter(e => e.user_id === user.id);
-    currentDay = userEntries.length > 0 ? userEntries[0].day + 1 : 1;
+    currentDay = entries[0].day + 1;
     if (currentDay > 21) currentDay = 21;
   }
-  loadDayUI();
-}
-
-function loadDayUI() {
-  const d = content21Days[currentDay];
+  
+  const d = content21Days[currentDay] || content21Days[1];
   document.getElementById("currentDay").textContent = currentDay;
   document.getElementById("dayContent").innerHTML = `
-    <div style="text-align:left; padding:10px;">
-      <p><strong>📖 Lectura:</strong> ${d.lectura}</p>
-      <p><strong>🙏 Oración:</strong> ${d.oracion}</p>
-      <p><strong>🎯 Micro-tarea:</strong> ${d.tarea}</p>
-    </div>
+    <p><strong>📖 Lectura:</strong> ${d.lectura}</p>
+    <p><strong>🙏 Oración:</strong> ${d.oracion}</p>
+    <p><strong>🎯 Micro-tarea:</strong> ${d.tarea}</p>
   `;
 }
 
-// --- EVENTOS ---
+// --- BOTONES ---
 document.getElementById("loginBtn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
+  
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  
+  if (signInError) {
     const { error: signUpError } = await supabase.auth.signUp({ email, password });
-    if (signUpError) alert(signUpError.message);
-    else alert("Cuenta creada. Revisa tu email o intenta ingresar.");
+    if (signUpError) alert("Error: " + signUpError.message);
+    else alert("¡Cuenta creada! Revisa tu email para confirmar.");
   }
 };
 
 document.getElementById("createCoupleBtn").onclick = async () => {
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const { data: cp } = await supabase.from("couples").insert({ code }).select().single();
+  const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+  
+  const { data: cp, error: cpError } = await supabase
+    .from("couples")
+    .insert({ code: newCode })
+    .select()
+    .single();
+
   if (cp) {
     await supabase.from("couple_members").insert({ couple_id: cp.id, user_id: user.id });
-    document.getElementById("coupleCode").textContent = code;
+    document.getElementById("coupleCode").textContent = newCode;
     document.getElementById("coupleCodeBox").classList.remove("hidden");
+  } else {
+    console.error(cpError);
   }
 };
 
 document.getElementById("joinCoupleBtn").onclick = async () => {
-  const code = document.getElementById("joinCode").value.trim();
-  const { data: cp } = await supabase.from("couples").select("id").eq("code", code).single();
+  const code = document.getElementById("joinCode").value.trim().toUpperCase();
+  const { data: cp } = await supabase.from("couples").select("id").eq("code", code).maybeSingle();
+
   if (cp) {
-    await supabase.from("couple_members").insert({ couple_id: cp.id, user_id: user.id });
-    initApp();
-  } else alert("Código inválido");
+    const { error } = await supabase.from("couple_members").insert({ couple_id: cp.id, user_id: user.id });
+    if (!error) await checkStatus();
+    else alert("Ya eres parte de una pareja.");
+  } else {
+    alert("Código no encontrado.");
+  }
 };
 
 document.getElementById("completeDayBtn").onclick = async () => {
-  const { error } = await supabase.from("entries").insert({ couple_id: coupleId, user_id: user.id, day: currentDay });
+  const { error } = await supabase.from("entries").insert({
+    couple_id: coupleId,
+    user_id: user.id,
+    day: currentDay
+  });
+
   if (!error) {
-    alert("¡Día enviado! Esperando a tu pareja para avanzar al siguiente 💙");
-    syncProgress();
+    alert("¡Día completado! 💙");
+    await loadProgress();
   }
 };
 
 function showSection(id) {
-  ["auth", "coupleSetup", "app"].forEach(s => document.getElementById(s).classList.add("hidden"));
+  document.getElementById("auth").classList.add("hidden");
+  document.getElementById("coupleSetup").classList.add("hidden");
+  document.getElementById("app").classList.add("hidden");
   document.getElementById(id).classList.remove("hidden");
 }
