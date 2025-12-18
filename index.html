@@ -15,7 +15,22 @@
   <input id="password" type="password" placeholder="Contraseña" />
   <button id="loginBtn">Ingresar / Registrarse</button>
 </section>
+<div id="userHeader" class="hidden" style="display:flex; justify-content:space-between; align-items:center; padding:10px;">
+  <span id="userEmailDisplay" style="font-size:0.8rem; opacity:0.7;"></span>
+  <button id="logoutBtn" style="width:auto; padding:5px 10px; background:#ef4444; font-size:0.8rem;">Cerrar Sesión</button>
+</div>
 
+<section id="app" class="hidden">
+  <div id="partnerStatus" style="background:#1e293b; padding:10px; margin-bottom:10px; border-radius:8px; font-size:0.9rem; border-left:4px solid #3b82f6;">
+    Cargando estado de tu pareja...
+  </div>
+  
+  <div class="card">
+    <h2>Día <span id="currentDay">1</span></h2>
+    <div id="dayContent"></div>
+    <button id="completeDayBtn">He terminado mi tarea</button>
+  </div>
+</section>
 <section id="coupleSetup" class="hidden">
   <h2>Crea tu equipo</h2>
   <button id="createCoupleBtn">Generar Código Nuevo</button>
