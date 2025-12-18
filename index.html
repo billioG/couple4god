@@ -12,9 +12,40 @@
 <canvas id="confetti-canvas"></canvas>
 <div id="toast-container"></div>
 
-<div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column;">
+<div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
   <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p>Cargando tu relación...</p>
+  <p style="color:#94a3b8;">Cargando...</p>
+</div>
+
+<div id="onboarding" class="onboarding-overlay hidden">
+  
+  <div id="slide1" class="slide active">
+    <div class="tutorial-icon">📱 ↔️ 📱</div>
+    <h2>1. Sincronícense</h2>
+    <p>Esto se juega en equipo. <strong>Uno crea</strong> un código secreto y <strong>el otro lo ingresa</strong> para unirse a la sala.</p>
+    <div class="instruction-tag">No pueden jugar solos</div>
+  </div>
+
+  <div id="slide2" class="slide">
+    <div class="tutorial-icon">🔒 ➡️ 🔓</div>
+    <h2>2. Regla de Oro</h2>
+    <p>El siguiente día está bloqueado hasta que <strong>AMBOS</strong> completen el día actual. Si tú acabas y tu pareja no, ¡anímala!</p>
+    <div class="instruction-tag">Nadie se queda atrás</div>
+  </div>
+
+  <div id="slide3" class="slide">
+    <div class="tutorial-icon">✍️ ✅</div>
+    <h2>3. Valida tu día</h2>
+    <p>Lee la lectura, haz la micro-tarea y <strong>escribe una reflexión</strong> en la app. Sin reflexión, el botón de completar no funciona.</p>
+    <button id="startAppBtn" style="margin-top:20px;">¡Entendido, vamos!</button>
+  </div>
+
+  <div class="dots">
+    <div class="dot active" id="dot1"></div>
+    <div class="dot" id="dot2"></div>
+    <div class="dot" id="dot3"></div>
+  </div>
+  <button id="nextSlideBtn" style="position:absolute; bottom:30px; width:80%;">Siguiente</button>
 </div>
 
 <div id="userHeader" class="hidden">
@@ -26,9 +57,9 @@
 </div>
 
 <section id="auth" class="hidden">
-  <div style="margin-bottom:40px;">
+  <div style="margin-bottom:30px;">
     <h1 style="font-size:2.5rem; margin-bottom:5px;">Couple4God 💙</h1>
-    <p style="color:#94a3b8;">Construye un amor a prueba de todo.</p>
+    <p style="color:#94a3b8;">Conexión real, un día a la vez.</p>
   </div>
 
   <h3 id="authTitle">Iniciar Sesión</h3>
@@ -45,6 +76,7 @@
 
 <section id="coupleSetup" class="hidden">
   <h2>Tu Equipo</h2>
+  
   <div id="setupActions">
     <button id="createCoupleBtn" style="background:#8b5cf6;">🔮 Crear Código Nuevo</button>
     <div style="margin:20px 0; opacity:0.5;">— O —</div>
@@ -56,7 +88,8 @@
     <div style="border:2px dashed #60a5fa; padding:20px; border-radius:15px; background:#1e293b;">
       <p style="margin:0; color:#94a3b8;">Tu código es:</p>
       <h1 id="displayCode" style="font-size:3rem; margin:10px 0; letter-spacing:5px; color:#fff;">...</h1>
-      <p style="color:#fbbf24; animation:pulse 2s infinite;">⏳ Esperando a tu pareja...</p>
+      <p style="color:#fbbf24; animation:pulse 2s infinite; font-weight:bold;">⏳ Esperando a tu pareja...</p>
+      <small style="display:block; margin-top:10px; opacity:0.7;">No cierres, te redirigiremos al entrar.</small>
     </div>
   </div>
 </section>
@@ -75,10 +108,10 @@
 
 <div id="adBanner" class="ad-banner hidden">
   <div style="text-align:left;">
-    <span style="display:block; font-weight:bold; font-size:0.9rem;">Curso "Amor Sano"</span>
+    <span style="display:block; font-weight:bold; font-size:0.9rem;">Curso "Matrimonio Sano"</span>
     <span style="font-size:0.75rem; color:#94a3b8;">Patrocinado</span>
   </div>
-  <button id="removeAdsBtn" class="remove-ads">Quitar (Premium)</button>
+  <button id="removeAdsBtn" class="remove-ads">Quitar Anuncios</button>
 </div>
 
 <div id="feedbackBtn" class="feedback-btn hidden">💬</div>
@@ -99,8 +132,8 @@
     </div>
 
     <div id="evidenceSection">
-      <p style="font-size:0.9rem; text-align:left; margin-bottom:5px;">✍️ Reflexión personal:</p>
-      <textarea id="dayReflection" rows="3" placeholder="¿Qué sentiste al hacerlo?"></textarea>
+      <p style="font-size:0.9rem; text-align:left; margin-bottom:5px;">✍️ Reflexión personal (Obligatorio):</p>
+      <textarea id="dayReflection" rows="3" placeholder="¿Cómo te sentiste al hacerlo?"></textarea>
     </div>
 
     <button id="saveDayBtn" style="margin-top:15px; background:#10b981;">✅ Completar Reto</button>
@@ -111,7 +144,7 @@
   <div class="modal-content">
     <h3>Sugerencias / Errores</h3>
     <textarea id="feedbackText" rows="4" placeholder="Cuéntanos qué podemos mejorar..."></textarea>
-    <button id="sendFeedbackBtn">Enviar Comentario</button>
+    <button id="sendFeedbackBtn">Enviar</button>
     <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cancelar</button>
   </div>
 </div>
