@@ -8,46 +8,55 @@
 </head>
 <body>
 
-<div id="userHeader" class="hidden" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#1e293b; margin-bottom:20px; border-radius:8px;">
-  <span id="userEmailDisplay" style="font-size:0.85rem; color:#94a3b8;"></span>
-  <button id="logoutBtn" style="width:auto; margin:0; padding:5px 12px; background:#ef4444; font-size:0.8rem;">Salir</button>
+<div id="userHeader" class="hidden">
+  <div style="text-align:left;">
+    <span id="userEmailDisplay" style="font-size:0.8rem; color:#94a3b8; display:block;">Usuario</span>
+    <span id="partnerStatusText" style="font-size:0.9rem; font-weight:bold; color:#fbbf24;">Cargando pareja...</span>
+  </div>
+  <button id="logoutBtn" style="width:auto; padding:5px 12px; background:#ef4444; font-size:0.75rem;">Salir</button>
 </div>
 
-<section id="auth" class="hidden">
-  <h1>Couple4God 💙</h1>
-  <p>Crecimiento espiritual en pareja</p>
+<section id="auth" class="hidden"> <h1 style="font-size: 2rem;">Couple4God 💙</h1>
+  <p style="color:#94a3b8; margin-bottom:20px;">Reto de 21 días de conexión real</p>
   <input id="email" type="email" placeholder="Correo electrónico" />
   <input id="password" type="password" placeholder="Contraseña" />
   <button id="loginBtn">Ingresar / Registrarse</button>
 </section>
 
 <section id="coupleSetup" class="hidden">
-  <h2>Tu Equipo</h2>
-  <button id="createCoupleBtn">Crear Código Nuevo</button>
-  
-  <div id="coupleCodeBox" class="hidden" style="margin:20px 0; padding:15px; border:2px dashed #3b82f6; background:#1e293b; border-radius:8px;">
-    <p style="margin:0 0 10px 0;">Comparte este código:</p>
+  <h2>Formar Equipo</h2>
+  <button id="createCoupleBtn">Obtener Código</button>
+  <div id="coupleCodeBox" class="hidden" style="margin:20px 0; padding:15px; border:2px dashed #3b82f6; background:#0f172a; border-radius:8px;">
     <h2 id="coupleCode" style="margin:0; letter-spacing:5px; color:#60a5fa;"></h2>
+    <small>Compártelo con tu pareja</small>
   </div>
-
-  <div class="divider" style="margin:20px 0; opacity:0.5;">— o únete con un código —</div>
-  
-  <input id="joinCode" placeholder="Código de tu pareja" style="text-transform:uppercase;" />
+  <div class="divider" style="margin:20px 0; opacity:0.5;">— o —</div>
+  <input id="joinCode" placeholder="Ingresar código de pareja" style="text-transform:uppercase;" />
   <button id="joinCoupleBtn" style="background:#10b981">Unirse</button>
 </section>
 
 <section id="app" class="hidden">
-  <div id="partnerStatus" style="padding:12px; margin-bottom:15px; border-radius:8px; font-size:0.9rem; font-weight:bold; text-align:left; transition: all 0.3s ease;">
-    Cargando estado de pareja...
-  </div>
-  
-  <div class="card" style="background:#1e293b; padding:20px; border-radius:12px;">
-    <h2 style="margin-top:0;">Día <span id="currentDay">1</span></h2>
-    <div id="dayContent" style="text-align:left; line-height:1.6; color:#e2e8f0;"></div>
-    <br>
-    <button id="completeDayBtn">✅ He terminado por hoy</button>
-  </div>
+  <h2 style="margin-bottom:20px;">Tu Camino Juntos</h2>
+  <div id="calendarGrid" class="calendar-grid">
+    </div>
 </section>
+
+<div id="dayModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <button id="closeModalBtn" class="close-modal">&times;</button>
+    <h2 id="modalTitle" style="margin-top:0; color:#60a5fa;">Día X</h2>
+    
+    <div style="margin: 15px 0;">
+      <p><strong>📖 Lectura:</strong> <span id="modalLectura"></span></p>
+      <p><strong>🙏 Oración:</strong> <span id="modalOracion"></span></p>
+      <div style="background:#334155; padding:10px; border-radius:8px; margin-top:10px;">
+        <p style="margin:0;"><strong>🎯 Misión:</strong> <span id="modalTarea"></span></p>
+      </div>
+    </div>
+
+    <button id="completeDayBtn">✅ Completar Misión</button>
+  </div>
+</div>
 
 <script src="app.js" type="module"></script>
 </body>
