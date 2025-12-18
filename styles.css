@@ -249,6 +249,19 @@ textarea {
 textarea:focus { outline: 2px solid #3b82f6; }
 
 /* --- ONBOARDING (CARRUSEL) --- */
+/* --- ONBOARDING --- */
+.onboarding-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #0f172a; z-index: 5000;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+.slide { display: none; text-align: center; padding: 20px; animation: fadeIn 0.5s; }
+.slide.active { display: block; }
+.dots { display: flex; gap: 10px; margin-top: 20px; }
+.dot { width: 10px; height: 10px; background: #334155; border-radius: 50%; }
+.dot.active { background: #3b82f6; transform: scale(1.2); }
+
+
 .onboarding-slide {
   display: flex;
   flex-direction: column;
@@ -291,18 +304,6 @@ textarea:focus { outline: 2px solid #3b82f6; }
   50% { opacity: 0.5; }
   100% { opacity: 1; }
 }
-/* --- ONBOARDING --- */
-.onboarding-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: #0f172a; z-index: 5000;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-}
-.slide { display: none; text-align: center; padding: 20px; animation: fadeIn 0.5s; }
-.slide.active { display: block; }
-.dots { display: flex; gap: 10px; margin-top: 20px; }
-.dot { width: 10px; height: 10px; background: #334155; border-radius: 50%; }
-.dot.active { background: #3b82f6; transform: scale(1.2); }
-
 /* --- WAITING ROOM --- */
 .waiting-container {
   border: 2px dashed #3b82f6;
@@ -317,6 +318,7 @@ textarea:focus { outline: 2px solid #3b82f6; }
   50% { border-color: #60a5fa; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
   100% { border-color: #3b82f6; }
 }
+
 
 /* --- UTILIDADES --- */
 .hidden { display: none !important; }
