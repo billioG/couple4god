@@ -182,3 +182,69 @@ button:hover { background: #2563eb; }
 
 /* UTILIDADES */
 .hidden { display: none !important; }
+
+/* --- BARRA DE PROGRESO CON HITOS --- */
+.progress-container {
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  height: 10px;
+  background: #334155;
+  border-radius: 10px;
+  margin: 20px auto 40px auto;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 10px;
+  width: 0%;
+  transition: width 1s ease-in-out;
+}
+
+.milestone {
+  position: absolute;
+  top: -15px; /* Ajustar posición emoji */
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  opacity: 0.3;
+  filter: grayscale(1);
+  transition: all 0.5s;
+}
+
+/* Posiciones exactas (7/21 = 33%, 14/21 = 66%, 21/21 = 100%) */
+.m-7 { left: 33.3%; }
+.m-14 { left: 66.6%; }
+.m-21 { left: 100%; }
+
+.milestone.active {
+  opacity: 1;
+  filter: grayscale(0);
+  transform: translateX(-50%) scale(1.3);
+}
+
+.milestone.m-21.active {
+  animation: heartBeat 1.5s infinite;
+}
+
+@keyframes heartBeat {
+  0% { transform: translateX(-50%) scale(1.3); }
+  15% { transform: translateX(-50%) scale(1.6); }
+  30% { transform: translateX(-50%) scale(1.3); }
+  45% { transform: translateX(-50%) scale(1.6); }
+  100% { transform: translateX(-50%) scale(1.3); }
+}
+
+/* --- TEXTAREA DE REFLEXIÓN --- */
+textarea {
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 10px;
+  font-family: inherit;
+  resize: none;
+}
+textarea:focus { outline: 2px solid #3b82f6; }
