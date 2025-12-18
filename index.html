@@ -1,78 +1,48 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <title>Couple4God</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <link rel="manifest" href="manifest.json" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header>
-  <h1>💙 Couple4God</h1>
-  <div class="header-actions">
-    <button id="notifBell">🔔</button>
-    <button id="pauseBtn">⏸ Pausa</button>
-    <button id="logoutBtn" class="ghost">Salir</button>
-  </div>
-</header>
-
 <!-- LOGIN -->
-<section id="auth" class="card">
-  <h2>Iniciar sesión</h2>
-  <input id="email" type="email" placeholder="Email" />
+<section id="auth">
+  <h1>Couple4God 💙</h1>
+  <input id="email" type="email" placeholder="Correo" />
   <input id="password" type="password" placeholder="Contraseña" />
-  <button id="loginBtn" class="primary">Entrar</button>
+  <button id="loginBtn">Ingresar</button>
 </section>
 
-<!-- CREAR / UNIRSE -->
-<section id="coupleSetup" class="card hidden">
-  <h2>💑 Crear espacio</h2>
+<!-- CREAR / UNIR -->
+<section id="coupleSetup" class="hidden">
+  <h2>Tu pareja</h2>
 
-  <button id="createCoupleBtn" class="primary">
-    Crear nuestra pareja
-  </button>
+  <button id="createCoupleBtn">Crear pareja</button>
 
-  <hr />
+  <div class="divider">— o —</div>
 
-  <p>¿Ya tienes un código?</p>
-  <input id="joinCode" placeholder="CÓDIGO" />
-  <button id="joinCoupleBtn" class="secondary">
-    Unirme con código
-  </button>
+  <input id="joinCode" placeholder="Código de pareja" />
+  <button id="joinCoupleBtn">Unirse</button>
 
-  <p id="coupleMsg" class="muted"></p>
+  <div id="coupleCodeBox" class="hidden">
+    <p>Código para tu pareja:</p>
+    <strong id="coupleCode"></strong>
+  </div>
 </section>
 
 <!-- APP -->
 <section id="app" class="hidden">
+  <h2>Día <span id="currentDay">1</span></h2>
 
-  <div id="storiesRow" class="stories"></div>
+  <div id="dayContent"></div>
 
-  <h2>📆 Progreso</h2>
-  <div id="days" class="grid"></div>
-
-  <h2>🧠 Feed</h2>
-  <div id="feedList"></div>
-
-  <h2>🏅 Badges</h2>
-  <div id="badges" class="badges"></div>
-
+  <button id="completeDayBtn">Completar día</button>
 </section>
 
-<!-- MODAL -->
-<div id="dayModal" class="modal hidden">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h3 id="modalTitle"></h3>
-    <div id="modalTask"></div>
-    <div id="taskArea"></div>
-    <button id="modalDoneBtn" class="primary hidden">Guardar</button>
-  </div>
-</div>
-
-<script type="module" src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
 </body>
 </html>
