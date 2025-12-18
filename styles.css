@@ -108,3 +108,77 @@ input, button {
 }
 button { background: #3b82f6; color: white; font-weight: bold; cursor: pointer; }
 button:hover { background: #2563eb; }
+
+/* ... (Mantén los estilos anteriores de body, input, button) ... */
+
+/* HEADER */
+#userHeader {
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 15px; 
+  background: #1e293b; 
+  margin-bottom: 20px; 
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+
+/* CALENDARIO */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.day-box {
+  aspect-ratio: 1;
+  background: #1e293b;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid #334155;
+  transition: all 0.2s;
+}
+
+/* Indicadores de pareja (puntos pequeños) */
+.partner-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 5px;
+}
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #475569; /* Gris por defecto */
+}
+.dot.me.done { background: #3b82f6; } /* Azul para mí */
+.dot.partner.done { background: #ec4899; } /* Rosa/Rojo para pareja */
+
+/* ESTADOS DE CAJA */
+.day-box.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+.day-box.active {
+  border-color: #3b82f6;
+  background: #1e293b;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  transform: scale(1.05);
+}
+.day-box.completed { border-color: #10b981; background: #064e3b; }
+.day-box.reward-day { border-color: #fbbf24; } /* Días 7, 14, 21 */
+
+/* MODAL DE PREMIO */
+#rewardModal { text-align: center; }
+.reward-icon { font-size: 4rem; margin: 20px 0; animation: bounce 2s infinite; }
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* UTILIDADES */
+.hidden { display: none !important; }
