@@ -14,25 +14,37 @@
 
 <div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
   <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p style="color:#94a3b8;">Cargando...</p>
+  <p style="color:#94a3b8;">Sincronizando...</p>
 </div>
 
 <div id="onboarding" class="onboarding-overlay hidden">
+  
   <div id="slide1" class="slide active">
-    <div style="font-size:4rem;">📱</div>
-    <h2>1. Conexión</h2>
-    <p>Esto es en equipo. Uno crea el código, el otro se une.</p>
+    <div style="font-size:4rem; margin-bottom:20px;">📲</div>
+    <h2>Paso 1: Conectar</h2>
+    <p style="font-size:1.1rem; line-height:1.6;">
+      No funciona solo. <br>
+      Uno toca <strong>"Crear Código"</strong>. <br>
+      El otro toca <strong>"Unirse"</strong> y escribe ese código.
+    </p>
   </div>
+
   <div id="slide2" class="slide">
-    <div style="font-size:4rem;">🔒</div>
-    <h2>2. Regla de Oro</h2>
-    <p>Nadie avanza solo. Deben completar el día juntos para desbloquear el siguiente.</p>
+    <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
+    <h2>Paso 2: Desbloquear</h2>
+    <p style="font-size:1.1rem; line-height:1.6;">
+      El candado <strong>solo se abre</strong> cuando AMBOS completan el día anterior. <br>
+      Si tú terminas y tu pareja no, toca esperar.
+    </p>
   </div>
+
   <div id="slide3" class="slide">
-    <div style="font-size:4rem;">✍️</div>
-    <h2>3. Reflexión</h2>
-    <p>Para completar el día, debes escribir una breve reflexión sobre la tarea.</p>
-    <button id="startAppBtn" style="margin-top:20px;">¡Entendido!</button>
+    <div style="font-size:4rem; margin-bottom:20px;">✍️</div>
+    <h2>Paso 3: Validar</h2>
+    <p style="font-size:1.1rem; line-height:1.6;">
+      Para que el día cuente como "Completado", es <strong>obligatorio</strong> escribir una breve reflexión.
+    </p>
+    <button id="startAppBtn" style="margin-top:30px; background:#10b981; font-size:1.2rem;">¡Entendido, Empezar!</button>
   </div>
   
   <div class="dots">
@@ -59,31 +71,24 @@
     <h1 style="font-size:2.5rem; margin-bottom:5px;">Couple4God 💙</h1>
     <p style="color:#94a3b8;">Tu relación, nivel Dios.</p>
   </div>
-
   <h3 id="authTitle">Iniciar Sesión</h3>
-  
   <div id="registerFields" class="hidden">
     <input id="userNameInput" type="text" placeholder="Tu Nombre (Ej. Alex)" />
   </div>
-  
   <input id="email" type="email" placeholder="Correo electrónico" />
   <input id="password" type="password" placeholder="Contraseña" />
-  
   <button id="authBtn">Ingresar</button>
-  
   <p id="toggleAuth" style="color:#60a5fa; cursor:pointer; margin-top:20px; text-decoration:underline;">¿Crear cuenta nueva?</p>
 </section>
 
 <section id="coupleSetup" class="hidden">
   <h2>Tu Equipo</h2>
-  
   <div id="setupActions">
     <button id="createCoupleBtn" style="background:#8b5cf6;">🔮 Crear Código Nuevo</button>
     <div style="margin:20px 0; opacity:0.5;">— O —</div>
     <input id="joinCode" placeholder="CÓDIGO DE PAREJA" style="text-align:center; text-transform:uppercase; font-weight:bold;" />
     <button id="joinCoupleBtn" style="background:#10b981;">Unirse</button>
   </div>
-
   <div id="waitingRoom" class="hidden" style="margin-top:30px;">
     <div style="border:2px dashed #60a5fa; padding:20px; border-radius:15px; background:#1e293b;">
       <p style="margin:0; color:#94a3b8;">Tu código es:</p>
@@ -100,7 +105,6 @@
     <div id="m14" class="milestone m-14">🎁</div>
     <div id="m21" class="milestone m-21">❤️</div>
   </div>
-
   <h2 style="text-align:left; margin-left:10px;">Tu Calendario</h2>
   <div id="calendarGrid" class="calendar-grid"></div>
 </section>
@@ -122,7 +126,6 @@
       <h2 id="modalTitle" style="margin:0; color:#60a5fa;">Día X</h2>
       <button class="close-modal" onclick="closeModals()">&times;</button>
     </div>
-    
     <div style="margin:20px 0; text-align:left;">
       <p><strong>📖 Lectura:</strong> <span id="modalLectura"></span></p>
       <p><strong>🙏 Oración:</strong> <span id="modalOracion"></span></p>
@@ -130,12 +133,10 @@
         <p style="margin:0;"><strong>🎯 Misión:</strong> <span id="modalTarea"></span></p>
       </div>
     </div>
-
     <div id="evidenceSection">
       <p style="font-size:0.9rem; text-align:left; margin-bottom:5px;">✍️ Reflexión personal:</p>
       <textarea id="dayReflection" rows="3" placeholder="¿Qué sentiste?"></textarea>
     </div>
-
     <button id="saveDayBtn" style="margin-top:15px; background:#10b981;">✅ Completar</button>
   </div>
 </div>
@@ -143,6 +144,7 @@
 <div id="moodModal" class="modal-overlay hidden">
   <div class="modal-content" style="text-align:center;">
     <h3>¿Cómo te sientes hoy?</h3>
+    <p style="font-size:0.9rem; color:#94a3b8; margin-bottom:15px;">Tu pareja lo verá para apoyarte.</p>
     <div class="mood-grid">
       <button class="mood-btn" onclick="saveMood('🤩')">🤩</button>
       <button class="mood-btn" onclick="saveMood('🙂')">🙂</button>
