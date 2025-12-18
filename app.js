@@ -4,179 +4,220 @@ const supabaseUrl = "https://dsiuuymgyzkcksaqtoqk.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// ESTADO GLOBAL
+// ESTADO
 let user = null;
 let coupleId = null;
 let partnerId = null;
 let currentDay = 1;
-let pollingInterval = null;
+let selectedDayInModal = 1;
 
-// CONTENIDO COMPLETO (Base de datos local)
+// --- CONTENIDO RENOVADO (Enfoque: Comunicación, Límites, Empatía) ---
 const content21Days = {
-  1: { lectura: "Salmo 139:1-14", oracion: "Dios, enséñame a verme como Tú me ves.", tarea: "Escribe 3 cualidades tuyas que nada tienen que ver con ella." },
-  2: { lectura: "Mateo 5:37", oracion: "Quiero ser sí-sí, no-sí; ayúdame a dejar el miedo.", tarea: "Practica decir “no” a un micro-pedido (ej. préstame tu cargador)." },
-  3: { lectura: "1 Juan 4:18", oracion: "Saco fuera el miedo que me hace controlar.", tarea: "Cuando sientas ansiedad, respira 4-7-8 y di: “No soy dueño de su libertad.”" },
-  4: { lectura: "Gálatas 6:5", oracion: "Cada quien lleva su carga.", tarea: "No lleves su mochila, no mandes mensaje hasta que ella responda el anterior." },
-  5: { lectura: "Santiago 1:19", oracion: "Rápido en escuchar, lento para hablar.", tarea: "En la próxima conversación cuenta hasta 3 antes de responder." },
-  6: { lectura: "2 Cor 12:9", oracion: "Mi gracia te basta; mi poder se perfecciona en tu debilidad.", tarea: "Anota un momento en que te humilló; pide gracia para no vengarte." },
-  7: { lectura: "Repaso Semana 1", oracion: "Releé tu lista de cualidades; celebra que ya diste 7 pasos.", tarea: "Comparte con un amigo de confianza o líder cómo te sientes." },
-  8: { lectura: "Efesios 4:15-16", oracion: "Habla verdad en amor, ni agresivo ni cobarde.", tarea: "Redacta el mensaje de límites propuesto. (No lo envíes aún)." },
-  9: { lectura: "Proverbios 25:28", oracion: "Ciudad sin muros: así el hombre sin dominio.", tarea: "Practica la frase: “Si no me das esa información, yo elegiré no seguir la conversación ahora.”" },
-  10: { lectura: "Mateo 18:15", oracion: "Vete a él a solas.", tarea: "Programa una cita presencial (café, parque). No por WhatsApp." },
-  11: { lectura: "Colosenses 3:13", oracion: "Soportaos y perdonáos.", tarea: "Si ella se enoja, no te defiendas; escucha 5 min sin interrumpir." },
-  12: { lectura: "1 Tesalonicenses 5:23", oracion: "Que vuestro espíritu, alma y cuerpo se conserven.", tarea: "Bloquea 30 min para hacer ejercicio solo; celular en avión." },
-  13: { lectura: "Santiago 5:12", oracion: "Sea vuestro sí, sí; vuestro no, no.", tarea: "Envía el mensaje del día 8. Solo una vez. No insistas." },
-  14: { lectura: "Repaso Semana 2", oracion: "Pídele a Dios que prepare el corazón de ella.", tarea: "Lee en voz alta tus límites redactados." },
-  15: { lectura: "Gálatas 6:7-8", oracion: "No nos cansemos de hacer bien.", tarea: "Si ella cumplió, celebra sin sobrecompensar (un abrazo)." },
-  16: { lectura: "Lucas 15:20", oracion: "El padre la vio y tuvo compasión.", tarea: "Si ella no cumplió, simplemente retira tu disponibilidad esa noche amablemente." },
-  17: { lectura: "Romanos 12:18", oracion: "Si es posible, vivid en paz con todos.", tarea: "Redacta una carta (no la envíes) contando cómo te sientes sin acusar." },
-  18: { lectura: "1 Pedro 3:7", oracion: "Vivid con ellas con entendimiento.", tarea: "Pregúntale: “¿Qué necesitas de mí para sentirte libre y segura?”" },
-  19: { lectura: "Salmo 37:5", oracion: "Encomienda a Jehová tu camino.", tarea: "Escribe en un papel “Señor, ya no soy el juez” y guárdalo en la Biblia." },
-  20: { lectura: "2 Corintios 2:6-8", oracion: "Perdonad y confortad.", tarea: "Si hay arrepentimiento, ofrece una nueva oportunidad con un límite claro." },
-  21: { lectura: "Revelación 21:5", oracion: "He aquí que todo lo nuevo.", tarea: "Evalúa: ¿Estás dispuesto a seguir sin desgastarte? Decide con oración." }
+  1: { tema: "Identidad", lectura: "Salmo 139:14", oracion: "Ayúdame a amarme para poder amar bien.", tarea: "Escribe en una nota 3 cosas que admiras de ti mismo/a y léelas antes de dormir." },
+  2: { tema: "Escucha Activa", lectura: "Santiago 1:19", oracion: "Señor, cierra mi boca y abre mi oído.", tarea: "En la próxima charla, espera 3 segundos antes de responder. No interrumpas." },
+  3: { tema: "Validación", lectura: "Romanos 12:15", oracion: "Que yo sienta lo que mi pareja siente.", tarea: "Pregunta: '¿Te sientes escuchado/a por mí últimamente?' Solo escucha la respuesta, no te defiendas." },
+  4: { tema: "Límites Sanos", lectura: "Proverbios 25:28", oracion: "Dame valor para decir 'no' con amor.", tarea: "Identifica algo pequeño que haces por obligación y di 'no' o negocia una alternativa hoy." },
+  5: { tema: "Lenguajes de Amor", lectura: "1 Juan 3:18", oracion: "Enséñame a amar como el otro necesita.", tarea: "Pregunta a tu pareja: '¿Qué puedo hacer hoy para que te sientas amado/a?' y hazlo." },
+  6: { tema: "Respeto al Enojo", lectura: "Efesios 4:26", oracion: "Que mi ira no destruya.", tarea: "Si hay tensión, usen la palabra clave 'PAUSA'. Tómense 15 min separados antes de seguir hablando." },
+  7: { tema: "Seguridad", lectura: "1 Juan 4:18", oracion: "Echa fuera el temor de nuestra relación.", tarea: "Mírala/o a los ojos y di: 'Estoy contigo en este equipo, no contra ti'." },
+  8: { tema: "Comunicación Clara", lectura: "Mateo 5:37", oracion: "Que mi sí sea sí.", tarea: "No uses indirectas hoy. Pide lo que necesitas claramente (ej. 'Necesito un abrazo', no 'Nadie me quiere')." },
+  9: { tema: "Empatía Profunda", lectura: "1 Pedro 3:8", oracion: "Ablanda mi corazón.", tarea: "Cuando tu pareja te cuente un problema, no des soluciones. Solo di: 'Debe ser difícil sentirse así, lo siento'." },
+  10: { tema: "Perdón Rápido", lectura: "Colosenses 3:13", oracion: "Límpiame de rencor.", tarea: "Identifica una pequeña ofensa reciente y di: 'Decido perdonar esto y no volver a mencionarlo'." },
+  11: { tema: "Espacio Personal", lectura: "Marcos 1:35", oracion: "Encuéntrame en el silencio.", tarea: "Regálense 1 hora de tiempo libre individual sin culpa. Al volver, agradézcanse el espacio." },
+  12: { tema: "Gratitud", lectura: "1 Tes 5:18", oracion: "Abre mis ojos a lo bueno.", tarea: "Envía un mensaje de texto agradeciendo algo específico que tu pareja hizo ayer." },
+  13: { tema: "Contacto Físico", lectura: "Cantares 2:6", oracion: "Santifica nuestro contacto.", tarea: "Dense un abrazo de 20 segundos sin decir nada. Solo respiren juntos." },
+  14: { tema: "Check-in Semanal", lectura: "Amós 3:3", oracion: "Alinea nuestros pasos.", tarea: "Pregunta: '¿Hay algo que hice esta semana que te lastimó inconscientemente?'." },
+  15: { tema: "Manejo de Crítica", lectura: "Proverbios 15:1", oracion: "Suaviza mis palabras.", tarea: "Usa la técnica 'Sandwich': Elogio + Petición de cambio + Elogio." },
+  16: { tema: "Servicio", lectura: "Gálatas 5:13", oracion: "Quiero servir, no ser servido.", tarea: "Haz una tarea doméstica que usualmente hace tu pareja, sin que te lo pida y sin esperar aplausos." },
+  17: { tema: "Sueños Juntos", lectura: "Habacuc 2:2", oracion: "Aviva nuestra visión.", tarea: "Dediquen 10 min a hablar del futuro: '¿Cómo nos gustaría estar en 5 años?'." },
+  18: { tema: "Vulnerabilidad", lectura: "2 Cor 12:9", oracion: "Quita mi armadura.", tarea: "Confiesa un miedo o inseguridad que no suelas decir. 'A veces temo que...'." },
+  19: { tema: "Límites Digitales", lectura: "Salmo 101:3", oracion: "Que nada nos distraiga.", tarea: "Cenen sin celulares. Cero pantallas durante 40 minutos. Mírense." },
+  20: { tema: "Celebración", lectura: "Filipenses 4:4", oracion: "Restaura nuestro gozo.", tarea: "Pongan una canción que les guste y bailen o canten juntos (aunque sea ridículo)." },
+  21: { tema: "Compromiso", lectura: "Rut 1:16", oracion: "Donde tú vayas, iré.", tarea: "Renueven su compromiso: Escribe una nueva promesa corta para esta nueva etapa y léesela." }
 };
 
-// --- GESTIÓN DE SESIÓN ---
+// --- AUTH & INIT ---
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (session) {
     user = session.user;
-    document.getElementById("userEmailDisplay").textContent = user.email;
+    // Mostrar header SOLO cuando hay sesión
+    document.getElementById("userEmailDisplay").textContent = user.email.split('@')[0];
     document.getElementById("userHeader").classList.remove("hidden");
+    document.getElementById("auth").classList.add("hidden");
     await checkStatus();
   } else {
-    resetState();
-    showSection("auth");
+    user = null;
+    // Ocultar header si no hay sesión
+    document.getElementById("userHeader").classList.add("hidden");
+    document.getElementById("auth").classList.remove("hidden");
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("coupleSetup").classList.add("hidden");
   }
 });
 
-function resetState() {
-  user = null;
-  coupleId = null;
-  partnerId = null;
-  if (pollingInterval) clearInterval(pollingInterval);
-  document.getElementById("userHeader").classList.add("hidden");
-}
-
 document.getElementById("logoutBtn").onclick = async () => {
   await supabase.auth.signOut();
+  window.location.reload(); // Recarga para limpiar estados visuales
 };
 
-// --- INICIALIZACIÓN DE DATOS ---
 async function checkStatus() {
-  // 1. Verificar si tiene pareja
-  const { data: member } = await supabase.from("couple_members")
-    .select("couple_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { data: member } = await supabase.from("couple_members").select("couple_id").eq("user_id", user.id).maybeSingle();
 
   if (member) {
     coupleId = member.couple_id;
-    
-    // 2. Buscar ID del compañero
+    // Buscar compañero
     const { data: partner } = await supabase.from("couple_members")
       .select("user_id")
-      .eq("couple_id", coupleId)
-      .neq("user_id", user.id)
-      .maybeSingle();
+      .eq("couple_id", coupleId).neq("user_id", user.id).maybeSingle();
       
     partnerId = partner ? partner.user_id : null;
-    
+    updatePartnerHeaderStatus();
+
     await loadProgress();
-    showSection("app");
-    
-    // 3. Iniciar Polling (cada 10 segs actualiza estado)
-    updatePartnerStatus();
-    if (pollingInterval) clearInterval(pollingInterval);
-    pollingInterval = setInterval(updatePartnerStatus, 10000); 
-
+    document.getElementById("coupleSetup").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
   } else {
-    showSection("coupleSetup");
+    document.getElementById("coupleSetup").classList.remove("hidden");
   }
 }
 
-// --- ACTUALIZACIÓN DINÁMICA ---
-async function updatePartnerStatus() {
-  const statusEl = document.getElementById("partnerStatus");
-  
+async function updatePartnerHeaderStatus() {
+  const el = document.getElementById("partnerStatusText");
   if (!partnerId) {
-    statusEl.textContent = "⏳ Esperando que tu pareja se una...";
-    statusEl.style.background = "#334155"; 
-    statusEl.style.color = "#fff";
-    statusEl.style.borderLeft = "4px solid #94a3b8";
-    return;
-  }
-
-  // Verificar si la pareja completó el día actual
-  const { data } = await supabase.from("entries")
-    .select("day")
-    .eq("user_id", partnerId)
-    .eq("day", currentDay)
-    .maybeSingle();
-
-  if (data) {
-    statusEl.textContent = "✅ Tu pareja ya completó el reto de hoy.";
-    statusEl.style.background = "rgba(16, 185, 129, 0.2)";
-    statusEl.style.color = "#6ee7b7";
-    statusEl.style.borderLeft = "4px solid #10b981";
+    el.textContent = "⏳ Esperando pareja...";
+    el.style.color = "#fbbf24";
   } else {
-    statusEl.textContent = "💤 Tu pareja aún no ha completado el reto.";
-    statusEl.style.background = "rgba(245, 158, 11, 0.2)";
-    statusEl.style.color = "#fcd34d";
-    statusEl.style.borderLeft = "4px solid #f59e0b";
+    // Ver si pareja completó el día actual
+    const { data } = await supabase.from("entries").select("day").eq("user_id", partnerId).eq("day", currentDay).maybeSingle();
+    if (data) {
+      el.textContent = `✅ Pareja completó el día ${currentDay}`;
+      el.style.color = "#4ade80";
+    } else {
+      el.textContent = "💤 Pareja pendiente";
+      el.style.color = "#94a3b8";
+    }
   }
 }
 
+// --- LÓGICA DEL CALENDARIO (ADVIENTO) ---
 async function loadProgress() {
+  // Ver cuál es el último día completado
   const { data: entries } = await supabase.from("entries")
     .select("day")
     .eq("user_id", user.id)
     .order("day", { ascending: false });
     
-  // Calcular día actual
-  if (entries && entries.length > 0) {
-    currentDay = entries[0].day + 1;
-  } else {
-    currentDay = 1;
-  }
+  // Si tengo entradas, mi día actual es el último + 1. Si no, es el 1.
+  const lastCompleted = (entries && entries.length > 0) ? entries[0].day : 0;
+  currentDay = lastCompleted + 1;
 
-  // Renderizar contenido
-  if (currentDay > 21) {
-    document.getElementById("dayContent").innerHTML = "<h3>🎉 ¡Reto Completado!</h3><p>Han terminado los 21 días de transformación.</p>";
-    document.getElementById("completeDayBtn").classList.add("hidden");
-    document.getElementById("currentDay").textContent = "Final";
-    return;
-  }
-
-  const d = content21Days[currentDay];
-  document.getElementById("currentDay").textContent = currentDay;
-  document.getElementById("dayContent").innerHTML = `
-    <p style="margin-bottom:10px;"><strong>📖 Lectura:</strong> ${d.lectura}</p>
-    <p style="margin-bottom:10px;"><strong>🙏 Oración:</strong> ${d.oracion}</p>
-    <p style="margin-bottom:10px; color:#60a5fa;"><strong>🎯 Tarea:</strong> ${d.tarea}</p>
-  `;
-  document.getElementById("completeDayBtn").classList.remove("hidden");
+  renderCalendar(lastCompleted);
 }
 
-// --- BOTONES DE ACCIÓN ---
+function renderCalendar(lastCompleted) {
+  const grid = document.getElementById("calendarGrid");
+  grid.innerHTML = "";
+
+  // Crear 21 días
+  for (let i = 1; i <= 21; i++) {
+    const box = document.createElement("div");
+    box.className = "day-box";
+    
+    let statusIcon = "🔒";
+    
+    if (i <= lastCompleted) {
+      // Día pasado (completado)
+      box.classList.add("completed");
+      statusIcon = "✅";
+      box.onclick = () => openModal(i, "completed");
+    } else if (i === currentDay) {
+      // Día actual (activo)
+      box.classList.add("active");
+      statusIcon = "🔥";
+      box.onclick = () => openModal(i, "active");
+    } else {
+      // Día futuro (bloqueado)
+      box.classList.add("locked");
+      statusIcon = "🔒";
+      box.onclick = () => {
+        // Efecto de vibración o alerta simple
+        alert("Completa los días anteriores para desbloquear este nivel.");
+      };
+    }
+
+    box.innerHTML = `
+      <div class="day-number">${i}</div>
+      <div class="day-status">${statusIcon}</div>
+    `;
+    grid.appendChild(box);
+  }
+}
+
+// --- MODAL ---
+function openModal(day, status) {
+  const d = content21Days[day] || { tema: "Fin", lectura: "", oracion: "", tarea: "¡Felicidades!" };
+  selectedDayInModal = day;
+
+  document.getElementById("modalTitle").textContent = `Día ${day}: ${d.tema}`;
+  document.getElementById("modalLectura").textContent = d.lectura;
+  document.getElementById("modalOracion").textContent = d.oracion;
+  document.getElementById("modalTarea").textContent = d.tarea;
+
+  const btn = document.getElementById("completeDayBtn");
+  
+  if (status === "completed") {
+    btn.textContent = "Ya completado ✅";
+    btn.disabled = true;
+    btn.style.background = "#064e3b";
+  } else {
+    btn.textContent = "Marcar como Completado";
+    btn.disabled = false;
+    btn.style.background = "#3b82f6";
+  }
+
+  document.getElementById("dayModal").classList.remove("hidden");
+}
+
+document.getElementById("closeModalBtn").onclick = () => {
+  document.getElementById("dayModal").classList.add("hidden");
+};
+
+// --- COMPLETAR DÍA ---
+document.getElementById("completeDayBtn").onclick = async () => {
+  const { error } = await supabase.from("entries").insert({
+    couple_id: coupleId,
+    user_id: user.id,
+    day: selectedDayInModal
+  });
+
+  if (!error) {
+    document.getElementById("dayModal").classList.add("hidden");
+    alert("¡Excelente! Día registrado.");
+    // Recargar calendario
+    await loadProgress(); 
+    updatePartnerHeaderStatus();
+  } else {
+    alert("Error al guardar (o ya lo completaste).");
+  }
+};
+
+// --- LOGINS / REGISTRO (Igual que antes) ---
 document.getElementById("loginBtn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  
-  if(!email || !password) return alert("Ingresa correo y contraseña");
+  if(!email || !password) return alert("Faltan datos");
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    // Si falla login, intentamos registro automático
     const { error: signUpError } = await supabase.auth.signUp({ email, password });
     if (signUpError) alert(error.message);
-    else alert("Usuario nuevo registrado. ¡Bienvenido!");
+    else alert("Usuario creado. ¡Bienvenido!");
   }
 };
 
 document.getElementById("createCoupleBtn").onclick = async () => {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   const { data } = await supabase.from("couples").insert({ code }).select().single();
-  
   if (data) {
     await supabase.from("couple_members").insert({ couple_id: data.id, user_id: user.id });
     document.getElementById("coupleCode").textContent = code;
@@ -188,32 +229,9 @@ document.getElementById("createCoupleBtn").onclick = async () => {
 document.getElementById("joinCoupleBtn").onclick = async () => {
   const code = document.getElementById("joinCode").value.trim().toUpperCase();
   const { data: cp } = await supabase.from("couples").select("id").eq("code", code).maybeSingle();
-  
   if (cp) {
     const { error } = await supabase.from("couple_members").insert({ couple_id: cp.id, user_id: user.id });
     if (!error) checkStatus();
-    else alert("Error al unirse (quizás ya eres miembro).");
-  } else {
-    alert("Código no encontrado");
-  }
+    else alert("Error al unirse.");
+  } else alert("Código inválido");
 };
-
-document.getElementById("completeDayBtn").onclick = async () => {
-  const { error } = await supabase.from("entries").insert({
-    couple_id: coupleId,
-    user_id: user.id,
-    day: currentDay
-  });
-
-  if (!error) {
-    // Recargar estado local inmediatamente
-    await loadProgress(); 
-    updatePartnerStatus();
-    alert("¡Día registrado! Sigue así.");
-  }
-};
-
-function showSection(id) {
-  ["auth", "coupleSetup", "app"].forEach(s => document.getElementById(s).classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-}
