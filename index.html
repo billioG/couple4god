@@ -14,26 +14,27 @@
 
 <div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
   <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p style="color:#94a3b8;">Conectando...</p>
+  <p style="color:#94a3b8;">Cargando...</p>
 </div>
 
 <div id="onboarding" class="onboarding-overlay hidden">
   <div id="slide1" class="slide active">
     <div style="font-size:4rem;">📱</div>
-    <h2>1. Sincronícense</h2>
-    <p>Uno crea el código, el otro se une. ¡Es un equipo!</p>
+    <h2>1. Conexión</h2>
+    <p>Esto es en equipo. Uno crea el código, el otro se une.</p>
   </div>
   <div id="slide2" class="slide">
     <div style="font-size:4rem;">🔒</div>
-    <h2>2. Sin trampas</h2>
+    <h2>2. Regla de Oro</h2>
     <p>Nadie avanza solo. Deben completar el día juntos para desbloquear el siguiente.</p>
   </div>
   <div id="slide3" class="slide">
-    <div style="font-size:4rem;">❤️</div>
-    <h2>3. Herramientas</h2>
-    <p>Usen el Muro de Oración y el Check-in Emocional diariamente.</p>
+    <div style="font-size:4rem;">✍️</div>
+    <h2>3. Reflexión</h2>
+    <p>Para completar el día, debes escribir una breve reflexión sobre la tarea.</p>
     <button id="startAppBtn" style="margin-top:20px;">¡Entendido!</button>
   </div>
+  
   <div class="dots">
     <div class="dot active" id="dot1"></div>
     <div class="dot" id="dot2"></div>
@@ -48,7 +49,7 @@
     <span id="myMoodDisplay" class="mood-indicator"></span>
   </div>
   <div style="display:flex; gap:10px;">
-    <div id="streakBadge" style="color:#f59e0b; font-weight:bold;">🔥 0</div>
+    <div id="streakBadge" style="color:#f59e0b; font-weight:bold; display:none;">🔥 0</div>
     <button id="logoutBtn" style="width:auto; padding:5px 10px; background:#ef4444; font-size:0.75rem; margin:0;">Salir</button>
   </div>
 </div>
@@ -58,29 +59,36 @@
     <h1 style="font-size:2.5rem; margin-bottom:5px;">Couple4God 💙</h1>
     <p style="color:#94a3b8;">Tu relación, nivel Dios.</p>
   </div>
+
   <h3 id="authTitle">Iniciar Sesión</h3>
+  
   <div id="registerFields" class="hidden">
     <input id="userNameInput" type="text" placeholder="Tu Nombre (Ej. Alex)" />
   </div>
+  
   <input id="email" type="email" placeholder="Correo electrónico" />
   <input id="password" type="password" placeholder="Contraseña" />
+  
   <button id="authBtn">Ingresar</button>
+  
   <p id="toggleAuth" style="color:#60a5fa; cursor:pointer; margin-top:20px; text-decoration:underline;">¿Crear cuenta nueva?</p>
 </section>
 
 <section id="coupleSetup" class="hidden">
   <h2>Tu Equipo</h2>
+  
   <div id="setupActions">
     <button id="createCoupleBtn" style="background:#8b5cf6;">🔮 Crear Código Nuevo</button>
     <div style="margin:20px 0; opacity:0.5;">— O —</div>
-    <input id="joinCode" placeholder="CÓDIGO" style="text-align:center; text-transform:uppercase; font-weight:bold;" />
+    <input id="joinCode" placeholder="CÓDIGO DE PAREJA" style="text-align:center; text-transform:uppercase; font-weight:bold;" />
     <button id="joinCoupleBtn" style="background:#10b981;">Unirse</button>
   </div>
+
   <div id="waitingRoom" class="hidden" style="margin-top:30px;">
-    <div style="border:2px dashed #60a5fa; padding:20px; border-radius:15px;">
-      <p style="margin:0;">Código:</p>
-      <h1 id="displayCode" style="font-size:3rem; margin:10px 0; letter-spacing:5px;">...</h1>
-      <p style="color:#fbbf24; animation:pulse 2s infinite;">⏳ Esperando pareja...</p>
+    <div style="border:2px dashed #60a5fa; padding:20px; border-radius:15px; background:#1e293b;">
+      <p style="margin:0; color:#94a3b8;">Tu código es:</p>
+      <h1 id="displayCode" style="font-size:3rem; margin:10px 0; letter-spacing:5px; color:#fff;">...</h1>
+      <p style="color:#fbbf24; animation:pulse 2s infinite;">⏳ Esperando a tu pareja...</p>
     </div>
   </div>
 </section>
@@ -92,14 +100,15 @@
     <div id="m14" class="milestone m-14">🎁</div>
     <div id="m21" class="milestone m-21">❤️</div>
   </div>
+
   <h2 style="text-align:left; margin-left:10px;">Tu Calendario</h2>
   <div id="calendarGrid" class="calendar-grid"></div>
 </section>
 
 <div id="toolsBar" class="tools-bar hidden">
-  <button class="tool-btn" id="openPrayerBtn">🙏</button>
-  <button class="tool-btn" id="openDateBtn">📅</button>
-  <button class="tool-btn" id="openFeedbackBtn">💬</button>
+  <button class="tool-btn" id="openPrayerBtn" title="Orar">🙏</button>
+  <button class="tool-btn" id="openDateBtn" title="Cita">📅</button>
+  <button class="tool-btn" id="openFeedbackBtn" title="Ayuda">💬</button>
 </div>
 
 <div id="adBanner" class="ad-banner hidden">
@@ -109,10 +118,11 @@
 
 <div id="dayModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <div style="display:flex; justify-content:space-between;">
-      <h2 id="modalTitle" style="margin:0; color:#60a5fa;"></h2>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 id="modalTitle" style="margin:0; color:#60a5fa;">Día X</h2>
       <button class="close-modal" onclick="closeModals()">&times;</button>
     </div>
+    
     <div style="margin:20px 0; text-align:left;">
       <p><strong>📖 Lectura:</strong> <span id="modalLectura"></span></p>
       <p><strong>🙏 Oración:</strong> <span id="modalOracion"></span></p>
@@ -120,10 +130,12 @@
         <p style="margin:0;"><strong>🎯 Misión:</strong> <span id="modalTarea"></span></p>
       </div>
     </div>
+
     <div id="evidenceSection">
-      <p style="font-size:0.9rem;">✍️ Reflexión personal:</p>
-      <textarea id="dayReflection" rows="3"></textarea>
+      <p style="font-size:0.9rem; text-align:left; margin-bottom:5px;">✍️ Reflexión personal:</p>
+      <textarea id="dayReflection" rows="3" placeholder="¿Qué sentiste?"></textarea>
     </div>
+
     <button id="saveDayBtn" style="margin-top:15px; background:#10b981;">✅ Completar</button>
   </div>
 </div>
@@ -150,7 +162,7 @@
     </div>
     <div id="prayerList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
     <textarea id="newPrayerText" rows="2" placeholder="Escribe tu petición..."></textarea>
-    <button id="addPrayerBtn">Publicar</button>
+    <button id="addPrayerBtn" style="margin-top:10px;">Publicar</button>
   </div>
 </div>
 
@@ -167,192 +179,7 @@
   <div class="modal-content">
     <h3>Sugerencias</h3>
     <textarea id="feedbackText" rows="4"></textarea>
-    <button id="sendFeedbackBtn">Enviar</button>
-    <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cancelar</button>
-  </div>
-</div>
-
-<div id="rewardModal" class="modal-overlay hidden">
-  <div class="modal-content" style="text-align:center; border-color:#fbbf24;">
-    <div style="font-size:5rem;">🏆</div>
-    <h2 style="color:#fbbf24;">¡Nivel Desbloqueado!</h2>
-    <p id="rewardText"></p>
-    <button onclick="closeModals()">¡Genial!</button>
-  </div>
-</div>
-
-<script src="app.js" type="module"></script>
-</body>
-</html><!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Couple4God</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-
-<canvas id="confetti-canvas"></canvas>
-<div id="toast-container"></div>
-
-<div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
-  <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p style="color:#94a3b8;">Conectando...</p>
-</div>
-
-<div id="onboarding" class="onboarding-overlay hidden">
-  <div id="slide1" class="slide active">
-    <div style="font-size:4rem;">📱</div>
-    <h2>1. Sincronícense</h2>
-    <p>Uno crea el código, el otro se une. ¡Es un equipo!</p>
-  </div>
-  <div id="slide2" class="slide">
-    <div style="font-size:4rem;">🔒</div>
-    <h2>2. Sin trampas</h2>
-    <p>Nadie avanza solo. Deben completar el día juntos para desbloquear el siguiente.</p>
-  </div>
-  <div id="slide3" class="slide">
-    <div style="font-size:4rem;">❤️</div>
-    <h2>3. Herramientas</h2>
-    <p>Usen el Muro de Oración y el Check-in Emocional diariamente.</p>
-    <button id="startAppBtn" style="margin-top:20px;">¡Entendido!</button>
-  </div>
-  <div class="dots">
-    <div class="dot active" id="dot1"></div>
-    <div class="dot" id="dot2"></div>
-    <div class="dot" id="dot3"></div>
-  </div>
-  <button id="nextSlideBtn" style="position:absolute; bottom:30px; width:80%;">Siguiente</button>
-</div>
-
-<div id="userHeader" class="hidden">
-  <div style="display:flex; align-items:center;">
-    <span id="userNameDisplay" style="font-weight:bold; display:block;">Usuario</span>
-    <span id="myMoodDisplay" class="mood-indicator"></span>
-  </div>
-  <div style="display:flex; gap:10px;">
-    <div id="streakBadge" style="color:#f59e0b; font-weight:bold;">🔥 0</div>
-    <button id="logoutBtn" style="width:auto; padding:5px 10px; background:#ef4444; font-size:0.75rem; margin:0;">Salir</button>
-  </div>
-</div>
-
-<section id="auth" class="hidden">
-  <div style="margin-bottom:30px;">
-    <h1 style="font-size:2.5rem; margin-bottom:5px;">Couple4God 💙</h1>
-    <p style="color:#94a3b8;">Tu relación, nivel Dios.</p>
-  </div>
-  <h3 id="authTitle">Iniciar Sesión</h3>
-  <div id="registerFields" class="hidden">
-    <input id="userNameInput" type="text" placeholder="Tu Nombre (Ej. Alex)" />
-  </div>
-  <input id="email" type="email" placeholder="Correo electrónico" />
-  <input id="password" type="password" placeholder="Contraseña" />
-  <button id="authBtn">Ingresar</button>
-  <p id="toggleAuth" style="color:#60a5fa; cursor:pointer; margin-top:20px; text-decoration:underline;">¿Crear cuenta nueva?</p>
-</section>
-
-<section id="coupleSetup" class="hidden">
-  <h2>Tu Equipo</h2>
-  <div id="setupActions">
-    <button id="createCoupleBtn" style="background:#8b5cf6;">🔮 Crear Código Nuevo</button>
-    <div style="margin:20px 0; opacity:0.5;">— O —</div>
-    <input id="joinCode" placeholder="CÓDIGO" style="text-align:center; text-transform:uppercase; font-weight:bold;" />
-    <button id="joinCoupleBtn" style="background:#10b981;">Unirse</button>
-  </div>
-  <div id="waitingRoom" class="hidden" style="margin-top:30px;">
-    <div style="border:2px dashed #60a5fa; padding:20px; border-radius:15px;">
-      <p style="margin:0;">Código:</p>
-      <h1 id="displayCode" style="font-size:3rem; margin:10px 0; letter-spacing:5px;">...</h1>
-      <p style="color:#fbbf24; animation:pulse 2s infinite;">⏳ Esperando pareja...</p>
-    </div>
-  </div>
-</section>
-
-<section id="app" class="hidden">
-  <div class="progress-container">
-    <div id="progressBarFill" class="progress-fill"></div>
-    <div id="m7" class="milestone m-7">👫</div>
-    <div id="m14" class="milestone m-14">🎁</div>
-    <div id="m21" class="milestone m-21">❤️</div>
-  </div>
-  <h2 style="text-align:left; margin-left:10px;">Tu Calendario</h2>
-  <div id="calendarGrid" class="calendar-grid"></div>
-</section>
-
-<div id="toolsBar" class="tools-bar hidden">
-  <button class="tool-btn" id="openPrayerBtn">🙏</button>
-  <button class="tool-btn" id="openDateBtn">📅</button>
-  <button class="tool-btn" id="openFeedbackBtn">💬</button>
-</div>
-
-<div id="adBanner" class="ad-banner hidden">
-  <span>Anuncio: Curso "Amor Sano" 🛡️</span>
-  <span id="removeAdsBtn" style="color:#f59e0b; font-weight:bold; margin-left:10px; cursor:pointer;">Quitar</span>
-</div>
-
-<div id="dayModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <div style="display:flex; justify-content:space-between;">
-      <h2 id="modalTitle" style="margin:0; color:#60a5fa;"></h2>
-      <button class="close-modal" onclick="closeModals()">&times;</button>
-    </div>
-    <div style="margin:20px 0; text-align:left;">
-      <p><strong>📖 Lectura:</strong> <span id="modalLectura"></span></p>
-      <p><strong>🙏 Oración:</strong> <span id="modalOracion"></span></p>
-      <div style="background:#334155; padding:12px; border-radius:8px; margin-top:10px; border-left:4px solid #f59e0b;">
-        <p style="margin:0;"><strong>🎯 Misión:</strong> <span id="modalTarea"></span></p>
-      </div>
-    </div>
-    <div id="evidenceSection">
-      <p style="font-size:0.9rem;">✍️ Reflexión personal:</p>
-      <textarea id="dayReflection" rows="3"></textarea>
-    </div>
-    <button id="saveDayBtn" style="margin-top:15px; background:#10b981;">✅ Completar</button>
-  </div>
-</div>
-
-<div id="moodModal" class="modal-overlay hidden">
-  <div class="modal-content" style="text-align:center;">
-    <h3>¿Cómo te sientes hoy?</h3>
-    <div class="mood-grid">
-      <button class="mood-btn" onclick="saveMood('🤩')">🤩</button>
-      <button class="mood-btn" onclick="saveMood('🙂')">🙂</button>
-      <button class="mood-btn" onclick="saveMood('😐')">😐</button>
-      <button class="mood-btn" onclick="saveMood('😢')">😢</button>
-      <button class="mood-btn" onclick="saveMood('😡')">😡</button>
-      <button class="mood-btn" onclick="saveMood('😴')">😴</button>
-    </div>
-  </div>
-</div>
-
-<div id="prayerModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <div style="display:flex; justify-content:space-between;">
-      <h3>Muro de Oración 🙏</h3>
-      <button class="close-modal" onclick="closeModals()">&times;</button>
-    </div>
-    <div id="prayerList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
-    <textarea id="newPrayerText" rows="2" placeholder="Escribe tu petición..."></textarea>
-    <button id="addPrayerBtn">Publicar</button>
-  </div>
-</div>
-
-<div id="dateModal" class="modal-overlay hidden">
-  <div class="modal-content" style="text-align:center;">
-    <h3>Cita Sorpresa 📅</h3>
-    <div id="dateIdea" style="font-size:1.2rem; margin:20px 0; color:#60a5fa;">...</div>
-    <button onclick="generateDate()">Otra idea</button>
-    <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cerrar</button>
-  </div>
-</div>
-
-<div id="feedbackModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <h3>Sugerencias</h3>
-    <textarea id="feedbackText" rows="4"></textarea>
-    <button id="sendFeedbackBtn">Enviar</button>
+    <button id="sendFeedbackBtn" style="margin-top:10px;">Enviar</button>
     <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cancelar</button>
   </div>
 </div>
