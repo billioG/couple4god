@@ -4,7 +4,7 @@ const supabaseUrl = "https://dsiuuymgyzkcksaqtoqk.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// REGISTRO PWA
+// SERVICE WORKER
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.error);
 
 // STATE
@@ -12,42 +12,19 @@ let user = null;
 let coupleId = null;
 let partnerId = null;
 let isRegistering = false;
-let pollingInterval = null; // Backup para realtime
+let pollingInterval = null;
 let selectedDay = 1;
 
-// 3. CITAS DINÁMICAS (31 Opciones)
+// CONTENT
 const dateIdeas = [
-  "🍝 Cocinar juntos una receta nueva", 
-  "✨ Caminar bajo las estrellas o ver el atardecer", 
-  "🎲 Noche de juegos de mesa (sin pantallas)", 
-  "📸 Ver fotos viejas y recordar el inicio", 
-  "🙏 Orar juntos tomados de la mano", 
-  "🦶 Masajes de pies o espalda mutuos", 
-  "💌 Escribirse cartas de amor y leerlas", 
-  "🥐 Desayuno en la cama el fin de semana",
-  "🍦 Salir solo por un postre/helado",
-  "🎬 Noche de película con palomitas caseras",
-  "🎤 Karaoke en casa (con canciones cursis)",
-  "🧹 Limpiar la casa juntos con música a tope",
-  "🗺️ Planear el próximo viaje soñado",
-  "🚲 Paseo en bicicleta o caminata larga",
-  "🍫 Cata de chocolates o dulces a ciegas",
-  "🖌️ Pintar o dibujar algo juntos (arte feo vale)",
-  "🧘 Clase de estiramiento o yoga juntos (YouTube)",
-  "📚 Leer un capítulo de un libro en voz alta",
-  "🛁 Baño relajante o spa en casa",
-  "🍕 Pizza casera (amasar juntos)",
-  "❓ Jugar a preguntas profundas (busquen lista online)",
-  "🌅 Ver el amanecer (si se animan a madrugar)",
-  "📵 Tarde totalmente libre de tecnología",
-  "🕺 Bailar en la sala (lento o rápido)",
-  "🧺 Picnic en la sala o el jardín",
-  "🍷 Noche de quesos y bebidas",
-  "📝 Hacer una lista de agradecimientos mutuos",
-  "🎢 Visitar un lugar nuevo de la ciudad",
-  "🧩 Armar un rompecabezas juntos",
-  "🍪 Hornear galletas o un pastel",
-  "💕 Renovación de votos informal en casa"
+  "🍝 Cocinar juntos una receta nueva", "✨ Caminar bajo las estrellas", "🎲 Noche de juegos de mesa", "📸 Ver fotos viejas", 
+  "🙏 Orar juntos tomados de la mano", "🦶 Masajes de pies mutuos", "💌 Escribirse cartas de amor", "🥐 Desayuno en la cama",
+  "🍦 Salir por un helado", "🎬 Noche de película en casa", "🎤 Karaoke casero", "🧹 Limpiar con música",
+  "🗺️ Planear viaje soñado", "🚲 Paseo en bicicleta", "🍫 Cata de chocolates", "🖌️ Pintar algo juntos",
+  "🧘 Clase de yoga juntos", "📚 Leer en voz alta", "🛁 Spa en casa", "🍕 Pizza casera",
+  "❓ Jugar a preguntas profundas", "🌅 Ver el amanecer", "📵 Tarde sin tecnología", "🕺 Bailar en la sala",
+  "🧺 Picnic en la sala", "🍷 Noche de quesos", "📝 Lista de agradecimientos", "🎢 Turista en tu ciudad",
+  "🧩 Armar rompecabezas", "🍪 Hornear galletas", "💕 Renovación de votos"
 ];
 
 const content21Days = {
@@ -132,7 +109,7 @@ async function initApp() {
         document.getElementById("streakBadge").style.display = 'block';
     }
 
-    // Mood Check
+    // Check Mood
     const today = new Date().toISOString().split('T')[0];
     if(member.last_mood_date !== today) document.getElementById("moodModal").classList.remove("hidden");
     else document.getElementById("myMoodDisplay").textContent = member.current_mood;
@@ -141,6 +118,7 @@ async function initApp() {
 
     if (partner) {
       partnerId = partner.user_id;
+      if (pollingInterval) clearInterval(pollingInterval);
       
       const { data: couple } = await supabase.from("couples").select("is_premium").eq("id", coupleId).single();
       if(!couple?.is_premium) document.getElementById("adBanner").classList.remove("hidden");
@@ -149,12 +127,11 @@ async function initApp() {
       document.getElementById("app").classList.remove("hidden");
       document.getElementById("toolsBar").classList.remove("hidden");
       
-      setupRealtime(); 
+      setupRealtime();
       await loadData();
       
-      // FALLBACK: Polling cada 10s por si falla Realtime
-      if(pollingInterval) clearInterval(pollingInterval);
-      pollingInterval = setInterval(loadData, 10000); 
+      // Polling backup
+      if(!pollingInterval) pollingInterval = setInterval(loadData, 10000);
 
     } else {
       const { data: cp } = await supabase.from("couples").select("code").eq("id", coupleId).single();
@@ -162,26 +139,20 @@ async function initApp() {
     }
   } catch(err) {
     console.error(err);
-    showToast("Error de conexión. Intenta recargar.", "error");
+    document.getElementById("globalLoader").classList.add("hidden");
+    showToast("Error de conexión.", "error");
   } finally {
     document.getElementById("globalLoader").classList.add("hidden");
   }
 }
 
-// --- REALTIME (Punto 1 y 2) ---
+// --- REALTIME ---
 function setupRealtime() {
   const channel = supabase.channel('room1')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'prayers', filter: `couple_id=eq.${coupleId}` }, payload => {
-        // Alguien actualizó una oración (marcó "Orando")
-        if (document.getElementById("prayerModal").classList.contains("hidden") === false) {
-            loadPrayers();
-        }
-    })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'prayers', filter: `couple_id=eq.${coupleId}` }, payload => {
-      if (payload.new.user_id !== user.id) {
-        showToast("🔔 Tu pareja publicó una oración", "success");
-        if (!document.getElementById("prayerModal").classList.contains("hidden")) loadPrayers();
-      }
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'prayers', filter: `couple_id=eq.${coupleId}` }, payload => {
+      // Si la oración cambió o se agregó una nueva
+      if (!document.getElementById("prayerModal").classList.contains("hidden")) loadPrayers();
+      if (payload.eventType === 'INSERT' && payload.new.user_id !== user.id) showToast("🔔 Nueva oración de tu pareja", "success");
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entries', filter: `couple_id=eq.${coupleId}` }, payload => {
       if (payload.new.user_id !== user.id) {
@@ -198,7 +169,6 @@ function showWaitingRoom(code) {
   document.getElementById("setupActions").classList.add("hidden");
   document.getElementById("waitingRoom").classList.remove("hidden");
   document.getElementById("displayCode").textContent = code;
-  // Polling para esperar pareja
   if (!pollingInterval) pollingInterval = setInterval(initApp, 5000);
 }
 
@@ -258,61 +228,39 @@ document.getElementById("openPrayerBtn").onclick = async () => {
   document.getElementById("prayerModal").classList.remove("hidden");
   loadPrayers();
 };
-
-// 2. ORACIÓN SYNC
 async function loadPrayers() {
   const { data } = await supabase.from("prayers").select("*").eq("couple_id", coupleId).order("created_at", {ascending:false});
   const list = document.getElementById("prayerList");
   list.innerHTML = "";
   if(data) data.forEach(p => {
     const isMine = p.user_id === user.id;
-    // Si yo le doy click a una oracion de mi pareja, marco que estoy orando
-    const actionHtml = !isMine 
-        ? `<span class="pray-action ${p.partner_praying ? 'active' : ''}" onclick="prayFor('${p.id}')">
-             ${p.partner_praying ? '🙏 Estamos orando' : 'Orar por esto'}
-           </span>` 
-        : (p.partner_praying ? '<span style="font-size:0.8rem; color:#10b981;">✅ Tu pareja ora por esto</span>' : '');
-
     const div = document.createElement("div");
     div.className = "prayer-item";
-    div.innerHTML = `
-        <div style="flex:1; padding-right:10px;">
-            <strong style="color:#60a5fa; font-size:0.8rem;">${isMine?'Yo':'Pareja'}:</strong> 
-            <span style="font-size:0.9rem;">${p.content}</span>
-        </div> 
-        ${actionHtml}`;
+    div.innerHTML = `<span>${isMine?'Yo':'Pareja'}: ${p.content}</span> ${!isMine ? `<span class="pray-action ${p.partner_praying?'active':''}" onclick="prayFor('${p.id}')">${p.partner_praying ? '🙏 Orando' : 'Orar'}</span>` : (p.partner_praying ? '<span style="color:#10b981; font-size:0.8rem">✅ Orando</span>' : '')}`;
     list.appendChild(div);
   });
 }
-
 window.prayFor = async (id) => {
-  // Actualizar DB
-  const { error } = await supabase.from("prayers").update({ partner_praying: true }).eq("id", id);
-  if(!error) {
-      loadPrayers(); // Actualizar mi UI inmediatamente
-      showToast("Le avisaremos a tu pareja 🙏", "success");
-  }
+  await supabase.from("prayers").update({ partner_praying: true }).eq("id", id);
+  // No necesitamos llamar loadPrayers aquí si el realtime está activo, pero por seguridad:
+  loadPrayers();
+  showToast("Le avisaremos a tu pareja 🙏", "success");
 };
-
 document.getElementById("addPrayerBtn").onclick = async () => {
   const txt = document.getElementById("newPrayerText").value;
   if(txt) {
     await supabase.from("prayers").insert({ couple_id: coupleId, user_id: user.id, content: txt });
     document.getElementById("newPrayerText").value = "";
+    // El realtime actualizará la lista, pero forzamos por si acaso
     loadPrayers();
   }
 };
 
-// 3. CITAS DINÁMICAS (Algoritmo Diario)
 document.getElementById("openDateBtn").onclick = () => {
   document.getElementById("dateModal").classList.remove("hidden");
-  
-  // Usar la fecha para elegir siempre la misma cita del array para ambos
+  // Cita Única Diaria
   const today = new Date();
-  const dayOfMonth = today.getDate(); // 1 al 31
-  // Usar modulo por si el array es menor a 31 (aunque lo cubrimos)
-  const index = (dayOfMonth - 1) % dateIdeas.length;
-  
+  const index = (today.getDate() - 1) % dateIdeas.length;
   document.getElementById("dateIdea").textContent = dateIdeas[index];
 };
 
@@ -326,7 +274,7 @@ document.getElementById("sendFeedbackBtn").onclick = async () => {
   }
 };
 
-// --- AUTH UI ---
+// --- AUTH UI (Login Fix) ---
 document.getElementById("toggleAuth").onclick = () => {
   isRegistering = !isRegistering;
   document.getElementById("authTitle").textContent = isRegistering ? "Crear Cuenta" : "Iniciar Sesión";
@@ -336,22 +284,32 @@ document.getElementById("toggleAuth").onclick = () => {
 };
 
 document.getElementById("authBtn").onclick = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  if(!email || !password) return showToast("Faltan datos", "error");
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  
+  if (!email || !password) return showToast("Faltan datos", "error");
   document.getElementById("globalLoader").classList.remove("hidden");
 
-  if(isRegistering) {
-    const name = document.getElementById("userNameInput").value;
-    if(!name) { document.getElementById("globalLoader").classList.add("hidden"); return showToast("Falta nombre", "error"); }
-    const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } });
-    if(error) showToast(error.message, "error");
-    else showToast("Cuenta creada. Ingresa.", "success");
-  } else {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error) showToast("Credenciales incorrectas", "error");
+  try {
+    if (isRegistering) {
+      const name = document.getElementById("userNameInput").value.trim();
+      if (!name) throw new Error("Falta nombre");
+      
+      const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } });
+      if (error) throw error;
+      showToast("Cuenta creada. Ingresa.", "success");
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error("Credenciales incorrectas");
+    }
+  } catch (err) {
+    console.error(err);
+    let msg = err.message;
+    if(msg.includes("Invalid login")) msg = "Contraseña incorrecta";
+    showToast(msg, "error");
+  } finally {
+    document.getElementById("globalLoader").classList.add("hidden");
   }
-  document.getElementById("globalLoader").classList.add("hidden");
 };
 
 // --- MODAL DÍA ---
