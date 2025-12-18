@@ -17,15 +17,11 @@ let selectedDay = 1;
 let isPremium = false;
 
 // DATE IDEAS
-const dateIdeas = [
-  "Cocinar juntos una receta nueva 🍝", "Caminar bajo las estrellas ✨", "Noche de juegos de mesa 🎲", 
-  "Ver fotos viejas y recordar 📸", "Orar juntos 10 minutos 🙏", "Masajes de pies mutuos 🦶", 
-  "Escribirse cartas de amor 💌", "Desayuno en la cama 🥐"
-];
+const dateIdeas = ["Cocinar juntos 🍝", "Caminar bajo estrellas ✨", "Juegos de mesa 🎲", "Ver fotos viejas 📸", "Orar juntos 🙏", "Masajes 🦶", "Cartas de amor 💌", "Desayuno en cama 🥐"];
 
 const content21Days = {
   1: { tema: "Identidad", lectura: "Salmo 139:14", oracion: "Ayúdame a amarme.", tarea: "Escribe 3 cualidades tuyas." },
-  // ... (Completa tus 21 días)
+  // ... (Completa)
   7: { tema: "Hito 1", lectura: "Mat 7:24", oracion: "Gracias.", tarea: "Celebrar.", premio: "¡Helado juntos! 🍦" },
   14: { tema: "Hito 2", lectura: "Neh 2:18", oracion: "Construir.", tarea: "Check-in.", premio: "Noche de cine 🎬" },
   21: { tema: "FINAL", lectura: "Rut 1:16", oracion: "Pacto.", tarea: "Promesa.", premio: "Luna de Miel ❤️" }
@@ -36,6 +32,8 @@ let slideIndex = 1;
 function checkOnboarding() {
   if (!localStorage.getItem("intro_done")) {
     document.getElementById("onboarding").classList.remove("hidden");
+    document.getElementById("auth").classList.add("hidden"); 
+    document.getElementById("globalLoader").classList.add("hidden"); // Esconder loader si hay onboarding
     return true; 
   }
   return false;
@@ -57,7 +55,8 @@ document.getElementById("startAppBtn").onclick = () => {
 
 // --- AUTH ---
 supabase.auth.onAuthStateChange(async (e, session) => {
-  if (document.getElementById("onboarding").classList.contains("hidden") === false) return; // Esperar onboarding
+  if (checkOnboarding()) return; // Si hay onboarding, salir y dejar que el usuario lo termine
+
   if (session) {
     user = session.user;
     const name = user.user_metadata?.first_name || "Amigo/a";
@@ -71,7 +70,7 @@ supabase.auth.onAuthStateChange(async (e, session) => {
 });
 
 function resetUI() {
-  if (!localStorage.getItem("intro_done")) return;
+  if (!localStorage.getItem("intro_done")) return; // No mostrar auth si el onboarding no ha terminado
   user = null;
   document.getElementById("globalLoader").classList.add("hidden");
   document.getElementById("auth").classList.remove("hidden");
@@ -81,11 +80,16 @@ function resetUI() {
   document.getElementById("toolsBar").classList.add("hidden");
 }
 
-// --- INIT APP ---
+// --- INIT APP (REPARADO) ---
 async function initApp() {
   try {
-    const { data: member } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
-    document.getElementById("globalLoader").classList.add("hidden");
+    // Intentar obtener miembro
+    const { data: member, error } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
+    
+    // Si falla la consulta, lanzar error para ir al catch
+    if (error && error.code !== 'PGRST116') throw error;
+
+    document.getElementById("globalLoader").classList.add("hidden"); // Asegurar que se oculte
 
     if (!member) {
       document.getElementById("coupleSetup").classList.remove("hidden");
@@ -98,13 +102,10 @@ async function initApp() {
     document.getElementById("userHeader").classList.remove("hidden");
     if(member.current_streak > 0) document.getElementById("streakBadge").textContent = `🔥 ${member.current_streak}`;
 
-    // MOOD CHECK
+    // MOOD
     const today = new Date().toISOString().split('T')[0];
-    if(member.last_mood_date !== today) {
-      document.getElementById("moodModal").classList.remove("hidden");
-    } else {
-      document.getElementById("myMoodDisplay").textContent = member.current_mood;
-    }
+    if(member.last_mood_date !== today) document.getElementById("moodModal").classList.remove("hidden");
+    else document.getElementById("myMoodDisplay").textContent = member.current_mood;
 
     const { data: partner } = await supabase.from("couple_members").select("user_id").eq("couple_id", coupleId).neq("user_id", user.id).maybeSingle();
 
@@ -113,7 +114,7 @@ async function initApp() {
       if (pollingInterval) clearInterval(pollingInterval);
       
       const { data: couple } = await supabase.from("couples").select("is_premium").eq("id", coupleId).single();
-      if(!couple.is_premium) document.getElementById("adBanner").classList.remove("hidden");
+      if(!couple?.is_premium) document.getElementById("adBanner").classList.remove("hidden");
 
       document.getElementById("coupleSetup").classList.add("hidden");
       document.getElementById("app").classList.remove("hidden");
@@ -123,7 +124,11 @@ async function initApp() {
       const { data: cp } = await supabase.from("couples").select("code").eq("id", coupleId).single();
       showWaitingRoom(cp.code);
     }
-  } catch(err) { console.error(err); }
+  } catch(err) {
+    console.error("Error initApp:", err);
+    document.getElementById("globalLoader").classList.add("hidden");
+    alert("Hubo un error cargando tus datos. Revisa tu conexión.");
+  }
 }
 
 function showWaitingRoom(code) {
@@ -134,7 +139,7 @@ function showWaitingRoom(code) {
   if (!pollingInterval) pollingInterval = setInterval(initApp, 5000);
 }
 
-// --- CORE DATA ---
+// --- DATA ---
 async function loadData() {
   const { data: entries } = await supabase.from("entries").select("*").eq("couple_id", coupleId);
   const myEntries = entries.filter(e => e.user_id === user.id);
@@ -146,7 +151,6 @@ async function loadData() {
   const joint = Math.min(myMax, pMax);
   const unlockable = joint + 1;
 
-  // Barra
   const pct = (joint / 21) * 100;
   document.getElementById("progressBarFill").style.width = `${pct}%`;
   if(joint>=7) document.getElementById("m7").classList.add("active");
@@ -168,7 +172,7 @@ async function loadData() {
     } else if (i === myMax + 1 && i <= unlockable) {
       icon="🔥"; css="active";
     } else if (i === myMax + 1 && i > unlockable) {
-      icon="⏳"; // Esperando
+      icon="⏳"; 
     }
 
     box.className = `day-box ${css}`;
@@ -179,17 +183,13 @@ async function loadData() {
 }
 
 // --- NEW FEATURES ---
-// 1. MOOD
 window.saveMood = async (emoji) => {
   const today = new Date().toISOString().split('T')[0];
   await supabase.from("couple_members").update({ current_mood: emoji, last_mood_date: today }).eq("user_id", user.id);
   document.getElementById("moodModal").classList.add("hidden");
   document.getElementById("myMoodDisplay").textContent = emoji;
-  if(['😢','😡'].includes(emoji)) showToast("Hemos avisado a tu pareja para que ore por ti 🙏", "success");
-  else showToast("Estado guardado", "success");
 };
 
-// 2. PRAYER WALL
 document.getElementById("openPrayerBtn").onclick = async () => {
   document.getElementById("prayerModal").classList.remove("hidden");
   loadPrayers();
@@ -198,11 +198,11 @@ async function loadPrayers() {
   const { data } = await supabase.from("prayers").select("*").eq("couple_id", coupleId).order("created_at", {ascending:false});
   const list = document.getElementById("prayerList");
   list.innerHTML = "";
-  data.forEach(p => {
+  if(data) data.forEach(p => {
     const isMine = p.user_id === user.id;
     const div = document.createElement("div");
     div.className = "prayer-item";
-    div.innerHTML = `<span>${isMine?'Yo':'Pareja'}: ${p.content}</span> ${!isMine ? `<span class="pray-action" onclick="prayFor('${p.id}')">${p.partner_praying ? '🙏 Orando' : 'Orar'}</span>` : ''}`;
+    div.innerHTML = `<span>${isMine?'Yo':'Pareja'}: ${p.content}</span> ${!isMine ? `<span class="pray-action ${p.partner_praying?'active':''}" onclick="prayFor('${p.id}')">${p.partner_praying ? '🙏 Orando' : 'Orar'}</span>` : ''}`;
     list.appendChild(div);
   });
 }
@@ -220,7 +220,6 @@ document.getElementById("addPrayerBtn").onclick = async () => {
   }
 };
 
-// 3. DATE GENERATOR
 document.getElementById("openDateBtn").onclick = () => {
   document.getElementById("dateModal").classList.remove("hidden");
   window.generateDate();
@@ -230,7 +229,6 @@ window.generateDate = () => {
   document.getElementById("dateIdea").textContent = idea;
 };
 
-// 4. FEEDBACK
 document.getElementById("openFeedbackBtn").onclick = () => document.getElementById("feedbackModal").classList.remove("hidden");
 document.getElementById("sendFeedbackBtn").onclick = async () => {
   const msg = document.getElementById("feedbackText").value;
@@ -241,13 +239,21 @@ document.getElementById("sendFeedbackBtn").onclick = async () => {
   }
 };
 
-// --- AUTH & SETUP BUTTONS ---
+// --- AUTH UI ---
 document.getElementById("toggleAuth").onclick = () => {
   isRegistering = !isRegistering;
-  document.getElementById("authTitle").textContent = isRegistering ? "Crear Cuenta" : "Iniciar Sesión";
-  document.getElementById("authBtn").textContent = isRegistering ? "Registrarse" : "Ingresar";
-  document.getElementById("registerFields").classList.toggle("hidden");
-  document.getElementById("toggleAuth").textContent = isRegistering ? "¿Ya tienes cuenta? Ingresa" : "¿Crear cuenta nueva?";
+  const title = document.getElementById("authTitle");
+  const btn = document.getElementById("authBtn");
+  const reg = document.getElementById("registerFields");
+  const tog = document.getElementById("toggleAuth");
+
+  if(isRegistering) {
+    title.textContent="Crear Cuenta"; btn.textContent="Registrarse"; reg.classList.remove("hidden");
+    tog.textContent="¿Ya tienes cuenta? Ingresa";
+  } else {
+    title.textContent="Iniciar Sesión"; btn.textContent="Ingresar"; reg.classList.add("hidden");
+    tog.textContent="¿Crear cuenta nueva?";
+  }
 };
 
 document.getElementById("authBtn").onclick = async () => {
@@ -261,9 +267,10 @@ document.getElementById("authBtn").onclick = async () => {
     if(!name) { document.getElementById("globalLoader").classList.add("hidden"); return showToast("Falta nombre", "error"); }
     const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } });
     if(error) showToast(error.message, "error");
+    else showToast("Cuenta creada. Ingresa.", "success");
   } else {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error) showToast("Error de acceso", "error");
+    if(error) showToast("Credenciales incorrectas", "error");
   }
   document.getElementById("globalLoader").classList.add("hidden");
 };
