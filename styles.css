@@ -1,121 +1,74 @@
 /* --- RESET & BASE --- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
 body {
   font-family: system-ui, -apple-system, sans-serif;
-  background: #0f172a;
-  color: #fff;
-  text-align: center;
-  padding: 20px 20px 100px 20px; /* Padding inferior para el anuncio */
-  margin: 0;
-  overscroll-behavior: none;
+  background: #0f172a; color: #fff; text-align: center;
+  padding: 20px 20px 120px 20px; /* Padding extra para el menú flotante */
+  margin: 0; overscroll-behavior: none;
 }
 
-/* --- ONBOARDING STYLES --- */
-.onboarding-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: #0f172a; z-index: 5000;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  padding: 20px;
-}
-.slide { display: none; text-align: center; animation: fadeIn 0.5s; width: 100%; max-width: 400px; }
-.slide.active { display: block; }
-.tutorial-icon { font-size: 4rem; margin-bottom: 20px; }
-.instruction-tag {
-  background: rgba(59, 130, 246, 0.2); color: #60a5fa;
-  padding: 5px 10px; border-radius: 20px; font-size: 0.8rem;
-  display: inline-block; margin-top: 15px; border: 1px solid #3b82f6;
-}
-.dots { display: flex; gap: 10px; margin-top: 30px; }
-.dot { width: 10px; height: 10px; background: #334155; border-radius: 50%; transition: 0.3s; }
-.dot.active { background: #3b82f6; transform: scale(1.3); }
-
-/* --- INPUTS & BUTTONS --- */
+/* --- UI ELEMENTS --- */
 input, textarea, button {
   width: 100%; padding: 14px; margin: 10px 0;
   border-radius: 10px; border: 1px solid #334155;
   background: #1e293b; color: white; font-size: 16px; outline: none;
 }
-input:focus, textarea:focus { border-color: #3b82f6; }
 button { background: #3b82f6; font-weight: bold; cursor: pointer; border: none; transition: transform 0.1s; }
 button:active { transform: scale(0.97); }
 
-/* --- HEADER & STREAK --- */
+/* --- HEADER --- */
 #userHeader {
   display: flex; justify-content: space-between; align-items: center;
   padding: 15px; background: #1e293b; border-radius: 12px;
   margin-bottom: 20px; border: 1px solid #334155;
 }
-.streak-fire {
-  font-size: 1.1rem; font-weight: bold; color: #f59e0b;
-  display: flex; align-items: center; gap: 5px; animation: flicker 2s infinite;
-}
-@keyframes flicker {
-  0%, 100% { opacity: 1; text-shadow: 0 0 10px #f59e0b; }
-  50% { opacity: 0.8; text-shadow: 0 0 20px #ef4444; }
-}
+.mood-indicator { font-size: 1.5rem; margin-left: 5px; animation: pop 0.5s; }
 
-/* --- CALENDARIO --- */
-.progress-container {
-  position: relative; width: 100%; height: 12px; background: #334155;
-  border-radius: 20px; margin: 30px 0 40px 0;
-}
-.progress-fill {
-  height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-  border-radius: 20px; width: 0%; transition: width 1s ease-in-out;
-}
-.milestone {
-  position: absolute; top: -30px; transform: translateX(-50%);
-  font-size: 1.8rem; opacity: 0.3; filter: grayscale(1); transition: 0.5s;
-}
+/* --- CALENDAR & PROGRESS --- */
+.progress-container { position: relative; width: 100%; height: 12px; background: #334155; border-radius: 20px; margin: 30px 0 40px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 20px; width: 0%; transition: width 1s; }
+.milestone { position: absolute; top: -30px; transform: translateX(-50%); font-size: 1.8rem; opacity: 0.3; filter: grayscale(1); }
 .milestone.m-7 { left: 33%; } .milestone.m-14 { left: 66%; } .milestone.m-21 { left: 100%; }
 .milestone.active { opacity: 1; filter: grayscale(0); transform: translateX(-50%) scale(1.2); }
 
-.calendar-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 12px; max-width: 600px; margin: 0 auto;
-}
-.day-box {
-  aspect-ratio: 1; background: #1e293b; border-radius: 12px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  position: relative; border: 2px solid #334155; cursor: pointer; transition: 0.2s;
-}
+.calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; max-width: 600px; margin: 0 auto; }
+.day-box { aspect-ratio: 1; background: #1e293b; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border: 2px solid #334155; cursor: pointer; }
 .day-box.locked { opacity: 0.5; cursor: not-allowed; }
-.day-box.active { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); transform: scale(1.02); }
+.day-box.active { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
 .day-box.completed { border-color: #10b981; background: #064e3b; }
 .day-box.reward-day { border-color: #fbbf24; }
-
 .partner-dots { display: flex; gap: 4px; margin-top: 5px; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: #475569; }
-.dot.me.done { background: #3b82f6; }
-.dot.partner.done { background: #ec4899; }
+.dot.me.done { background: #3b82f6; } .dot.partner.done { background: #ec4899; }
 
-/* --- EXTRAS --- */
-.ad-banner {
-  position: fixed; bottom: 0; left: 0; width: 100%; height: 70px;
-  background: #0f172a; border-top: 2px solid #3b82f6;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0 20px; z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+/* --- TOOLS BAR (NUEVO) --- */
+.tools-bar {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px);
+  padding: 10px 20px; border-radius: 30px; border: 1px solid #475569;
+  display: flex; gap: 15px; z-index: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
-.remove-ads { background: gold; color: black; font-size: 0.7rem; padding: 5px 10px; width: auto; }
+.tool-btn { font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; transition: 0.2s; width: auto; margin: 0; }
+.tool-btn:hover { transform: scale(1.2); }
 
-.feedback-btn {
-  position: fixed; bottom: 85px; right: 20px;
-  width: 45px; height: 45px; background: rgba(255,255,255,0.1);
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; backdrop-filter: blur(10px); cursor: pointer; z-index: 99;
-}
+/* --- PRAYER ITEMS --- */
+.prayer-item { background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+.pray-action { font-size: 0.8rem; background: #334155; padding: 5px 10px; border-radius: 20px; cursor: pointer; }
+.pray-action.active { background: #10b981; color: white; }
 
-.modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.9); z-index: 2000;
-  display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);
-}
-.modal-content {
-  background: #1e293b; padding: 25px; border-radius: 16px;
-  width: 90%; max-width: 400px; text-align: left; border: 1px solid #475569;
-}
+/* --- MOOD GRID --- */
+.mood-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+.mood-btn { font-size: 2.5rem; background: #0f172a; border-radius: 10px; border: 2px solid transparent; cursor: pointer; }
+.mood-btn:hover { border-color: #3b82f6; }
+
+/* --- UTILS --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+.modal-content { background: #1e293b; padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; text-align: left; border: 1px solid #475569; max-height: 80vh; overflow-y: auto; }
 .hidden { display: none !important; }
+.onboarding-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+.slide { display: none; text-align: center; width: 100%; max-width: 400px; } .slide.active { display: block; }
+.dots { display: flex; gap: 10px; margin-top: 30px; } .dot { width: 10px; height: 10px; background: #334155; border-radius: 50%; } .dot.active { background: #3b82f6; }
+.ad-banner { position: fixed; bottom: 80px; /* Encima del toolbar */ left: 0; width: 100%; height: 40px; background: #0f172a; border-top: 1px solid #334155; display: flex; justify-content: center; align-items: center; font-size: 0.7rem; color: #64748b; z-index: 800; }
 #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
 #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
 .toast { background: #334155; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #3b82f6; animation: slideIn 0.3s; }
