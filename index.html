@@ -2,47 +2,41 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Couple4God</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Couple4God</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<!-- LOGIN -->
-<section id="auth">
+<section id="auth" class="hidden">
   <h1>Couple4God 💙</h1>
+  <p>Entra o regístrate con el mismo botón</p>
   <input id="email" type="email" placeholder="Correo" />
   <input id="password" type="password" placeholder="Contraseña" />
-  <button id="loginBtn">Ingresar</button>
+  <button id="loginBtn">Ingresar / Registrarse</button>
 </section>
 
-<!-- CREAR / UNIR -->
 <section id="coupleSetup" class="hidden">
-  <h2>Tu pareja</h2>
-
-  <button id="createCoupleBtn">Crear pareja</button>
-
+  <h2>Crea tu equipo</h2>
+  <button id="createCoupleBtn">Generar Código Nuevo</button>
+  <div id="coupleCodeBox" class="hidden" style="margin:20px; padding:15px; border:2px dashed #3b82f6;">
+    <p>Comparte este código con tu pareja:</p>
+    <h2 id="coupleCode"></h2>
+    <small>Una vez que ella entre, la app se activará.</small>
+  </div>
   <div class="divider">— o —</div>
+  <input id="joinCode" placeholder="Pega el código de tu pareja" />
+  <button id="joinCoupleBtn" style="background:#10b981">Unirse a Pareja</button>
+</section>
 
-  <input id="joinCode" placeholder="Código de pareja" />
-  <button id="joinCoupleBtn">Unirse</button>
-
-  <div id="coupleCodeBox" class="hidden">
-    <p>Código para tu pareja:</p>
-    <strong id="coupleCode"></strong>
+<section id="app" class="hidden">
+  <div class="card">
+    <h2>Día <span id="currentDay">1</span></h2>
+    <div id="dayContent"></div>
+    <button id="completeDayBtn">He terminado mi tarea</button>
   </div>
 </section>
 
-<!-- APP -->
-<section id="app" class="hidden">
-  <h2>Día <span id="currentDay">1</span></h2>
-
-  <div id="dayContent"></div>
-
-  <button id="completeDayBtn">Completar día</button>
-</section>
-
-
-<script src="app.js"></script>
+<script src="app.js" type="module"></script>
 </body>
 </html>
