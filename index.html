@@ -6,6 +6,9 @@
   <title>Couple4God</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css" />
+  
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3818308944646353"
+     crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -14,7 +17,7 @@
 
 <div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
   <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p style="color:#94a3b8;">Conectando...</p>
+  <p style="color:#94a3b8;">Sincronizando amor...</p>
 </div>
 
 <div id="onboarding" class="onboarding-overlay hidden">
@@ -98,13 +101,21 @@
 
 <div id="toolsBar" class="tools-bar hidden">
   <button class="tool-btn" id="openPrayerBtn" title="Muro de Oración">🙏</button>
-  <button class="tool-btn" id="openDateBtn" title="Cita Sorpresa">📅</button>
+  <button class="tool-btn" id="openDateBtn" title="Cita del Día">📅</button>
   <button class="tool-btn" id="openFeedbackBtn" title="Ayuda">💬</button>
 </div>
 
 <div id="adBanner" class="ad-banner hidden">
-  <span>Anuncio: Curso "Amor Sano" 🛡️</span>
-  <span id="removeAdsBtn" style="color:#f59e0b; font-weight:bold; margin-left:10px; cursor:pointer;">Quitar</span>
+  <ins class="adsbygoogle"
+     style="display:block; width:100%; height:100%;"
+     data-ad-client="ca-pub-3818308944646353"
+     data-ad-slot="XXXXXXXXXX" 
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+  <script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+  <button id="removeAdsBtn" style="position:absolute; right:5px; top:5px; background:gold; color:black; font-size:0.6rem; padding:2px 6px; border-radius:4px; border:none; width:auto;">X (Premium)</button>
 </div>
 
 <div id="dayModal" class="modal-overlay hidden">
@@ -148,6 +159,7 @@
       <h3>Muro de Oración 🙏</h3>
       <button class="close-modal" onclick="closeModals()" style="color:#fff; background:none; border:none; font-size:1.5rem;">&times;</button>
     </div>
+    <p style="font-size:0.8rem; color:#94a3b8; margin-top:-10px;">Presiona "Orar" para avisar a tu pareja.</p>
     <div id="prayerList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
     <textarea id="newPrayerText" rows="2" placeholder="Escribe tu petición..."></textarea>
     <button id="addPrayerBtn" style="margin-top:10px;">Publicar</button>
@@ -156,9 +168,11 @@
 
 <div id="dateModal" class="modal-overlay hidden">
   <div class="modal-content" style="text-align:center;">
-    <h3>Cita Sorpresa 📅</h3>
-    <div id="dateIdea" style="font-size:1.2rem; margin:20px 0; color:#60a5fa;">...</div>
-    <button onclick="generateDate()">Otra idea</button>
+    <h3>Cita del Día 📅</h3>
+    <p style="color:#94a3b8; font-size:0.9rem;">Una propuesta diferente para cada día.</p>
+    <div style="background:#334155; padding:20px; border-radius:10px; margin:20px 0; border:2px dashed #60a5fa;">
+        <div id="dateIdea" style="font-size:1.3rem; font-weight:bold; color:#fff;">...</div>
+    </div>
     <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cerrar</button>
   </div>
 </div>
