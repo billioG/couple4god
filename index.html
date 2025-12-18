@@ -10,8 +10,8 @@
 
 <div id="userHeader" class="hidden">
   <div style="text-align:left;">
-    <span id="userEmailDisplay" style="font-size:0.8rem; color:#94a3b8; display:block;"></span>
-    <span id="partnerStatusText" style="font-size:0.85rem; font-weight:bold; color:#fbbf24;">Sincronizando...</span>
+    <span id="userNameDisplay" style="font-size:1rem; font-weight:bold; display:block; color:#fff;"></span>
+    <span id="partnerStatusText" style="font-size:0.8rem; color:#fbbf24;">Sincronizando...</span>
   </div>
   <button id="logoutBtn" style="width:auto; padding:5px 12px; background:#ef4444; font-size:0.75rem;">Salir</button>
 </div>
@@ -21,6 +21,9 @@
 <section id="auth" class="hidden">
   <h1 style="font-size: 2rem;">Couple4God 💙</h1>
   <p style="color:#94a3b8;">Conexión espiritual diaria</p>
+  
+  <input id="userNameInput" type="text" placeholder="Tu Nombre (Ej. Juan)" />
+  
   <input id="email" type="email" placeholder="Correo electrónico" />
   <input id="password" type="password" placeholder="Contraseña" />
   <button id="loginBtn">Ingresar / Registrarse</button>
@@ -39,10 +42,14 @@
 </section>
 
 <section id="app" class="hidden">
+  <div class="progress-container">
+    <div id="progressBarFill" class="progress-fill"></div>
+    <div id="m7" class="milestone m-7">👫</div>
+    <div id="m14" class="milestone m-14">🎁</div>
+    <div id="m21" class="milestone m-21">❤️</div>
+  </div>
+
   <h2 style="margin-bottom:10px;">Tu Camino</h2>
-  <p style="font-size:0.9rem; color:#94a3b8; margin-bottom:20px;">
-    ℹ️ El siguiente día se desbloquea cuando <strong>ambos</strong> terminen el anterior.
-  </p>
   <div id="calendarGrid" class="calendar-grid"></div>
 </section>
 
@@ -50,6 +57,7 @@
   <div class="modal-content">
     <button id="closeModalBtn" class="close-modal" style="width:auto;">&times;</button>
     <h2 id="modalTitle" style="margin-top:0; color:#60a5fa;"></h2>
+    
     <div style="margin: 15px 0;">
       <p><strong>📖 Lectura:</strong> <span id="modalLectura"></span></p>
       <p><strong>🙏 Oración:</strong> <span id="modalOracion"></span></p>
@@ -57,10 +65,13 @@
         <p style="margin:0;"><strong>🎯 Misión:</strong> <span id="modalTarea"></span></p>
       </div>
     </div>
-    <button id="completeDayBtn">✅ Completar Misión</button>
-    <p id="waitMessage" class="hidden" style="color:#fbbf24; font-size:0.9rem; margin-top:10px;">
-      ⏳ Esperando a tu pareja para avanzar...
-    </p>
+
+    <div id="evidenceSection">
+      <p style="font-size:0.9rem; margin-bottom:5px;">✍️ Reflexión (Obligatorio):</p>
+      <textarea id="dayReflection" rows="3" placeholder="¿Cómo te sentiste al hacerlo? ¿Qué aprendiste?"></textarea>
+    </div>
+
+    <button id="completeDayBtn" style="margin-top:10px;">✅ Guardar y Completar</button>
   </div>
 </div>
 
@@ -68,7 +79,7 @@
   <div class="modal-content" style="border-color:#fbbf24; text-align:center;">
     <button id="closeRewardBtn" class="close-modal" style="width:auto;">&times;</button>
     <div class="reward-icon">🏆</div>
-    <h2 style="color:#fbbf24;">¡Nivel Completado!</h2>
+    <h2 style="color:#fbbf24;">¡Hito Desbloqueado!</h2>
     <p id="rewardText" style="font-size:1.1rem; line-height:1.5;"></p>
     <button onclick="document.getElementById('rewardModal').classList.add('hidden')">¡A seguir!</button>
   </div>
