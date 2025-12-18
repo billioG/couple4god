@@ -18,7 +18,7 @@ let selectedDay = 1;
 const dateIdeas = ["Cocinar juntos 🍝", "Ver estrellas ✨", "Juegos mesa 🎲", "Ver fotos viejas 📸", "Orar juntos 🙏", "Masajes 🦶", "Cartas amor 💌", "Desayuno cama 🥐"];
 const content21Days = {
   1: { tema: "Identidad", lectura: "Salmo 139:14", oracion: "Ayúdame a amarme.", tarea: "Escribe 3 cualidades tuyas." },
-  // ... (Completa los días)
+  // ... Pega tus 21 días aquí ...
   7: { tema: "Hito 1", lectura: "Mat 7:24", oracion: "Gracias.", tarea: "Celebrar.", premio: "¡Helado juntos! 🍦" },
   14: { tema: "Hito 2", lectura: "Neh 2:18", oracion: "Construir.", tarea: "Check-in.", premio: "Noche de cine 🎬" },
   21: { tema: "FINAL", lectura: "Rut 1:16", oracion: "Pacto.", tarea: "Promesa.", premio: "Luna de Miel ❤️" }
@@ -54,8 +54,9 @@ document.getElementById("startAppBtn").onclick = () => {
 supabase.auth.onAuthStateChange(async (e, session) => {
   if (session) {
     user = session.user;
-    if (checkOnboarding()) return; // Esperar
+    if (checkOnboarding()) return; 
     document.getElementById("userNameDisplay").textContent = `Hola, ${user.user_metadata?.first_name || 'Amigo'}`;
+    document.getElementById("auth").classList.add("hidden");
     document.getElementById("globalLoader").classList.remove("hidden");
     await initApp();
   } else {
@@ -74,12 +75,10 @@ function resetUI() {
   document.getElementById("toolsBar").classList.add("hidden");
 }
 
-// --- INIT APP ---
+// --- INIT APP (FIXED) ---
 async function initApp() {
   try {
-    document.getElementById("auth").classList.add("hidden");
     const { data: member } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
-    
     document.getElementById("globalLoader").classList.add("hidden");
 
     if (!member) {
@@ -96,11 +95,7 @@ async function initApp() {
         document.getElementById("streakBadge").style.display = 'block';
     }
 
-    // Check Mood
-    const today = new Date().toISOString().split('T')[0];
-    if(member.last_mood_date !== today) document.getElementById("moodModal").classList.remove("hidden");
-    else document.getElementById("myMoodDisplay").textContent = member.current_mood;
-
+    // CHECK PARTNER
     const { data: partner } = await supabase.from("couple_members").select("user_id").eq("couple_id", coupleId).neq("user_id", user.id).maybeSingle();
 
     if (partner) {
@@ -114,6 +109,15 @@ async function initApp() {
       document.getElementById("app").classList.remove("hidden");
       document.getElementById("toolsBar").classList.remove("hidden");
       await loadData();
+
+      // MOOD CHECK (Al final para no bloquear)
+      const today = new Date().toISOString().split('T')[0];
+      if(member.last_mood_date !== today) {
+        setTimeout(() => document.getElementById("moodModal").classList.remove("hidden"), 1000);
+      } else {
+        document.getElementById("myMoodDisplay").textContent = member.current_mood;
+      }
+
     } else {
       const { data: cp } = await supabase.from("couples").select("code").eq("id", coupleId).single();
       showWaitingRoom(cp.code);
@@ -121,7 +125,7 @@ async function initApp() {
   } catch(err) {
     console.error(err);
     document.getElementById("globalLoader").classList.add("hidden");
-    alert("Error de conexión. Recarga.");
+    showToast("Error de conexión.", "error");
   }
 }
 
@@ -175,12 +179,21 @@ async function loadData() {
   }
 }
 
-// --- FEATURES ---
+// --- NEW FEATURES (Fixed Logic) ---
 window.saveMood = async (emoji) => {
-  const today = new Date().toISOString().split('T')[0];
-  await supabase.from("couple_members").update({ current_mood: emoji, last_mood_date: today }).eq("user_id", user.id);
-  document.getElementById("moodModal").classList.add("hidden");
-  document.getElementById("myMoodDisplay").textContent = emoji;
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { error } = await supabase.from("couple_members").update({ current_mood: emoji, last_mood_date: today }).eq("user_id", user.id);
+    
+    if (error) throw error;
+
+    document.getElementById("moodModal").classList.add("hidden");
+    document.getElementById("myMoodDisplay").textContent = emoji;
+    showToast("Estado actualizado", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Error guardando estado (Verifica permisos SQL)", "error");
+  }
 };
 
 document.getElementById("openPrayerBtn").onclick = async () => {
@@ -232,34 +245,38 @@ document.getElementById("sendFeedbackBtn").onclick = async () => {
   }
 };
 
-// --- AUTH BUTTONS ---
+// --- AUTH UI ---
 document.getElementById("toggleAuth").onclick = () => {
   isRegistering = !isRegistering;
-  document.getElementById("authTitle").textContent = isRegistering ? "Crear Cuenta" : "Iniciar Sesión";
-  document.getElementById("authBtn").textContent = isRegistering ? "Registrarse" : "Ingresar";
-  document.getElementById("registerFields").classList.toggle("hidden");
-  document.getElementById("toggleAuth").textContent = isRegistering ? "¿Ya tienes cuenta? Ingresa" : "¿Crear cuenta nueva?";
+  const title = document.getElementById("authTitle");
+  const btn = document.getElementById("authBtn");
+  const reg = document.getElementById("registerFields");
+  const tog = document.getElementById("toggleAuth");
+
+  if(isRegistering) {
+    title.textContent="Crear Cuenta"; btn.textContent="Registrarse"; reg.classList.remove("hidden");
+    tog.textContent="¿Ya tienes cuenta? Ingresa";
+  } else {
+    title.textContent="Iniciar Sesión"; btn.textContent="Ingresar"; reg.classList.add("hidden");
+    tog.textContent="¿Crear cuenta nueva?";
+  }
 };
 
 document.getElementById("authBtn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   if(!email || !password) return showToast("Faltan datos", "error");
-  
   document.getElementById("globalLoader").classList.remove("hidden");
 
   if(isRegistering) {
     const name = document.getElementById("userNameInput").value;
-    if(!name) {
-       document.getElementById("globalLoader").classList.add("hidden");
-       return showToast("Falta nombre", "error");
-    }
+    if(!name) { document.getElementById("globalLoader").classList.add("hidden"); return showToast("Falta nombre", "error"); }
     const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } });
     if(error) showToast(error.message, "error");
-    else showToast("Creado. Ingresa.", "success");
+    else showToast("Cuenta creada. Ingresa.", "success");
   } else {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error) showToast("Error al ingresar", "error");
+    if(error) showToast("Credenciales incorrectas", "error");
   }
   document.getElementById("globalLoader").classList.add("hidden");
 };
