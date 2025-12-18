@@ -8,75 +8,73 @@
 </head>
 <body>
 
-<section id="onboarding" class="hidden" style="background:#0f172a; position:fixed; top:0; left:0; width:100%; height:100%; z-index:2000;">
-  <div id="slide1" class="onboarding-slide">
-    <div style="font-size:4rem;">❤️</div>
+<div id="onboarding" class="onboarding-overlay hidden">
+  <div id="slide1" class="slide active">
+    <div style="font-size:5rem;">❤️</div>
     <h2>Reconecta</h2>
     <p>21 días para fortalecer su relación con Dios y entre ustedes.</p>
   </div>
-  <div id="slide2" class="onboarding-slide hidden">
-    <div style="font-size:4rem;">🤝</div>
+  <div id="slide2" class="slide">
+    <div style="font-size:5rem;">🔥</div>
     <h2>Actúa</h2>
-    <p>Lecturas breves y micro-tareas prácticas para demostrar amor.</p>
+    <p>Pequeños retos diarios. No se avanza hasta que ambos completen el día.</p>
   </div>
-  <div id="slide3" class="onboarding-slide hidden">
-    <div style="font-size:4rem;">🎁</div>
+  <div id="slide3" class="slide">
+    <div style="font-size:5rem;">🎁</div>
     <h2>Celebra</h2>
-    <p>Desbloqueen premios y medallas al completar los hitos juntos.</p>
-    <button id="finishOnboardingBtn" style="margin-top:30px;">Comenzar</button>
+    <p>Desbloqueen premios sorpresa en los días 7, 14 y 21.</p>
+    <button id="startAppBtn" style="margin-top:20px;">¡Comenzar!</button>
   </div>
-  <div class="dots-container">
-    <div class="dot-indicator active" id="d1"></div>
-    <div class="dot-indicator" id="d2"></div>
-    <div class="dot-indicator" id="d3"></div>
+  <div class="dots">
+    <div class="dot active" id="dot1"></div>
+    <div class="dot" id="dot2"></div>
+    <div class="dot" id="dot3"></div>
   </div>
   <button id="nextSlideBtn" style="position:absolute; bottom:30px; width:80%;">Siguiente</button>
-</section>
+</div>
 
 <div id="userHeader" class="hidden">
   <div style="text-align:left;">
-    <span id="userNameDisplay" style="font-size:1rem; font-weight:bold; display:block; color:#fff;"></span>
-    <span id="partnerStatusText" style="font-size:0.8rem; color:#fbbf24;">Sincronizando...</span>
+    <span id="userNameDisplay" style="font-size:1rem; font-weight:bold; display:block;">Hola</span>
+    <span id="headerStatus" style="font-size:0.8rem; color:#fbbf24;">Cargando...</span>
   </div>
-  <button id="logoutBtn" style="width:auto; padding:5px 12px; background:#ef4444; font-size:0.75rem;">Salir</button>
+  <button id="logoutBtn" style="width:auto; padding:5px 10px; background:#ef4444; font-size:0.8rem;">Salir</button>
 </div>
 
-<div id="globalLoader" style="margin-top:50px;">Cargando Couple4God...</div>
-
 <section id="auth" class="hidden">
-  <h1 style="font-size: 2rem;">Couple4God 💙</h1>
+  <h1>Couple4God 💙</h1>
+  <h2 id="authTitle">Iniciar Sesión</h2>
   
-  <h2 id="authTitle" class="auth-mode-title">Iniciar Sesión</h2>
-  
-  <div id="registerFields" class="hidden">
+  <div id="nameFieldContainer" class="hidden">
     <input id="userNameInput" type="text" placeholder="Tu Nombre (Ej. Juan)" />
   </div>
-  
+
   <input id="email" type="email" placeholder="Correo electrónico" />
   <input id="password" type="password" placeholder="Contraseña" />
   
   <button id="authBtn">Ingresar</button>
   
-  <p id="toggleAuthBtn" class="auth-toggle">¿No tienes cuenta? Regístrate</p>
+  <p id="toggleAuth" style="color:#60a5fa; cursor:pointer; text-decoration:underline;">
+    ¿No tienes cuenta? Regístrate aquí
+  </p>
 </section>
 
-<section id="coupleSetup" class="hidden">
+<section id="setupSection" class="hidden">
   <h2>Tu Equipo</h2>
   
-  <div id="setupButtons">
+  <div id="setupActions">
     <button id="createCoupleBtn">Crear Código Nuevo</button>
     <div class="divider" style="opacity:0.5; margin:15px 0;">— o —</div>
-    <input id="joinCode" placeholder="Código de tu pareja" style="text-transform:uppercase;" />
+    <input id="joinCode" placeholder="CÓDIGO DE TU PAREJA" style="text-transform:uppercase; text-align:center; letter-spacing:2px;" />
     <button id="joinCoupleBtn" style="background:#10b981">Unirse</button>
   </div>
 
-  <div id="waitingRoom" class="hidden" style="margin-top:20px;">
-    <p>¡Código creado con éxito!</p>
-    <div style="padding:20px; border:2px dashed #3b82f6; background:#1e293b; border-radius:10px; margin:20px 0;">
-      <h1 id="generatedCode" class="pulse-code" style="margin:0; letter-spacing:5px; font-size:2.5rem;">...</h1>
-    </div>
-    <p style="color:#fbbf24;">⏳ Esperando a que tu pareja ingrese este código...</p>
-    <p style="font-size:0.8rem; opacity:0.7;">No cierres esta pantalla, te redirigiremos automáticamente.</p>
+  <div id="waitingRoom" class="waiting-container hidden">
+    <h3>¡Código Creado!</h3>
+    <p>Comparte este código con tu pareja:</p>
+    <h1 id="displayCode" style="font-size:3rem; margin:10px 0; letter-spacing:5px; color:#60a5fa;">...</h1>
+    <p style="color:#fbbf24;">⏳ Esperando a que tu pareja se una...</p>
+    <small>Esta pantalla se actualizará automáticamente.</small>
   </div>
 </section>
 
@@ -88,36 +86,38 @@
     <div id="m21" class="milestone m-21">❤️</div>
   </div>
 
-  <h2 style="margin-bottom:10px;">Tu Camino</h2>
+  <h2>Tu Camino</h2>
   <div id="calendarGrid" class="calendar-grid"></div>
 </section>
 
 <div id="dayModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <button id="closeModalBtn" class="close-modal" style="width:auto;">&times;</button>
+    <button id="closeModalBtn" class="close-modal" style="width:auto; color:white;">&times;</button>
     <h2 id="modalTitle" style="margin-top:0; color:#60a5fa;"></h2>
-    <div style="margin: 15px 0;">
+    
+    <div style="text-align:left; margin:15px 0;">
       <p><strong>📖 Lectura:</strong> <span id="modalLectura"></span></p>
       <p><strong>🙏 Oración:</strong> <span id="modalOracion"></span></p>
       <div style="background:#334155; padding:10px; border-radius:8px; margin-top:10px;">
         <p style="margin:0;"><strong>🎯 Misión:</strong> <span id="modalTarea"></span></p>
       </div>
     </div>
-    <div id="evidenceSection">
-      <p style="font-size:0.9rem; margin-bottom:5px;">✍️ Reflexión:</p>
-      <textarea id="dayReflection" rows="3" placeholder="¿Qué aprendiste hoy?"></textarea>
+
+    <div id="evidenceContainer">
+      <p style="font-size:0.9rem;">✍️ Reflexión (Obligatorio para desbloquear):</p>
+      <textarea id="dayReflection" rows="3"></textarea>
     </div>
-    <button id="completeDayBtn" style="margin-top:10px;">✅ Guardar y Completar</button>
+
+    <button id="saveDayBtn" style="margin-top:10px;">✅ Completar Día</button>
   </div>
 </div>
 
 <div id="rewardModal" class="modal-overlay hidden">
-  <div class="modal-content" style="border-color:#fbbf24; text-align:center;">
-    <button id="closeRewardBtn" class="close-modal" style="width:auto;">&times;</button>
-    <div class="reward-icon">🏆</div>
-    <h2 style="color:#fbbf24;">¡Hito Desbloqueado!</h2>
-    <p id="rewardText" style="font-size:1.1rem; line-height:1.5;"></p>
-    <button onclick="document.getElementById('rewardModal').classList.add('hidden')">¡A seguir!</button>
+  <div class="modal-content" style="text-align:center; border:2px solid #fbbf24;">
+    <div style="font-size:4rem;">🏆</div>
+    <h2 style="color:#fbbf24;">¡Felicidades!</h2>
+    <p id="rewardText"></p>
+    <button onclick="document.getElementById('rewardModal').classList.add('hidden')">Continuar</button>
   </div>
 </div>
 
