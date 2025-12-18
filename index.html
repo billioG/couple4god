@@ -8,47 +8,44 @@
 </head>
 <body>
 
+<div id="userHeader" class="hidden" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#1e293b; margin-bottom:20px; border-radius:8px;">
+  <span id="userEmailDisplay" style="font-size:0.85rem; color:#94a3b8;"></span>
+  <button id="logoutBtn" style="width:auto; margin:0; padding:5px 12px; background:#ef4444; font-size:0.8rem;">Salir</button>
+</div>
+
 <section id="auth" class="hidden">
   <h1>Couple4God 💙</h1>
-  <p>Entra o regístrate con el mismo botón</p>
-  <input id="email" type="email" placeholder="Correo" />
+  <p>Crecimiento espiritual en pareja</p>
+  <input id="email" type="email" placeholder="Correo electrónico" />
   <input id="password" type="password" placeholder="Contraseña" />
   <button id="loginBtn">Ingresar / Registrarse</button>
 </section>
-<div id="userHeader" class="hidden" style="display:flex; justify-content:space-between; align-items:center; padding:10px;">
-  <span id="userEmailDisplay" style="font-size:0.8rem; opacity:0.7;"></span>
-  <button id="logoutBtn" style="width:auto; padding:5px 10px; background:#ef4444; font-size:0.8rem;">Cerrar Sesión</button>
-</div>
+
+<section id="coupleSetup" class="hidden">
+  <h2>Tu Equipo</h2>
+  <button id="createCoupleBtn">Crear Código Nuevo</button>
+  
+  <div id="coupleCodeBox" class="hidden" style="margin:20px 0; padding:15px; border:2px dashed #3b82f6; background:#1e293b; border-radius:8px;">
+    <p style="margin:0 0 10px 0;">Comparte este código:</p>
+    <h2 id="coupleCode" style="margin:0; letter-spacing:5px; color:#60a5fa;"></h2>
+  </div>
+
+  <div class="divider" style="margin:20px 0; opacity:0.5;">— o únete con un código —</div>
+  
+  <input id="joinCode" placeholder="Código de tu pareja" style="text-transform:uppercase;" />
+  <button id="joinCoupleBtn" style="background:#10b981">Unirse</button>
+</section>
 
 <section id="app" class="hidden">
-  <div id="partnerStatus" style="background:#1e293b; padding:10px; margin-bottom:10px; border-radius:8px; font-size:0.9rem; border-left:4px solid #3b82f6;">
-    Cargando estado de tu pareja...
+  <div id="partnerStatus" style="padding:12px; margin-bottom:15px; border-radius:8px; font-size:0.9rem; font-weight:bold; text-align:left; transition: all 0.3s ease;">
+    Cargando estado de pareja...
   </div>
   
-  <div class="card">
-    <h2>Día <span id="currentDay">1</span></h2>
-    <div id="dayContent"></div>
-    <button id="completeDayBtn">He terminado mi tarea</button>
-  </div>
-</section>
-<section id="coupleSetup" class="hidden">
-  <h2>Crea tu equipo</h2>
-  <button id="createCoupleBtn">Generar Código Nuevo</button>
-  <div id="coupleCodeBox" class="hidden" style="margin:20px; padding:15px; border:2px dashed #3b82f6;">
-    <p>Comparte este código con tu pareja:</p>
-    <h2 id="coupleCode"></h2>
-    <small>Una vez que ella entre, la app se activará.</small>
-  </div>
-  <div class="divider">— o —</div>
-  <input id="joinCode" placeholder="Pega el código de tu pareja" />
-  <button id="joinCoupleBtn" style="background:#10b981">Unirse a Pareja</button>
-</section>
-
-<section id="app" class="hidden">
-  <div class="card">
-    <h2>Día <span id="currentDay">1</span></h2>
-    <div id="dayContent"></div>
-    <button id="completeDayBtn">He terminado mi tarea</button>
+  <div class="card" style="background:#1e293b; padding:20px; border-radius:12px;">
+    <h2 style="margin-top:0;">Día <span id="currentDay">1</span></h2>
+    <div id="dayContent" style="text-align:left; line-height:1.6; color:#e2e8f0;"></div>
+    <br>
+    <button id="completeDayBtn">✅ He terminado por hoy</button>
   </div>
 </section>
 
