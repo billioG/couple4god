@@ -1,49 +1,110 @@
-* {
-  box-sizing: border-box;
-  font-family: system-ui, sans-serif;
-}
-
+/* --- ESTILOS GENERALES --- */
 body {
-  font-family: Arial, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   background: #0f172a;
   color: #fff;
   text-align: center;
   padding: 20px;
+  margin: 0;
+}
+
+.hidden { display: none !important; }
+
+/* --- HEADER USUARIO --- */
+#userHeader {
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 15px; 
+  background: #1e293b; 
+  margin-bottom: 20px; 
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+
+/* --- CALENDARIO GRID (Adviento) --- */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.day-box {
+  aspect-ratio: 1;
+  background: #1e293b;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid #334155;
+  transition: all 0.2s;
+}
+
+.day-number { font-size: 1.5rem; font-weight: bold; }
+.day-status { font-size: 1.2rem; margin-top: 5px; }
+
+/* ESTADOS DEL DÍA */
+.day-box.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #0f172a;
+}
+.day-box.active {
+  border-color: #3b82f6;
+  background: #1e293b;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
+}
+.day-box.completed {
+  border-color: #10b981;
+  background: #064e3b;
+  color: #a7f3d0;
+}
+
+/* --- MODAL (Ventana del contenido) --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: #1e293b;
+  padding: 25px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: left;
+  border: 1px solid #3b82f6;
+  position: relative;
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px; right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
 }
 
 input, button {
   width: 100%;
-  max-width: 300px;
   padding: 12px;
-  margin: 8px auto;
-  display: block;
+  margin: 8px 0;
   border-radius: 8px;
   border: none;
 }
-
-button {
-  background: #3b82f6;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #2563eb;
-}
-
-.hidden {
-  display: none;
-}
-
-.divider {
-  margin: 15px 0;
-  opacity: 0.6;
-}
-
-#dayContent {
-  background: #1e293b;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-}
+button { background: #3b82f6; color: white; font-weight: bold; cursor: pointer; }
+button:hover { background: #2563eb; }
