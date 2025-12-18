@@ -14,39 +14,26 @@
 
 <div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
   <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p style="color:#94a3b8;">Sincronizando...</p>
+  <p style="color:#94a3b8;">Conectando...</p>
 </div>
 
 <div id="onboarding" class="onboarding-overlay hidden">
-  
   <div id="slide1" class="slide active">
-    <div style="font-size:4rem; margin-bottom:20px;">📲</div>
-    <h2>Paso 1: Conectar</h2>
-    <p style="font-size:1.1rem; line-height:1.6;">
-      No funciona solo. <br>
-      Uno toca <strong>"Crear Código"</strong>. <br>
-      El otro toca <strong>"Unirse"</strong> y escribe ese código.
-    </p>
+    <div style="font-size:4rem; margin-bottom:20px;">📱</div>
+    <h2>1. Conéctense</h2>
+    <p>Uno crea el código, el otro se une. ¡Es un equipo!</p>
   </div>
-
   <div id="slide2" class="slide">
     <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
-    <h2>Paso 2: Desbloquear</h2>
-    <p style="font-size:1.1rem; line-height:1.6;">
-      El candado <strong>solo se abre</strong> cuando AMBOS completan el día anterior. <br>
-      Si tú terminas y tu pareja no, toca esperar.
-    </p>
+    <h2>2. Regla de Oro</h2>
+    <p>Nadie avanza solo. Deben completar el día <strong>juntos</strong> para desbloquear el siguiente.</p>
   </div>
-
   <div id="slide3" class="slide">
     <div style="font-size:4rem; margin-bottom:20px;">✍️</div>
-    <h2>Paso 3: Validar</h2>
-    <p style="font-size:1.1rem; line-height:1.6;">
-      Para que el día cuente como "Completado", es <strong>obligatorio</strong> escribir una breve reflexión.
-    </p>
-    <button id="startAppBtn" style="margin-top:30px; background:#10b981; font-size:1.2rem;">¡Entendido, Empezar!</button>
+    <h2>3. Reflexión</h2>
+    <p>Para validar el día, es obligatorio escribir una breve reflexión personal.</p>
+    <button id="startAppBtn" style="margin-top:30px; background:#10b981;">¡Entendido!</button>
   </div>
-  
   <div class="dots">
     <div class="dot active" id="dot1"></div>
     <div class="dot" id="dot2"></div>
@@ -60,9 +47,9 @@
     <span id="userNameDisplay" style="font-weight:bold; display:block;">Usuario</span>
     <span id="myMoodDisplay" class="mood-indicator"></span>
   </div>
-  <div style="display:flex; gap:10px;">
+  <div style="display:flex; gap:10px; align-items:center;">
     <div id="streakBadge" style="color:#f59e0b; font-weight:bold; display:none;">🔥 0</div>
-    <button id="logoutBtn" style="width:auto; padding:5px 10px; background:#ef4444; font-size:0.75rem; margin:0;">Salir</button>
+    <button id="logoutBtn" class="btn-small" style="background:#ef4444;">Salir</button>
   </div>
 </div>
 
@@ -110,8 +97,8 @@
 </section>
 
 <div id="toolsBar" class="tools-bar hidden">
-  <button class="tool-btn" id="openPrayerBtn" title="Orar">🙏</button>
-  <button class="tool-btn" id="openDateBtn" title="Cita">📅</button>
+  <button class="tool-btn" id="openPrayerBtn" title="Muro de Oración">🙏</button>
+  <button class="tool-btn" id="openDateBtn" title="Cita Sorpresa">📅</button>
   <button class="tool-btn" id="openFeedbackBtn" title="Ayuda">💬</button>
 </div>
 
@@ -124,7 +111,7 @@
   <div class="modal-content">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <h2 id="modalTitle" style="margin:0; color:#60a5fa;">Día X</h2>
-      <button class="close-modal" onclick="closeModals()">&times;</button>
+      <button class="close-modal" onclick="closeModals()" style="color:#fff; background:none; border:none; font-size:1.5rem;">&times;</button>
     </div>
     <div style="margin:20px 0; text-align:left;">
       <p><strong>📖 Lectura:</strong> <span id="modalLectura"></span></p>
@@ -144,7 +131,6 @@
 <div id="moodModal" class="modal-overlay hidden">
   <div class="modal-content" style="text-align:center;">
     <h3>¿Cómo te sientes hoy?</h3>
-    <p style="font-size:0.9rem; color:#94a3b8; margin-bottom:15px;">Tu pareja lo verá para apoyarte.</p>
     <div class="mood-grid">
       <button class="mood-btn" onclick="saveMood('🤩')">🤩</button>
       <button class="mood-btn" onclick="saveMood('🙂')">🙂</button>
@@ -158,9 +144,9 @@
 
 <div id="prayerModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <div style="display:flex; justify-content:space-between;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
       <h3>Muro de Oración 🙏</h3>
-      <button class="close-modal" onclick="closeModals()">&times;</button>
+      <button class="close-modal" onclick="closeModals()" style="color:#fff; background:none; border:none; font-size:1.5rem;">&times;</button>
     </div>
     <div id="prayerList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
     <textarea id="newPrayerText" rows="2" placeholder="Escribe tu petición..."></textarea>
