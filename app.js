@@ -15,10 +15,10 @@ let isRegistering = false;
 let pollingInterval = null;
 let selectedDay = 1;
 
-// CONTENT
+// CONTENT LISTS
 const dateIdeas = [
   "🍝 Cocinar juntos una receta nueva", "✨ Caminar bajo las estrellas", "🎲 Noche de juegos de mesa", "📸 Ver fotos viejas", 
-  "🙏 Orar juntos tomados de la mano", "🦶 Masajes de pies mutuos", "💌 Escribirse cartas de amor", "🥐 Desayuno en la cama",
+  "🙏 Orar juntos de la mano", "🦶 Masajes de pies mutuos", "💌 Escribirse cartas de amor", "🥐 Desayuno en la cama",
   "🍦 Salir por un helado", "🎬 Noche de película en casa", "🎤 Karaoke casero", "🧹 Limpiar con música",
   "🗺️ Planear viaje soñado", "🚲 Paseo en bicicleta", "🍫 Cata de chocolates", "🖌️ Pintar algo juntos",
   "🧘 Clase de yoga juntos", "📚 Leer en voz alta", "🛁 Spa en casa", "🍕 Pizza casera",
@@ -130,7 +130,6 @@ async function initApp() {
       setupRealtime();
       await loadData();
       
-      // Polling backup
       if(!pollingInterval) pollingInterval = setInterval(loadData, 10000);
 
     } else {
@@ -139,7 +138,6 @@ async function initApp() {
     }
   } catch(err) {
     console.error(err);
-    document.getElementById("globalLoader").classList.add("hidden");
     showToast("Error de conexión.", "error");
   } finally {
     document.getElementById("globalLoader").classList.add("hidden");
@@ -148,17 +146,13 @@ async function initApp() {
 
 // --- REALTIME ---
 function setupRealtime() {
-  const channel = supabase.channel('room1')
+  supabase.channel('room1')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'prayers', filter: `couple_id=eq.${coupleId}` }, payload => {
-      // Si la oración cambió o se agregó una nueva
       if (!document.getElementById("prayerModal").classList.contains("hidden")) loadPrayers();
       if (payload.eventType === 'INSERT' && payload.new.user_id !== user.id) showToast("🔔 Nueva oración de tu pareja", "success");
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entries', filter: `couple_id=eq.${coupleId}` }, payload => {
-      if (payload.new.user_id !== user.id) {
-        showToast("⚡ Tu pareja completó un reto", "success");
-        loadData();
-      }
+      if (payload.new.user_id !== user.id) { showToast("⚡ Tu pareja completó un reto", "success"); loadData(); }
     })
     .subscribe();
 }
@@ -224,6 +218,7 @@ window.saveMood = async (emoji) => {
   } catch (e) { console.error(e); }
 };
 
+// PRAYERS
 document.getElementById("openPrayerBtn").onclick = async () => {
   document.getElementById("prayerModal").classList.remove("hidden");
   loadPrayers();
@@ -242,7 +237,6 @@ async function loadPrayers() {
 }
 window.prayFor = async (id) => {
   await supabase.from("prayers").update({ partner_praying: true }).eq("id", id);
-  // No necesitamos llamar loadPrayers aquí si el realtime está activo, pero por seguridad:
   loadPrayers();
   showToast("Le avisaremos a tu pareja 🙏", "success");
 };
@@ -251,30 +245,98 @@ document.getElementById("addPrayerBtn").onclick = async () => {
   if(txt) {
     await supabase.from("prayers").insert({ couple_id: coupleId, user_id: user.id, content: txt });
     document.getElementById("newPrayerText").value = "";
-    // El realtime actualizará la lista, pero forzamos por si acaso
     loadPrayers();
   }
 };
 
+// DAILY DATE
 document.getElementById("openDateBtn").onclick = () => {
   document.getElementById("dateModal").classList.remove("hidden");
-  // Cita Única Diaria
   const today = new Date();
   const index = (today.getDate() - 1) % dateIdeas.length;
   document.getElementById("dateIdea").textContent = dateIdeas[index];
 };
 
+// SOUL QUESTIONS
+document.getElementById("openQuestionsBtn").onclick = () => {
+  document.getElementById("questionsModal").classList.remove("hidden");
+  loadDailyQuestion();
+};
+async function loadDailyQuestion() {
+  const today = new Date();
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+  const questionIndex = (dayOfYear % 30) + 1; // 1 to 30
+
+  const { data: qData } = await supabase.from('daily_questions').select('*').eq('id', questionIndex).maybeSingle();
+  
+  if(qData) {
+    document.getElementById("soulQuestionText").textContent = qData.content;
+    loadAnswers(qData.id);
+  } else {
+    document.getElementById("soulQuestionText").textContent = "Pregunta del día...";
+  }
+}
+async function loadAnswers(questionId) {
+  const container = document.getElementById("answersContainer");
+  const inputSection = document.getElementById("answerInputSection");
+  const waitingMsg = document.getElementById("waitingMessage");
+  
+  container.innerHTML = 'Cargando...';
+
+  const { data: answers } = await supabase.from('user_answers').select('*').eq('couple_id', coupleId).eq('question_id', questionId);
+  container.innerHTML = "";
+
+  const myAnswer = answers.find(a => a.user_id === user.id);
+  const partnerAnswer = answers.find(a => a.user_id === partnerId);
+
+  // Partner Bubble
+  if (partnerAnswer) {
+    const bubble = document.createElement("div");
+    if (myAnswer) {
+      bubble.className = "chat-bubble partner";
+      bubble.innerHTML = `<strong>Pareja:</strong><br>${partnerAnswer.answer}`;
+    } else {
+      bubble.className = "chat-bubble partner blurred-text";
+      bubble.textContent = "Texto oculto secreto";
+      const lock = document.createElement("div");
+      lock.className = "blur-overlay"; lock.innerHTML = "🔒 Responde para ver";
+      const wrap = document.createElement("div"); wrap.style.position="relative";
+      wrap.appendChild(bubble); wrap.appendChild(lock);
+      container.appendChild(wrap);
+    }
+    if(myAnswer) container.appendChild(bubble); 
+  } else {
+    const w = document.createElement("p"); w.className="waiting-badge"; w.textContent="Tu pareja no ha respondido...";
+    container.appendChild(w);
+  }
+
+  // My Bubble
+  if (myAnswer) {
+    const b = document.createElement("div"); b.className="chat-bubble me";
+    b.innerHTML = `<strong>Tú:</strong><br>${myAnswer.answer}`;
+    container.appendChild(b);
+    inputSection.classList.add("hidden");
+    if (!partnerAnswer) waitingMsg.classList.remove("hidden"); else waitingMsg.classList.add("hidden");
+  } else {
+    inputSection.classList.remove("hidden");
+    waitingMsg.classList.add("hidden");
+    document.getElementById("sendAnswerBtn").onclick = async () => {
+      const txt = document.getElementById("myAnswer").value.trim();
+      if(txt.length < 2) return showToast("Escribe más...", "error");
+      const { error } = await supabase.from('user_answers').insert({ couple_id: coupleId, user_id: user.id, question_id: questionId, answer: txt });
+      if(!error) { showToast("¡Enviado!", "success"); loadAnswers(questionId); }
+    };
+  }
+}
+
+// FEEDBACK
 document.getElementById("openFeedbackBtn").onclick = () => document.getElementById("feedbackModal").classList.remove("hidden");
 document.getElementById("sendFeedbackBtn").onclick = async () => {
   const msg = document.getElementById("feedbackText").value;
-  if(msg) {
-    await supabase.from("feedback").insert({ user_id: user.id, message: msg });
-    showToast("Enviado", "success");
-    document.getElementById("feedbackModal").classList.add("hidden");
-  }
+  if(msg) { await supabase.from("feedback").insert({ user_id: user.id, message: msg }); showToast("Enviado", "success"); document.getElementById("feedbackModal").classList.add("hidden"); }
 };
 
-// --- AUTH UI (Login Fix) ---
+// AUTH
 document.getElementById("toggleAuth").onclick = () => {
   isRegistering = !isRegistering;
   document.getElementById("authTitle").textContent = isRegistering ? "Crear Cuenta" : "Iniciar Sesión";
@@ -286,7 +348,6 @@ document.getElementById("toggleAuth").onclick = () => {
 document.getElementById("authBtn").onclick = async () => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  
   if (!email || !password) return showToast("Faltan datos", "error");
   document.getElementById("globalLoader").classList.remove("hidden");
 
@@ -294,7 +355,6 @@ document.getElementById("authBtn").onclick = async () => {
     if (isRegistering) {
       const name = document.getElementById("userNameInput").value.trim();
       if (!name) throw new Error("Falta nombre");
-      
       const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } });
       if (error) throw error;
       showToast("Cuenta creada. Ingresa.", "success");
@@ -312,7 +372,7 @@ document.getElementById("authBtn").onclick = async () => {
   }
 };
 
-// --- MODAL DÍA ---
+// MODAL DÍA
 function openDayModal(day, isDone, status, content) {
   if (status === "locked" || status === "reward-day") return;
   if (status !== "active" && status !== "completed") return showToast("Tu pareja debe completar los anteriores.", "error");
@@ -368,6 +428,7 @@ document.getElementById("saveDayBtn").onclick = async () => {
   } else showToast("Error", "error");
 };
 
+// UTILS
 document.getElementById("logoutBtn").onclick = async () => { await supabase.auth.signOut(); window.location.reload(); };
 document.getElementById("removeAdsBtn").onclick = async () => { if(confirm("¿Pagar?")) { await supabase.from("couples").update({ is_premium: true }).eq("id", coupleId); initApp(); } };
 window.closeModals = () => document.querySelectorAll(".modal-overlay").forEach(m => m.classList.add("hidden"));
