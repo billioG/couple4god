@@ -1,9 +1,9 @@
-// 🔹 SUPABASE
+// SUPABASE
 const supabaseUrl = "https://dsiuuymgyzkcksaqtoqk.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg";
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// 🔹 ELEMENTOS
+// ELEMENTOS
 const auth = document.getElementById("auth");
 const coupleSetup = document.getElementById("coupleSetup");
 const app = document.getElementById("app");
@@ -23,12 +23,12 @@ const coupleCodeText = document.getElementById("coupleCode");
 const dayContent = document.getElementById("dayContent");
 const currentDayEl = document.getElementById("currentDay");
 
-// 🔹 ESTADO
+// ESTADO
 let user = null;
 let coupleId = null;
 let currentDay = 1;
 
-// 🔹 RETOS
+// RETOS
 const days = {
   1: {
     lectura: "Amarse es decidir cuidar al otro incluso cuando cuesta.",
@@ -37,7 +37,7 @@ const days = {
   }
 };
 
-// 🔹 LOGIN
+// LOGIN
 loginBtn.onclick = async () => {
   const email = emailInput.value;
   const password = passwordInput.value;
@@ -57,12 +57,12 @@ loginBtn.onclick = async () => {
   coupleSetup.classList.remove("hidden");
 };
 
-// 🔹 CREAR CÓDIGO
+//  CREAR CÓDIGO
 function generateCoupleCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-// 🔹 CREAR PAREJA
+//  CREAR PAREJA
 createCoupleBtn.onclick = async () => {
   const code = generateCoupleCode();
 
@@ -94,7 +94,7 @@ createCoupleBtn.onclick = async () => {
   loadDay();
 };
 
-// 🔹 UNIRSE A PAREJA
+//  UNIRSE A PAREJA
 joinCoupleBtn.onclick = async () => {
   const code = joinCodeInput.value.trim();
 
@@ -122,7 +122,7 @@ joinCoupleBtn.onclick = async () => {
   loadDay();
 };
 
-// 🔹 MOSTRAR DÍA
+//  MOSTRAR DÍA
 function loadDay() {
   const d = days[currentDay];
 
@@ -135,7 +135,7 @@ function loadDay() {
   `;
 }
 
-// 🔹 COMPLETAR DÍA
+//  COMPLETAR DÍA
 completeDayBtn.onclick = async () => {
   await supabase.from("entries").insert({
     couple_id: coupleId,
