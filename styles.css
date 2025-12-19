@@ -1,167 +1,123 @@
-/* --- VARIABLES DE COLOR (Basadas en tu imagen) --- */
 :root {
-    --bg-dark: #13151b;       /* Fondo principal muy oscuro */
-    --card-dark: #1e222d;     /* Fondo de las tarjetas/botones */
-    --primary: #4e8eff;       /* Azul brillante para el día activo */
-    --accent-green: #00d285;  /* Verde para el Jardín */
-    --text-main: #ffffff;
-    --text-muted: #8b9bb4;
+    --bg-dark: #13151b;
+    --card-bg: #1e222d;
+    --primary: #4e8eff;
+    --accent: #00d285;
+    --text-white: #ffffff;
+    --text-gray: #8b9bb4;
     --danger: #ff4757;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
-body { 
-    background-color: var(--bg-dark); 
-    color: var(--text-main); 
-    height: 100vh; 
-    overflow: hidden; /* Evita doble scroll */
-}
+/* FIX SCROLL: El body no debe tener overflow hidden en móvil a veces, pero usamos app-container para controlar */
+body { background-color: var(--bg-dark); color: var(--text-white); height: 100vh; overflow: hidden; }
 
 #app-container {
-    max-width: 480px;
-    margin: 0 auto;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    background-color: var(--bg-dark);
+    max-width: 480px; margin: 0 auto; height: 100%; display: flex; flex-direction: column;
+    background-color: var(--bg-dark); position: relative;
 }
+
+.hidden { display: none !important; }
+.center-content { padding: 40px; display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; overflow-y: auto; }
+
+/* --- INPUTS & BOTONES --- */
+.input-field {
+    width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px;
+    border: 1px solid #333; background: #252a35; color: white; outline: none; font-size: 16px;
+}
+.btn-primary {
+    background: var(--primary); color: white; width: 100%; padding: 14px;
+    border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px;
+}
+.btn-text { background: none; border: none; color: var(--text-gray); margin-top: 15px; cursor: pointer; text-decoration: underline; }
 
 /* --- HEADER --- */
-.top-bar {
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.top-bar { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); z-index: 10; }
+.xp-pill { background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; }
+.btn-logout { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+
+/* --- ÁREA DE CONTENIDO (Scrollable) --- */
+#content-area { 
+    flex: 1; 
+    overflow-y: auto; 
+    padding-bottom: 100px; /* Espacio extra para que el menú no tape el final */
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
 }
 
-.user-info { display: flex; flex-direction: column; }
-.user-name { font-size: 1.2rem; font-weight: bold; }
-.avatars { display: flex; gap: 5px; margin-top: 5px; font-size: 1.2rem; }
-
-.btn-logout {
-    background-color: var(--danger);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 12px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* --- JARDÍN (Tarjeta Verde) --- */
-.garden-card {
-    margin: 10px 20px;
-    background: linear-gradient(180deg, rgba(0, 210, 133, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
-    border: 2px solid var(--accent-green);
-    border-radius: 20px;
-    padding: 20px;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 0 20px rgba(0, 210, 133, 0.1);
-}
-
-.garden-title { 
-    color: #aebbc9; 
-    font-size: 0.8rem; 
-    text-transform: uppercase; 
-    letter-spacing: 1px; 
-    margin-bottom: 10px;
-}
-
-.plant-icon { font-size: 4rem; display: block; margin: 10px 0; filter: drop-shadow(0 0 10px var(--accent-green)); }
-.level-text { font-weight: bold; font-size: 1.1rem; color: var(--accent-green); }
-.sub-text { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; }
-
-/* --- CALENDARIO (Grid) --- */
-.section-title { padding: 0 20px; margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; }
-
-#content-area {
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: 80px; /* Espacio para el menú flotante */
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 columnas exactas como en la foto */
-    gap: 12px;
-    padding: 0 20px;
-}
-
-.day-btn {
-    aspect-ratio: 1;
-    background-color: var(--card-dark);
-    border-radius: 15px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.day-num { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; color: var(--text-muted); }
-.day-icon { font-size: 1.2rem; }
-
-/* Estados del Calendario */
-.day-btn.locked { opacity: 0.6; cursor: not-allowed; }
-.day-btn.locked .day-icon { filter: grayscale(1); }
-
-.day-btn.active {
-    border-color: var(--primary);
-    background-color: rgba(78, 142, 255, 0.1);
-    box-shadow: 0 0 15px rgba(78, 142, 255, 0.3);
-}
-.day-btn.active .day-num { color: white; }
-.day-btn.active .day-icon { animation: bounce 2s infinite; }
-
-.day-btn.completed { background-color: #2d3436; border-color: var(--accent-green); }
-.day-btn.completed .day-num { color: var(--accent-green); }
-
-/* --- MENÚ FLOTANTE --- */
+/* --- MENÚ FLOTANTE (FIXED) --- */
+/* Ahora se queda pegado abajo de la pantalla, encima de todo */
 .floating-nav {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
+    position: fixed; 
+    bottom: 20px; 
+    left: 50%; 
     transform: translateX(-50%);
-    background-color: #242936;
-    padding: 10px 20px;
+    background: #252a35; 
+    padding: 10px 20px; 
     border-radius: 50px;
-    display: flex;
-    gap: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 1px solid #333;
+    display: flex; 
+    gap: 20px; 
+    justify-content: space-between;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
+    border: 1px solid #444; 
+    z-index: 9000; /* Z-index alto para estar encima */
+    width: 90%;
+    max-width: 400px;
 }
 
-.nav-icon {
-    font-size: 1.5rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    opacity: 0.5;
-    transition: 0.2s;
+.nav-icon { 
+    background: none; border: none; font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: 0.2s; position: relative; 
+}
+.nav-icon:hover, .nav-icon.active { opacity: 1; transform: scale(1.1); }
+
+/* INDICADOR DE NOTIFICACIÓN (PUNTO ROJO) */
+.nav-icon.has-notification::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: var(--danger);
+    border-radius: 50%;
+    border: 2px solid #252a35;
 }
 
-.nav-icon.active { opacity: 1; transform: scale(1.2); }
-
-/* --- MODAL (Corrección previa + Estilo Oscuro) --- */
+/* --- MODALES (SCROLL FIX) --- */
 .modal-overlay {
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(5px);
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
+    display: flex; justify-content: center; align-items: center; z-index: 9999;
 }
 
 .modal-box {
-    background: var(--card-dark);
-    color: white;
-    border: 1px solid #333;
+    background: var(--card-bg); 
+    padding: 25px; 
+    border-radius: 20px; 
+    width: 90%; 
+    max-width: 380px; 
+    text-align: center; 
+    border: 1px solid #333; 
+    position: relative;
+    /* FIX PARA PANTALLAS PEQUEÑAS: */
+    max-height: 85vh; 
+    overflow-y: auto; /* Permite scroll dentro del modal */
 }
 
 .btn-close-modal {
-    background: #333;
-    color: white;
-    align-self: center; /* Mantiene el botón pequeño */
-    min-width: 40px;
-    width: 40px;
+    position: absolute; top: 10px; right: 10px; background: #333; color: white;
+    border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; z-index: 10;
+}
+
+/* --- ELEMENTOS INTERNOS (Jardín, Grid, etc) --- */
+.garden-card { margin: 0 20px 20px; background: linear-gradient(180deg, rgba(0,210,133,0.15) 0%, rgba(30,34,45,0) 100%); border: 1px solid var(--accent); border-radius: 20px; padding: 20px; text-align: center; }
+.plant-icon { font-size: 3.5rem; filter: drop-shadow(0 0 10px var(--accent)); margin: 5px 0; }
+.calendar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px; }
+.day-card { aspect-ratio: 1; background-color: var(--card-bg); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid transparent; cursor: pointer; }
+.day-card.locked { opacity: 0.5; cursor: not-allowed; } .day-card.active { border-color: var(--primary); background: rgba(78, 142, 255, 0.1); }
+.day-card.completed { border-color: var(--accent); background: rgba(0, 210, 133, 0.1); }
+
+/* --- TOAST --- */
+.toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; pointer-events: none; }
+.toast { background: #333; color: white; padding: 12px 20px; border-radius: 50px; margin-bottom: 10px; border: 1px solid #555; text-align: center; pointer-events: auto; animation: slideIn 0.3s; }
+@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
