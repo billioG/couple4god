@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Couple Garden</title>
+    
     <link rel="stylesheet" href="css/styles.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -19,11 +21,7 @@
                 
                 <input type="text" id="full-name" class="input-field hidden" placeholder="Tu Nombre">
                 
-                <div id="gender-selector" class="gender-select hidden">
-                    <div class="gender-option" onclick="selectGender('male', this)">👨 Hombre</div>
-                    <div class="gender-option" onclick="selectGender('female', this)">👩 Mujer</div>
-                </div>
-                <input type="hidden" id="selected-gender" value="">
+                <input type="hidden" id="selected-gender" value="neutral">
 
                 <input type="email" id="email" class="input-field" placeholder="Correo electrónico">
                 <input type="password" id="password" class="input-field" placeholder="Contraseña">
@@ -36,18 +34,29 @@
         <section id="sync-view" class="view hidden">
             <div class="center-content" style="justify-content: flex-start; padding-top: 60px;">
                 <h2>Tu Equipo</h2>
+                
                 <div class="sync-card">
                     <h3 style="color:white; margin-bottom:10px;">¡Código Creado!</h3>
-                    <p style="color:var(--text-gray); font-size:0.9rem;">Comparte este código:</p>
+                    <p style="color:var(--text-gray); font-size:0.9rem;">Comparte este código con tu pareja:</p>
+                    
                     <div id="my-code" class="code-display" onclick="copyCode()">...</div>
-                    <div class="sync-status"><span>⏳</span> Esperando pareja...</div>
-                    <button onclick="window.location.reload()" class="btn-text" style="font-size:0.8rem; margin-top:15px; color:var(--primary)">🔄 Actualizar estado</button>
+                    
+                    <div class="sync-status">
+                        <span>⏳</span> Esperando vinculación...
+                    </div>
+                    
+                    <button onclick="window.location.reload()" class="btn-text" style="font-size:0.8rem; margin-top:15px; color:var(--primary)">
+                        🔄 Toca aquí si ya se vincularon
+                    </button>
                 </div>
+
                 <div class="divider">O ingresa su código</div>
+
                 <div style="width:100%">
-                    <input type="text" id="partner-code" class="input-field" placeholder="EJ: JFU2QD" style="text-align:center; text-transform:uppercase;">
+                    <input type="text" id="partner-code" class="input-field" placeholder="EJ: JFU2QD" style="text-align:center; text-transform:uppercase; letter-spacing: 2px;">
                     <button onclick="connectCouple()" class="btn-primary">Conectar</button>
                 </div>
+
                 <button onclick="handleLogout()" class="btn-text" style="color:var(--danger); margin-top:30px;">Cerrar Sesión</button>
             </div>
         </section>
@@ -63,37 +72,40 @@
             </div>
 
             <div id="content-area">
+                
                 <div class="garden-card">
                     <div class="garden-header">JARDÍN ESPIRITUAL</div>
                     <div class="plant-icon" id="garden-plant">🌱</div>
                     <div class="level-text" id="garden-level">Nivel 1: Semilla</div>
-                </div>
-
-                <div class="progress-container">
-                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-bottom:5px;">
-                        <span>Progreso de los 21 días</span>
-                        <span id="progress-text">0%</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill" id="progress-bar"></div>
-                        <div class="milestone" style="left: 33%;" id="milestone-7">👫</div>
-                        <div class="milestone" style="left: 66%;" id="milestone-14">🎁</div>
-                        <div class="milestone" style="left: 100%;" id="milestone-21">❤️</div>
-                    </div>
+                    <div class="sub-text" id="garden-next">Cargando...</div>
                 </div>
 
                 <h2 class="section-title" id="section-title">Tu Calendario</h2>
+                
                 <div id="dynamic-content">
+                    <div class="progress-container">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-bottom:5px;">
+                            <span>Tu Progreso</span>
+                            <span id="progress-text">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progress-bar"></div>
+                            <div class="milestone" style="left: 33%;" id="milestone-7">👫</div>
+                            <div class="milestone" style="left: 66%;" id="milestone-14">🎁</div>
+                            <div class="milestone" style="left: 100%;" id="milestone-21">❤️</div>
+                        </div>
+                    </div>
                     <div id="calendar-grid" class="calendar-grid"></div>
                 </div>
+
             </div>
 
             <nav class="floating-nav">
-                <button class="nav-icon" onclick="showSection('prayer')">🙏</button>
-                <button class="nav-icon" onclick="showSection('questions')">✨</button>
-                <button class="nav-icon" onclick="showSection('peace')">🏳️</button>
-                <button class="nav-icon active" onclick="showSection('calendar')">📅</button>
-                <button class="nav-icon" onclick="showSection('tips')">💬</button>
+                <button class="nav-icon" onclick="showSection('prayer')" title="Peticiones">🙏</button>
+                <button class="nav-icon" onclick="showSection('questions')" title="Preguntas">✨</button>
+                <button class="nav-icon" onclick="showSection('peace')" title="Paz">🏳️</button>
+                <button class="nav-icon active" onclick="showSection('calendar')" title="Retos">📅</button>
+                <button class="nav-icon" onclick="showSection('tips')" title="Tips">💬</button>
             </nav>
         </section>
     </div>
@@ -108,6 +120,7 @@
             </div>
         </div>
     </div>
+
     <div id="toast-container"></div>
 
     <script src="js/config.js"></script>
@@ -115,5 +128,6 @@
     <script src="js/gamification.js"></script>
     <script src="js/challenges.js"></script>
     <script src="js/app.js"></script>
+
 </body>
 </html>
