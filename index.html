@@ -6,9 +6,7 @@
   <title>Couple4God</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css" />
-  
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3818308944646353"
-     crossorigin="anonymous"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3818308944646353" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -17,31 +15,27 @@
 
 <div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
   <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p style="color:#94a3b8;">Conectando...</p>
+  <p style="color:#94a3b8;">Construyendo amor...</p>
 </div>
 
 <div id="onboarding" class="onboarding-overlay hidden">
   <div id="slide1" class="slide active">
-    <div style="font-size:4rem; margin-bottom:20px;">📱</div>
-    <h2>1. Conéctense</h2>
-    <p>Uno crea el código, el otro se une. ¡Es un equipo!</p>
+    <div style="font-size:4rem; margin-bottom:20px;">🌳</div>
+    <h2>1. El Jardín</h2>
+    <p>Completen retos juntos para regar y hacer crecer su Jardín Espiritual.</p>
   </div>
   <div id="slide2" class="slide">
-    <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
-    <h2>2. Regla de Oro</h2>
-    <p>Nadie avanza solo. Deben completar el día <strong>juntos</strong> para desbloquear el siguiente.</p>
+    <div style="font-size:4rem; margin-bottom:20px;">🏳️</div>
+    <h2>2. Bandera Blanca</h2>
+    <p>¿Peleados? Usa el botón de emergencia para romper el orgullo y reconciliarse.</p>
   </div>
   <div id="slide3" class="slide">
     <div style="font-size:4rem; margin-bottom:20px;">✨</div>
-    <h2>3. Conexión Profunda</h2>
-    <p>Usen las herramientas diarias: Preguntas del Alma, Oración y Citas.</p>
-    <button id="startAppBtn" style="margin-top:30px; background:#10b981;">¡Entendido!</button>
+    <h2>3. Conexión</h2>
+    <p>Preguntas profundas diarias y oración compartida.</p>
+    <button id="startAppBtn" style="margin-top:30px; background:#10b981;">¡Empezar!</button>
   </div>
-  <div class="dots">
-    <div class="dot active" id="dot1"></div>
-    <div class="dot" id="dot2"></div>
-    <div class="dot" id="dot3"></div>
-  </div>
+  <div class="dots"><div class="dot active" id="dot1"></div><div class="dot" id="dot2"></div><div class="dot" id="dot3"></div></div>
   <button id="nextSlideBtn" style="position:absolute; bottom:30px; width:80%;">Siguiente</button>
 </div>
 
@@ -50,10 +44,7 @@
     <span id="userNameDisplay" style="font-weight:bold; display:block;">Usuario</span>
     <span id="myMoodDisplay" class="mood-indicator"></span>
   </div>
-  <div style="display:flex; gap:10px; align-items:center;">
-    <div id="streakBadge" style="color:#f59e0b; font-weight:bold; display:none;">🔥 0</div>
-    <button id="logoutBtn" class="btn-small" style="background:#ef4444;">Salir</button>
-  </div>
+  <button id="logoutBtn" class="btn-small" style="background:#ef4444;">Salir</button>
 </div>
 
 <section id="auth" class="hidden">
@@ -89,33 +80,28 @@
 </section>
 
 <section id="app" class="hidden">
-  <div class="progress-container">
-    <div id="progressBarFill" class="progress-fill"></div>
-    <div id="m7" class="milestone m-7">👫</div>
-    <div id="m14" class="milestone m-14">🎁</div>
-    <div id="m21" class="milestone m-21">❤️</div>
+  <div id="gardenContainer" class="garden-container">
+    <h3 style="margin:0; font-size:1rem; text-transform:uppercase; letter-spacing:2px; color:#a7f3d0;">Jardín Espiritual</h3>
+    <span id="gardenPlant" class="plant-stage">🌱</span>
+    <p id="gardenLevel" class="garden-info">Nivel 1: Semilla de Fe</p>
+    <div id="waterEffect"></div>
   </div>
+
   <h2 style="text-align:left; margin-left:10px;">Tu Calendario</h2>
   <div id="calendarGrid" class="calendar-grid"></div>
 </section>
 
 <div id="toolsBar" class="tools-bar hidden">
   <button class="tool-btn" id="openPrayerBtn" title="Orar">🙏</button>
-  <button class="tool-btn" id="openQuestionsBtn" title="Pregunta del Alma" style="font-size: 1.8rem;">✨</button>
+  <button class="tool-btn" id="openQuestionsBtn" title="Pregunta del Alma">✨</button>
+  <button class="tool-btn" id="openPeaceBtn" title="Bandera Blanca">🏳️</button>
   <button class="tool-btn" id="openDateBtn" title="Cita">📅</button>
   <button class="tool-btn" id="openFeedbackBtn" title="Ayuda">💬</button>
 </div>
 
 <div id="adBanner" class="ad-banner hidden">
-  <ins class="adsbygoogle"
-     style="display:block; width:100%; height:100%;"
-     data-ad-client="ca-pub-3818308944646353"
-     data-ad-slot="XXXXXXXXXX" 
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-  <script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-  </script>
+  <ins class="adsbygoogle" style="display:block; width:100%; height:100%;" data-ad-client="ca-pub-3818308944646353" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   <button id="removeAdsBtn" style="position:absolute; right:5px; top:5px; background:gold; color:black; font-size:0.6rem; padding:2px 6px; border-radius:4px; border:none; width:auto;">X</button>
 </div>
 
@@ -140,6 +126,22 @@
   </div>
 </div>
 
+<div id="peaceModal" class="modal-overlay hidden">
+  <div class="modal-content peace-modal">
+    <span class="white-flag-icon">🏳️</span>
+    <h3 style="margin-top:10px;">Bandera Blanca</h3>
+    <div id="peaceContent">
+      <p>¿Quieres romper el hielo y buscar la paz con tu pareja?</p>
+      <button id="sendPeaceBtn" style="background:#fff; color:#1e293b;">Enviar Petición de Paz</button>
+    </div>
+    <div id="peaceReceiver" class="hidden">
+      <p><strong>Tu pareja quiere la paz.</strong> <br>¿Aceptas dejar el orgullo y reconciliarte?</p>
+      <button id="acceptPeaceBtn" style="background:#10b981;">🤝 Acepto Reconciliarme</button>
+    </div>
+    <button onclick="closeModals()" style="background:transparent; border:none; text-decoration:underline; margin-top:10px; color:#ccc;">Cancelar</button>
+  </div>
+</div>
+
 <div id="moodModal" class="modal-overlay hidden">
   <div class="modal-content" style="text-align:center;">
     <h3>¿Cómo te sientes hoy?</h3>
@@ -154,13 +156,31 @@
   </div>
 </div>
 
+<div id="questionsModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0; color:#fbbf24;">Pregunta del Alma ✨</h3>
+      <button class="close-modal" onclick="closeModals()" style="color:#fff; background:none; border:none; font-size:1.5rem;">&times;</button>
+    </div>
+    <div class="question-card" style="margin-top:15px; background:linear-gradient(135deg, #1e293b, #0f172a); border:1px solid #3b82f6; padding:15px; border-radius:10px;">
+      <p id="soulQuestionText" style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">Cargando...</p>
+      <small style="color:#94a3b8;">Pregunta del día</small>
+    </div>
+    <div id="answersContainer" class="chat-container" style="display:flex; flex-direction:column; gap:10px; margin:15px 0; max-height:250px; overflow-y:auto;"></div>
+    <div id="answerInputSection" class="hidden">
+      <textarea id="myAnswer" rows="3" placeholder="Responde con el corazón..."></textarea>
+      <button id="sendAnswerBtn" style="margin-top:10px; background:#8b5cf6;">Enviar Respuesta</button>
+    </div>
+    <p id="waitingMessage" class="hidden" style="color:#fbbf24; font-size:0.9rem; margin-top:10px;">✅ Tú ya respondiste. Esperando a tu pareja...</p>
+  </div>
+</div>
+
 <div id="prayerModal" class="modal-overlay hidden">
   <div class="modal-content">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <h3>Muro de Oración 🙏</h3>
       <button class="close-modal" onclick="closeModals()" style="color:#fff; background:none; border:none; font-size:1.5rem;">&times;</button>
     </div>
-    <p style="font-size:0.8rem; color:#94a3b8; margin-top:-10px;">Toca para orar por tu pareja.</p>
     <div id="prayerList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
     <textarea id="newPrayerText" rows="2" placeholder="Escribe tu petición..."></textarea>
     <button id="addPrayerBtn" style="margin-top:10px;">Publicar</button>
@@ -170,36 +190,10 @@
 <div id="dateModal" class="modal-overlay hidden">
   <div class="modal-content" style="text-align:center;">
     <h3>Cita del Día 📅</h3>
-    <p style="color:#94a3b8; font-size:0.9rem;">Una propuesta diferente para cada día.</p>
     <div style="background:#334155; padding:20px; border-radius:10px; margin:20px 0; border:2px dashed #60a5fa;">
         <div id="dateIdea" style="font-size:1.3rem; font-weight:bold; color:#fff;">...</div>
     </div>
     <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cerrar</button>
-  </div>
-</div>
-
-<div id="questionsModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="margin:0; color:#fbbf24;">Pregunta del Alma ✨</h3>
-      <button class="close-modal" onclick="closeModals()" style="color:#fff; background:none; border:none; font-size:1.5rem;">&times;</button>
-    </div>
-    
-    <div class="question-card" style="margin-top:15px; background:linear-gradient(135deg, #1e293b, #0f172a); border:1px solid #3b82f6; padding:15px; border-radius:10px;">
-      <p id="soulQuestionText" style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">Cargando...</p>
-      <small style="color:#94a3b8;">Pregunta del día</small>
-    </div>
-
-    <div id="answersContainer" class="chat-container" style="display:flex; flex-direction:column; gap:10px; margin:15px 0; max-height:250px; overflow-y:auto;"></div>
-
-    <div id="answerInputSection" class="hidden">
-      <textarea id="myAnswer" rows="3" placeholder="Responde con el corazón..."></textarea>
-      <button id="sendAnswerBtn" style="margin-top:10px; background:#8b5cf6;">Enviar Respuesta</button>
-    </div>
-    
-    <p id="waitingMessage" class="hidden" style="color:#fbbf24; font-size:0.9rem; margin-top:10px;">
-      ✅ Tú ya respondiste. Esperando a tu pareja para revelar su respuesta...
-    </p>
   </div>
 </div>
 
