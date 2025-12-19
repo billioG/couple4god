@@ -1,40 +1,64 @@
-// --- BANDERA BLANCA (PAZ) ---
+// js/gamification.js
 
-async function checkWhiteFlagStatus() {
+// Verificar estado de la bandera (Botón Paz)
+window.checkWhiteFlagStatus = async function() {
+    // Seguridad: Si no hay perfil cargado, no hacemos nada
+    if (!window.currentProfile || !window.currentProfile.id) {
+        console.warn("Perfil no cargado aún.");
+        return; 
+    }
+
     const contentDiv = document.getElementById('content-area');
-    const myId = currentProfile.id;
+    const myId = window.currentProfile.id;
 
-    // Buscar si tengo pareja y el estado
-    const { data: couple } = await supabase
+    // Buscar si tengo pareja vinculada
+    // Nota: Ajusta la lógica si tu tabla couples es diferente
+    const { data: couple, error } = await window.db
         .from('couples')
         .select('*')
         .or(`user1_id.eq.${myId},user2_id.eq.${myId}`)
-        .single();
+        .maybeSingle();
 
-    if (!couple) {
-        contentDiv.innerHTML = `<p style="text-align:center; margin-top:20px">Aún no tienes pareja vinculada.</p>`;
+    if (error) {
+        console.error("Error buscando pareja:", error);
         return;
     }
 
-    let html = `<h2>🏳️ Zona de Paz</h2><br>`;
+    if (!couple) {
+        contentDiv.innerHTML = `
+            <div class="garden-card" style="background:var(--card-dark); border-color:#333;">
+                <h3 style="color:var(--text-main)">💔 Sin vínculo</h3>
+                <p>Aún no tienes una pareja vinculada en la app.</p>
+            </div>`;
+        return;
+    }
 
-    if (couple.white_flag_status === 'none') {
+    let html = `<h2 class="section-title">🏳️ Zona de Paz</h2><div style="padding:0 20px">`;
+
+    if (couple.white_flag_status === 'none' || !couple.white_flag_status) {
         html += `
-            <p>Si tuvieron una discusión, usa este botón para pedir una tregua.</p>
+            <div class="wisdom-box" style="background:var(--card-dark); color:white; border:1px solid #333;">
+                <h4>¿Discusión difícil?</h4>
+                <p>Usa este botón para pedir una tregua a tu pareja. Es el primer paso para reconciliarse.</p>
+            </div>
             <br>
-            <button onclick="sendWhiteFlag('${couple.id}')" class="btn-secondary">
-                Levantar Bandera Blanca
+            <button onclick="sendWhiteFlag('${couple.id}')" class="btn-primary" style="background:var(--text-muted)">
+                🏳️ Levantar Bandera Blanca
             </button>
         `;
     } 
     else if (couple.white_flag_status === 'sent') {
         if (couple.white_flag_sender === myId) {
-            html += `<p class="loader">Esperando que tu pareja acepte la paz...</p>`;
-        } else {
-            // ¡Aquí es donde la pareja ve la solicitud!
             html += `
-                <div class="action-box" style="background:#e3f2fd">
-                    <h3>Tu pareja pide Paz</h3>
+                <div class="garden-card">
+                    <h3>🏳️ Bandera Enviada</h3>
+                    <p>Esperando que tu pareja acepte la tregua...</p>
+                </div>`;
+        } else {
+            // ¡La pareja ve esto!
+            html += `
+                <div class="garden-card" style="border-color:var(--primary)">
+                    <h3 style="color:white">🏳️ Tu pareja pide Paz</h3>
                     <p>Al aceptar, ambos ganarán 50 XP y se restaurará la armonía.</p>
                     <button onclick="acceptWhiteFlag('${couple.id}', '${couple.white_flag_sender}')" class="btn-primary">
                         Aceptar Tregua (+50 XP)
@@ -44,75 +68,97 @@ async function checkWhiteFlagStatus() {
         }
     } 
     else if (couple.white_flag_status === 'accepted') {
-        html += `<div class="wisdom-box"><h3>✨ ¡Reconciliación exitosa!</h3><p>La paz ha sido restaurada.</p></div>`;
-        // Botón para resetear (opcional)
-        setTimeout(() => resetFlag(couple.id), 5000); 
+        html += `
+            <div class="garden-card" style="border-color:var(--accent-green)">
+                <h3 style="color:var(--accent-green)">✨ ¡Paz Restaurada!</h3>
+                <p>El conflicto ha terminado. Abrácense.</p>
+                <button onclick="resetFlag('${couple.id}')" class="btn-primary" style="margin-top:10px; background:#333">
+                    Nueva conversación
+                </button>
+            </div>`;
     }
 
+    html += '</div>';
     contentDiv.innerHTML = html;
-}
+};
 
 // Enviar bandera
-async function sendWhiteFlag(coupleId) {
-    await supabase.from('couples').update({
-        white_flag_status: 'sent',
-        white_flag_sender: currentProfile.id
-    }).eq('id', coupleId);
-    checkWhiteFlagStatus();
-}
-
-// Aceptar bandera (SOLUCIÓN PUNTO 2)
-async function acceptWhiteFlag(coupleId, partnerId) {
-    // 1. Actualizar DB
-    await supabase.from('couples').update({
-        white_flag_status: 'accepted'
-    }).eq('id', coupleId);
-
-    // 2. Dar puntos a AMBOS
-    await supabase.rpc('add_xp', { user_id: currentProfile.id, points: 50 });
-    await supabase.rpc('add_xp', { user_id: partnerId, points: 50 });
-
-    showModal("🕊️ Paz Restaurada", "Ambos han ganado +50 XP. ¡Vayan a abrazarse!");
+window.sendWhiteFlag = async function(coupleId) {
+    if (!window.currentProfile) return;
     
-    refreshUserProfile(); // Actualizar mi contador
-    checkWhiteFlagStatus();
-}
+    const { error } = await window.db
+        .from('couples')
+        .update({ 
+            white_flag_status: 'sent', 
+            white_flag_sender: window.currentProfile.id 
+        })
+        .eq('id', coupleId);
+    
+    if(!error) window.checkWhiteFlagStatus();
+};
 
-// Reseteo automático o manual para futuras peleas
-async function resetFlag(coupleId) {
-    await supabase.from('couples').update({ white_flag_status: 'none' }).eq('id', coupleId);
-    checkWhiteFlagStatus();
-}
+// Aceptar bandera
+window.acceptWhiteFlag = async function(coupleId, partnerId) {
+    if (!window.currentProfile) return;
+
+    // 1. Actualizar estado
+    const { error } = await window.db
+        .from('couples')
+        .update({ white_flag_status: 'accepted' })
+        .eq('id', coupleId);
+
+    if (!error) {
+        // 2. Dar puntos (RPC)
+        await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: 50 });
+        await window.db.rpc('add_xp', { user_id: partnerId, points: 50 });
+
+        window.showModal("🕊️ Paz Restaurada", "Han ganado +50 XP. ¡El amor gana!");
+        window.refreshUserProfile(); // Actualizar header
+        window.checkWhiteFlagStatus();
+    }
+};
+
+// Resetear bandera
+window.resetFlag = async function(coupleId) {
+    await window.db.from('couples').update({ white_flag_status: 'none' }).eq('id', coupleId);
+    window.checkWhiteFlagStatus();
+};
 
 // --- TIENDA DE PREMIOS ---
-async function openRewards() {
+window.openRewards = async function() {
+    if (!window.db) return;
+
     const contentDiv = document.getElementById('content-area');
-    contentDiv.innerHTML = '<div class="loader">Cargando premios...</div>';
+    contentDiv.innerHTML = '<div style="text-align:center; padding:20px">Cargando premios...</div>';
 
-    const { data: rewards } = await supabase.from('rewards').select('*');
+    const { data: rewards, error } = await window.db.from('rewards').select('*');
 
-    let html = `<h2>🎁 Canjea tus Puntos</h2><div class="rewards-grid">`;
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    let html = `<h2 class="section-title">🎁 Canjea tus Puntos</h2><div style="padding:0 20px; padding-bottom:80px;">`;
     
     rewards.forEach(reward => {
-        const canAfford = currentProfile.xp >= reward.xp_cost;
+        const canAfford = (window.currentProfile?.xp || 0) >= reward.xp_cost;
         html += `
-            <div class="challenge-card" style="margin-bottom:10px">
-                <div style="display:flex; justify-content:space-between; align-items:center">
-                    <div style="font-size:2em">${reward.icon || '🎟️'}</div>
-                    <div style="text-align:right">
-                        <h4>${reward.title}</h4>
-                        <small>${reward.xp_cost} XP</small>
-                    </div>
+            <div style="background:var(--card-dark); padding:15px; border-radius:15px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; border:1px solid #333;">
+                <div style="font-size:2rem; margin-right:15px;">${reward.icon || '🎟️'}</div>
+                <div style="flex:1;">
+                    <h4 style="color:white; margin-bottom:5px;">${reward.title}</h4>
+                    <small style="color:var(--primary); font-weight:bold;">${reward.xp_cost} XP</small>
                 </div>
                 <button 
-                    onclick="redeemReward(${reward.id}, ${reward.xp_cost})" 
-                    class="${canAfford ? 'btn-primary' : 'btn-secondary'}" 
-                    ${!canAfford ? 'disabled style="opacity:0.5"' : ''}>
-                    ${canAfford ? 'Canjear' : 'Faltan puntos'}
+                    onclick="alert('Función de canje en construcción')" 
+                    class="btn-primary" 
+                    style="width:auto; padding:8px 15px; margin:0; ${!canAfford ? 'opacity:0.5; background:#333;' : ''}"
+                    ${!canAfford ? 'disabled' : ''}>
+                    Canjear
                 </button>
             </div>
         `;
     });
     html += '</div>';
     contentDiv.innerHTML = html;
-}
+};
