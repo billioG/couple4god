@@ -1,90 +1,88 @@
-// js/challenges.js
+// ==========================================
+// LÓGICA DE RETOS Y CALENDARIO (SIMPLIFICADA)
+// ==========================================
 
+// 1. Cargar Grid
 window.loadChallengeGrid = async function() {
     if (!window.currentProfile || !window.currentCouple) return;
 
+    // Asegurar contenedor
     const dynamicContainer = document.getElementById('dynamic-content');
     if (!document.getElementById('calendar-grid')) {
-        // Inyectamos también la barra de progreso si no existe
-        // Nota: En index.html ya está la estructura, solo llenamos el grid
+        // Restaurar estructura si se perdió
+        dynamicContainer.innerHTML = `
+            <div class="progress-container">
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-bar"></div>
+                    <div class="milestone" style="left: 33%;" id="milestone-7">👫</div>
+                    <div class="milestone" style="left: 66%;" id="milestone-14">🎁</div>
+                    <div class="milestone" style="left: 100%;" id="milestone-21">❤️</div>
+                </div>
+                <p style="text-align:center; font-size:0.8rem; color:#888; margin-top:5px;">Tu Progreso</p>
+            </div>
+            <div id="calendar-grid" class="calendar-grid"></div>
+        `;
     }
 
     const grid = document.getElementById('calendar-grid');
-    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center">Cargando progreso de ambos...</p>';
+    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center">Cargando...</p>';
 
     try {
-        // 1. Obtener progreso MÍO y de mi PAREJA
         const partnerId = (window.currentCouple.user1_id === window.currentProfile.id) 
                           ? window.currentCouple.user2_id 
                           : window.currentCouple.user1_id;
 
-        // Traer todos los registros de progreso de ambos
+        // Traer TODO el progreso de la pareja
         const { data: allProgress } = await window.db
             .from('user_progress')
             .select('user_id, last_challenge_id')
             .in('user_id', [window.currentProfile.id, partnerId]);
 
-        // Organizar datos
-        // Convertimos a un Set de IDs de retos completados para búsqueda rápida
+        // Sets para búsqueda rápida
         const myCompleted = new Set(allProgress.filter(p => p.user_id === window.currentProfile.id).map(p => p.last_challenge_id));
         const partnerCompleted = new Set(allProgress.filter(p => p.user_id === partnerId).map(p => p.last_challenge_id));
 
-        // Determinar día actual (basado en mis completados + 1)
-        const myCount = myCompleted.size;
-        const currentDay = myCount + 1;
+        // Lógica Secuencial: El día actual es el siguiente al último que YO completé
+        // (Buscamos el hueco más pequeño. Si hice el 1, 2 y 4, mi día actual debería ser el 3)
+        let currentDay = 1;
+        while (myCompleted.has(currentDay)) {
+            currentDay++;
+        }
+        
         const totalDays = 21;
 
-        // Actualizar Barra de Progreso (Punto 3)
-        updateProgressBar(myCount, totalDays);
+        // Actualizar Barra
+        window.updateProgressBar(myCompleted.size, totalDays);
 
         let html = '';
 
         for (let i = 1; i <= totalDays; i++) {
-            // Verificar quién completó este día (ID del reto = i, asumiendo IDs secuenciales 1-21)
-            // Si tus IDs de retos en DB no son 1-21, esto requiere ajuste. 
-            // Asumo que en la tabla challenges, id = day_number para simplificar.
             const meDone = myCompleted.has(i);
             const partnerDone = partnerCompleted.has(i);
-
+            
             let className = 'locked';
             let mainIcon = '🔒';
             let indicatorsHtml = '';
-            let clickAction = `onclick="window.showToast('Día bloqueado', 'error')"`;
+            let clickAction = `onclick="window.showToast('Completa los días anteriores', 'error')"`;
 
-            // Lógica de Estado Principal
+            // ESTADOS PRINCIPALES
             if (meDone) {
-                className = 'completed';
+                className = 'completed'; // Ya lo hice (Verde)
                 mainIcon = '✅';
-                clickAction = `onclick="openChallengeModal(${i}, true)"`;
+                clickAction = `onclick="openChallengeModal(${i}, true)"`; // Solo lectura
             } else if (i === currentDay) {
-                className = 'active';
+                className = 'active'; // Me toca hoy (Fuego)
                 mainIcon = '🔥';
-                clickAction = `onclick="openChallengeModal(${i}, false)"`;
+                clickAction = `onclick="openChallengeModal(${i}, false)"`; // Para hacer
             }
 
-            // Lógica de Indicadores (Punto 4)
-            // Asumimos: Azul = Male, Rosa = Female.
-            // Si no tenemos el género de la pareja a mano, usaremos lógica simple:
-            // Mi punto siempre a la izquierda, pareja a la derecha, o colores fijos si cargamos el perfil de la pareja.
-            
-            // Para simplificar: Azul = Hombre, Rosa = Mujer.
-            // Necesitamos saber el género de cada uno.
-            // window.currentProfile.gender nos dice el mío.
-            // Asumiremos colores basados en eso.
-
+            // INDICADORES INFERIORES (Estrella o Puntos)
             if (meDone && partnerDone) {
-                indicatorsHtml = '<span class="star-icon">⭐️</span>'; // Ambos listos
+                indicatorsHtml = '<span class="star-icon">⭐️</span>';
             } else {
-                // Punto Mío
-                if (meDone) {
-                    const colorClass = window.currentProfile.gender === 'male' ? 'dot-blue' : 'dot-pink';
-                    indicatorsHtml += `<span class="dot ${colorClass}"></span>`;
-                }
-                // Punto Pareja (Adivinamos color opuesto o gris si no sabemos)
-                if (partnerDone) {
-                    const partnerColor = window.currentProfile.gender === 'male' ? 'dot-pink' : 'dot-blue';
-                    indicatorsHtml += `<span class="dot ${partnerColor}"></span>`;
-                }
+                // Punto Izq: Yo / Punto Der: Pareja
+                indicatorsHtml += `<span class="dot-check ${meDone ? 'done' : ''}"></span>`;
+                indicatorsHtml += `<span class="dot-check ${partnerDone ? 'done' : ''}"></span>`;
             }
 
             html += `
@@ -97,105 +95,134 @@ window.loadChallengeGrid = async function() {
         }
 
         grid.innerHTML = html;
-        window.updateGardenDisplay(currentDay);
+        
+        // Actualizar Jardín (Definida abajo para evitar errores)
+        if (window.updateGardenDisplay) window.updateGardenDisplay(currentDay);
 
     } catch (err) {
-        console.error("Error grid:", err);
+        console.error(err);
+        grid.innerHTML = '<p>Error de conexión</p>';
     }
 };
 
-// Actualizar Barra (Punto 3)
-function updateProgressBar(completedCount, total) {
-    const percent = (completedCount / total) * 100;
-    document.getElementById('progress-bar').style.width = `${percent}%`;
-    document.getElementById('progress-text').innerText = `${Math.round(percent)}%`;
+// 2. Barra de Progreso
+window.updateProgressBar = function(count, total) {
+    const percent = (count / total) * 100;
+    const bar = document.getElementById('progress-bar');
+    if(bar) bar.style.width = `${percent}%`;
 
-    // Desbloquear hitos visualmente
-    if (completedCount >= 7) document.getElementById('milestone-7').classList.add('unlocked');
-    if (completedCount >= 14) document.getElementById('milestone-14').classList.add('unlocked');
-    if (completedCount >= 21) document.getElementById('milestone-21').classList.add('unlocked');
-}
+    // Desbloquear iconos visualmente
+    if (count >= 7) document.getElementById('milestone-7')?.classList.add('unlocked');
+    if (count >= 14) document.getElementById('milestone-14')?.classList.add('unlocked');
+    if (count >= 21) document.getElementById('milestone-21')?.classList.add('unlocked');
+};
 
-// Abrir Modal (Con Reflexión - Punto 4)
+// 3. Jardín (Definición Explícita)
+window.updateGardenDisplay = function(day) {
+    const plants = ['Semilla 🌱', 'Brote 🌿', 'Tallo 🎋', 'Flor 🌷', 'Árbol 🌳'];
+    // Asegurar que day no sea mayor al máximo posible para el array
+    const levelIndex = Math.min(Math.floor((day - 1) / 5), plants.length - 1);
+    const plant = plants[levelIndex];
+    
+    const iconEl = document.getElementById('garden-plant');
+    const levelEl = document.getElementById('garden-level');
+    const nextEl = document.getElementById('garden-next');
+
+    if(iconEl) {
+        iconEl.innerText = plant.split(' ')[1];
+        levelEl.innerText = `Nivel ${levelIndex + 1}: ${plant.split(' ')[0]}`;
+        
+        const daysLeft = 5 - ((day - 1) % 5);
+        nextEl.innerText = (levelIndex >= 4) ? "¡Máximo Nivel!" : `Faltan ${daysLeft} días para evolucionar 🚀`;
+    }
+};
+
+// 4. Abrir Modal (Con Reflexión)
 window.openChallengeModal = async function(day, isCompleted) {
     window.showModal(`Reto Día ${day}`, "Cargando...");
     
-    const { data: challenge } = await window.db.from('challenges').select('*').eq('day_number', day).single();
-
-    if(challenge) {
+    const { data } = await window.db.from('challenges').select('*').eq('day_number', day).single();
+    
+    if(data) {
         let html = `
-            <blockquote style="font-style:italic; border-left:3px solid var(--primary); padding-left:10px; margin:10px 0; color:white;">"${challenge.quote}"</blockquote>
-            <p style="text-align:right; color:var(--primary); font-size:0.9em; margin-bottom:20px">— ${challenge.author}</p>
+            <blockquote style="font-style:italic; border-left:3px solid var(--primary); padding-left:10px; margin:10px 0; color:white;">"${data.quote}"</blockquote>
+            <p style="text-align:right; color:var(--primary); font-size:0.8rem; margin-bottom:20px">— ${data.author}</p>
             
-            <div style="background:#252a35; padding:15px; border-radius:10px; margin-bottom:15px;">
-                <h4 style="color:var(--accent); margin-bottom:5px;">🧠 Sabiduría</h4>
-                <p style="font-size:0.9em; color:#ddd;">${challenge.reflection}</p>
+            <div style="background:#252a35; padding:15px; border-radius:10px; margin-bottom:15px; text-align:left;">
+                <h4 style="color:var(--accent); margin-bottom:5px; text-transform:uppercase; font-size:0.75rem;">🧠 Sabiduría</h4>
+                <p style="font-size:0.9rem; color:#ddd; line-height:1.4;">${data.reflection}</p>
             </div>
 
-            <div style="background:rgba(78, 142, 255, 0.1); padding:15px; border-radius:10px; border:1px solid var(--primary);">
-                <h4 style="color:var(--primary); margin-bottom:5px;">🔥 Misión</h4>
-                <p style="font-size:0.9em; color:white;">${challenge.task}</p>
+            <div style="background:rgba(78, 142, 255, 0.1); padding:15px; border-radius:10px; border:1px solid var(--primary); margin-bottom:15px; text-align:left;">
+                <h4 style="color:var(--primary); margin-bottom:5px; text-transform:uppercase; font-size:0.75rem;">🔥 Misión de Hoy</h4>
+                <p style="font-size:0.95em; color:white;">${data.task}</p>
             </div>
         `;
         
-        // Campo de Reflexión (Obligatorio para completar)
+        // Campo de Reflexión (Obligatorio)
         if (!isCompleted) {
             html += `
-                <div style="margin-top:20px;">
-                    <p style="font-size:0.9em; color:#aaa; margin-bottom:5px;">Para completar, escribe una breve reflexión:</p>
-                    <textarea id="challenge-reflection" class="input-field" style="height:80px; font-size:0.9rem;" placeholder="¿Cómo te sentiste?"></textarea>
+                <div style="margin-top:20px; text-align:left;">
+                    <label style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:5px;">Para completar, escribe una breve reflexión:</label>
+                    <textarea id="challenge-reflection" class="input-field" style="height:80px; font-size:0.9rem; width:100%;" placeholder="¿Cómo te sentiste? ¿Qué aprendiste?"></textarea>
                 </div>
             `;
+            // Botón de acción
+            // Nota: Pasamos el ID del reto directamente
+            const actions = document.getElementById('modal-actions');
+            actions.innerHTML = `<button class="btn-primary" onclick="completeChallenge(${data.id})">Completar (+20 XP)</button>`;
         } else {
-             // Si ya completó, podríamos mostrar su reflexión anterior (requiere query extra)
-             html += `<p style="color:var(--accent); text-align:center; margin-top:15px;">✅ Reto completado</p>`;
+             // Si ya está completado, mostrar mensaje
+             html += `<div style="text-align:center; padding:10px; border:1px dashed var(--accent); border-radius:8px; margin-top:10px; color:var(--accent);">✅ Reto Completado</div>`;
+             document.getElementById('modal-actions').innerHTML = '';
         }
 
-        const actions = document.getElementById('modal-actions');
         document.getElementById('modal-body').innerHTML = html;
-        
-        if (!isCompleted) {
-            actions.innerHTML = `<button class="btn-primary" onclick="completeChallenge(${challenge.id})">Completar Reto</button>`;
-        } else {
-            actions.innerHTML = '';
-        }
     }
 };
 
-// Completar Reto (Guardando Reflexión)
+// 5. Completar Reto (Validar Reflexión)
 window.completeChallenge = async function(id) {
-    const reflectionText = document.getElementById('challenge-reflection').value.trim();
+    const reflectionInput = document.getElementById('challenge-reflection');
+    const reflectionText = reflectionInput ? reflectionInput.value.trim() : '';
     
     if (reflectionText.length < 5) {
-        return window.showToast("Por favor escribe una reflexión real.", "error");
+        return window.showToast("Escribe una reflexión real para continuar", "error");
     }
 
     try {
-        // 1. Guardar progreso
+        // A. Guardar progreso
         await window.db.from('user_progress').insert({ 
             user_id: window.currentProfile.id, 
             last_challenge_id: id 
         });
 
-        // 2. Guardar Reflexión en Shared Content (Para que la pareja la vea si quieres implementarlo luego)
+        // B. Guardar la reflexión en 'shared_content' para historial (y futuro uso)
         await window.db.from('shared_content').insert({
             user_id: window.currentProfile.id,
             couple_id: window.currentCouple.id,
-            type: `reflection_day_${id}`, // Tipo especial para identificar el día
-            content: reflectionText
+            type: 'reflection',
+            content: `[Día ${id}] ${reflectionText}`
         });
 
-        // 3. Dar XP
-        await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: 100 });
+        // C. Dar XP (20 puntos como pediste)
+        await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: 20 });
         
         window.closeModal();
-        window.showToast("¡Reto Completado! +100 XP", "success");
+        window.showToast("¡Reto Completado! +20 XP", "success");
         
-        await window.refreshUserProfile();
+        // Recargar todo
+        if(window.refreshUserProfile) window.refreshUserProfile();
         window.loadChallengeGrid();
 
     } catch(e) {
         console.error(e);
-        window.showToast("Error al guardar", "error");
+        // Si es error de duplicado (código 23505), lo manejamos suavemente
+        if (e.code === '23505') {
+            window.closeModal();
+            window.loadChallengeGrid();
+        } else {
+            window.showToast("Error al guardar", "error");
+        }
     }
 };
