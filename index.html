@@ -4,23 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Couple Garden</title>
-    
     <link rel="stylesheet" href="css/styles.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
     <div id="app-container">
         
+        <section id="onboarding-view" class="view hidden">
+            <div class="onboarding-content">
+                <div style="font-size: 5rem; margin-bottom: 20px;">🌱</div>
+                <h1>Bienvenido a Couple Garden</h1>
+                <p>Tu espacio sagrado para cultivar el amor.</p>
+                
+                <div class="step">
+                    <h3>1. Conecta</h3>
+                    <p>Vincula tu cuenta con tu pareja usando un código único.</p>
+                </div>
+                <div class="step">
+                    <h3>2. Cultiva</h3>
+                    <p>Completa un reto diario. ¡Solo uno por día! La constancia es la clave.</p>
+                </div>
+                <div class="step">
+                    <h3>3. Cosecha</h3>
+                    <p>Gana XP, canjea premios reales y evolucionen su Jardín.</p>
+                </div>
+
+                <button onclick="finishOnboarding()" class="btn-primary">¡Comenzar!</button>
+            </div>
+        </section>
+
         <section id="auth-view" class="view hidden">
             <div class="center-content">
-                <span style="font-size: 4rem;">🌱</span>
+                <span style="font-size: 4rem;">🏡</span>
                 <h1>Couple Garden</h1>
-                <p style="color: var(--text-gray); margin-bottom: 30px;">Cultiva tu relación día a día</p>
+                <p style="color: var(--text-gray); margin-bottom: 30px;">El amor se construye a diario</p>
                 
                 <input type="text" id="full-name" class="input-field hidden" placeholder="Tu Nombre">
-                
                 <input type="hidden" id="selected-gender" value="neutral">
 
                 <input type="email" id="email" class="input-field" placeholder="Correo electrónico">
@@ -32,31 +52,18 @@
         </section>
 
         <section id="sync-view" class="view hidden">
-            <div class="center-content" style="justify-content: flex-start; padding-top: 60px;">
+            <div class="center-content scrollable">
                 <h2>Tu Equipo</h2>
-                
                 <div class="sync-card">
                     <h3 style="color:white; margin-bottom:10px;">¡Código Creado!</h3>
-                    <p style="color:var(--text-gray); font-size:0.9rem;">Comparte este código con tu pareja:</p>
-                    
+                    <p style="color:var(--text-gray); font-size:0.9rem;">Comparte esto con tu pareja:</p>
                     <div id="my-code" class="code-display" onclick="copyCode()">...</div>
-                    
-                    <div class="sync-status">
-                        <span>⏳</span> Esperando vinculación...
-                    </div>
-                    
-                    <button onclick="window.location.reload()" class="btn-text" style="font-size:0.8rem; margin-top:15px; color:var(--primary)">
-                        🔄 Toca aquí si ya se vincularon
-                    </button>
+                    <div class="sync-status"><span>⏳</span> Esperando...</div>
+                    <button onclick="window.location.reload()" class="btn-text" style="color:var(--primary)">🔄 Ya ingresaron el código</button>
                 </div>
-
                 <div class="divider">O ingresa su código</div>
-
-                <div style="width:100%">
-                    <input type="text" id="partner-code" class="input-field" placeholder="EJ: JFU2QD" style="text-align:center; text-transform:uppercase; letter-spacing: 2px;">
-                    <button onclick="connectCouple()" class="btn-primary">Conectar</button>
-                </div>
-
+                <input type="text" id="partner-code" class="input-field" placeholder="EJ: JFU2QD" style="text-align:center; text-transform:uppercase; letter-spacing: 2px;">
+                <button onclick="connectCouple()" class="btn-primary">Conectar</button>
                 <button onclick="handleLogout()" class="btn-text" style="color:var(--danger); margin-top:30px;">Cerrar Sesión</button>
             </div>
         </section>
@@ -72,7 +79,6 @@
             </div>
 
             <div id="content-area">
-                
                 <div class="garden-card">
                     <div class="garden-header">JARDÍN ESPIRITUAL</div>
                     <div class="plant-icon" id="garden-plant">🌱</div>
@@ -84,20 +90,18 @@
                 
                 <div id="dynamic-content">
                     <div class="progress-container">
-                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-bottom:5px;">
-                            <span>Tu Progreso</span>
-                            <span id="progress-text">0%</span>
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888;">
+                            <span>Progreso</span><span id="progress-text">0%</span>
                         </div>
                         <div class="progress-track">
                             <div class="progress-fill" id="progress-bar"></div>
-                            <div class="milestone" style="left: 33%;" id="milestone-7">👫</div>
-                            <div class="milestone" style="left: 66%;" id="milestone-14">🎁</div>
-                            <div class="milestone" style="left: 100%;" id="milestone-21">❤️</div>
+                            <div class="milestone" style="left:33%" id="milestone-7">👫</div>
+                            <div class="milestone" style="left:66%" id="milestone-14">🎁</div>
+                            <div class="milestone" style="left:100%" id="milestone-21">❤️</div>
                         </div>
                     </div>
                     <div id="calendar-grid" class="calendar-grid"></div>
                 </div>
-
             </div>
 
             <nav class="floating-nav">
@@ -105,7 +109,8 @@
                 <button class="nav-icon" onclick="showSection('questions')" title="Preguntas">✨</button>
                 <button class="nav-icon" onclick="showSection('peace')" title="Paz">🏳️</button>
                 <button class="nav-icon active" onclick="showSection('calendar')" title="Retos">📅</button>
-                <button class="nav-icon" onclick="showSection('tips')" title="Tips">💬</button>
+                <button class="nav-icon" onclick="showSection('tips')" title="Tips">💡</button>
+                <button class="nav-icon" onclick="showSection('rewards')" title="Premios">🎁</button>
             </nav>
         </section>
     </div>
@@ -113,14 +118,13 @@
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <button onclick="closeModal()" class="btn-close-modal">✕</button>
-            <div style="padding-top: 30px;">
-                <h3 id="modal-title" style="color: var(--primary); margin-bottom: 15px;">Título</h3>
-                <div id="modal-body" style="color: #ccc; line-height: 1.6; text-align: left;"></div>
+            <div style="padding-top: 20px;">
+                <h3 id="modal-title" style="color: var(--primary); margin-bottom: 10px;">Título</h3>
+                <div id="modal-body" style="color: #ccc; line-height: 1.5; text-align: left;"></div>
                 <div id="modal-actions" style="margin-top: 20px;"></div>
             </div>
         </div>
     </div>
-
     <div id="toast-container"></div>
 
     <script src="js/config.js"></script>
@@ -128,6 +132,5 @@
     <script src="js/gamification.js"></script>
     <script src="js/challenges.js"></script>
     <script src="js/app.js"></script>
-
 </body>
 </html>
