@@ -14,9 +14,8 @@
 body { 
     background-color: var(--bg-dark); 
     color: var(--text-white); 
-    min-height: 100vh; /* Permite crecer */
-    overflow-x: hidden; /* Solo evita scroll horizontal */
-    /* Quitamos overflow: hidden para permitir scroll nativo si es necesario */
+    min-height: 100vh; 
+    overflow-x: hidden; 
 }
 
 #app-container {
@@ -27,12 +26,12 @@ body {
     flex-direction: column; 
     background-color: var(--bg-dark); 
     position: relative;
-    padding-bottom: 90px; /* Espacio para el menú flotante */
+    padding-bottom: 90px; /* Espacio para menú flotante */
 }
 
-/* --- ONBOARDING (Corrección Visual) --- */
+/* --- ONBOARDING (Visual Fix) --- */
 #onboarding-view {
-    position: fixed; /* Fijo para cubrir todo */
+    position: fixed; 
     top: 0; left: 0; width: 100%; height: 100%;
     background: var(--bg-dark);
     z-index: 9999;
@@ -44,13 +43,13 @@ body {
     flex: 1;
     display: flex;
     width: 100%;
-    overflow: hidden; /* Oculta los otros slides */
+    overflow: hidden; 
 }
 
 .slide {
-    min-width: 100%; /* Ocupa el 100% del ancho del padre */
+    min-width: 100%; /* Ocupa 100% del ancho */
+    flex: 0 0 100%;  /* No se encoge */
     width: 100%;
-    flex: 0 0 100%; /* No se encoge ni crece */
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -58,7 +57,7 @@ body {
     align-items: center;
     padding: 40px;
     text-align: center;
-    transition: transform 0.3s ease-out; /* Animación suave */
+    transition: transform 0.3s ease-out; 
 }
 
 .slide-icon { font-size: 5rem; margin-bottom: 30px; animation: float 3s infinite ease-in-out; }
@@ -86,11 +85,11 @@ body {
     align-items: center; 
     background: var(--bg-dark); 
     border-bottom: 1px solid #222; 
-    position: sticky; top: 0; z-index: 100; /* Fijo arriba */
+    position: sticky; top: 0; z-index: 100; 
 }
 
 .floating-nav { 
-    position: fixed; /* Fijo abajo */
+    position: fixed; 
     bottom: 20px; left: 50%; transform: translateX(-50%); 
     background: #252a35; padding: 12px 20px; border-radius: 50px; 
     display: flex; gap: 20px; 
@@ -116,9 +115,29 @@ body {
 .garden-card { margin: 20px; background: linear-gradient(180deg, rgba(0,210,133,0.15) 0%, rgba(30,34,45,0) 100%); border: 1px solid var(--accent); border-radius: 20px; padding: 20px; text-align: center; }
 .plant-icon { font-size: 3.5rem; margin: 10px 0; filter: drop-shadow(0 0 10px var(--accent)); }
 
-/* Grid Calendario */
-.calendar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px; }
-.day-card { aspect-ratio: 1; background: var(--card-bg); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+/* Grid Calendario (CENTRADO) */
+.calendar-grid { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 12px; 
+    padding: 0 10px;
+    max-width: 400px; 
+    margin: 0 auto; /* Centrado horizontal */
+    justify-content: center;
+}
+
+.day-card { 
+    aspect-ratio: 1; 
+    background: var(--card-bg); 
+    border-radius: 12px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    position: relative; 
+    cursor: pointer; 
+    text-align: center;
+}
 .day-card.active { border: 2px solid var(--primary); background: rgba(78, 142, 255, 0.1); }
 .day-card.completed { border: 2px solid var(--accent); background: rgba(0, 210, 133, 0.1); }
 .day-card.locked { opacity: 0.5; }
@@ -131,7 +150,22 @@ body {
 .milestone.unlocked { filter: grayscale(0) opacity(1); transform: translateX(-50%) scale(1.2); }
 
 /* --- BOTONES & INPUTS --- */
-.btn-primary { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; font-size: 1rem; }
+.btn-primary { 
+    background: var(--primary); 
+    color: white; 
+    width: 100%; 
+    padding: 14px; 
+    border: none; 
+    border-radius: 12px; 
+    font-weight: bold; 
+    margin-top: 10px; 
+    cursor: pointer; 
+    font-size: 1rem; 
+    text-align: center; /* Texto centrado */
+    display: flex;      /* Flex para centrar contenido */
+    justify-content: center;
+    align-items: center;
+}
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; background: #555 !important; color: #aaa !important; }
 
 .input-field { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #333; background: #252a35; color: white; outline: none; }
@@ -139,17 +173,18 @@ body {
 .btn-text { background: transparent; border: none; color: var(--text-gray); margin-top: 15px; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
 .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
 
+/* Centrado para Login */
+#auth-view .center-content { align-items: center; }
+
 /* --- ESTILOS PREMIOS Y PETICIONES --- */
 .reward-card { background: var(--card-bg); border: 1px solid #333; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .reward-cost { background: rgba(78, 142, 255, 0.1); color: var(--primary); padding: 5px 10px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; }
 
-/* Estilo mejorado para canje pendiente */
 .pending-reward { border: 2px solid var(--accent); background: rgba(0, 210, 133, 0.05); }
 
-/* Botones de Acción en Peticiones/Premios */
 .btn-action-green { 
     background: var(--accent); 
-    color: #000; /* Texto oscuro para contraste */
+    color: #000; 
     padding: 8px 12px; 
     border-radius: 8px; 
     border: none; 
