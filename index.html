@@ -15,34 +15,37 @@
 
 <div id="globalLoader" style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; background:#0f172a; z-index:9000; position:fixed; top:0; left:0; width:100%;">
   <h1 style="color:#3b82f6; animation:pulse 1s infinite;">Couple4God</h1>
-  <p style="color:#94a3b8;">Construyendo amor...</p>
+  <p style="color:#94a3b8;">Conectando...</p>
 </div>
 
 <div id="onboarding" class="onboarding-overlay hidden">
   <div id="slide1" class="slide active">
-    <div style="font-size:4rem; margin-bottom:20px;">🌳</div>
-    <h2>1. El Jardín</h2>
-    <p>Completen retos juntos para regar y hacer crecer su Jardín Espiritual.</p>
+    <div style="font-size:4rem; margin-bottom:20px;">📱</div>
+    <h2>1. Conéctense</h2>
+    <p>Uno crea el código, el otro se une. ¡Es un equipo!</p>
   </div>
   <div id="slide2" class="slide">
-    <div style="font-size:4rem; margin-bottom:20px;">🏳️</div>
-    <h2>2. Bandera Blanca</h2>
-    <p>¿Peleados? Usa el botón de emergencia para romper el orgullo y reconciliarse.</p>
+    <div style="font-size:4rem; margin-bottom:20px;">🌳</div>
+    <h2>2. Cultiven</h2>
+    <p>Completen retos juntos para hacer crecer su Jardín Espiritual.</p>
   </div>
   <div id="slide3" class="slide">
-    <div style="font-size:4rem; margin-bottom:20px;">✨</div>
-    <h2>3. Conexión</h2>
-    <p>Preguntas profundas diarias y oración compartida.</p>
-    <button id="startAppBtn" style="margin-top:30px; background:#10b981;">¡Empezar!</button>
+    <div style="font-size:4rem; margin-bottom:20px;">🏳️</div>
+    <h2>3. Reconciliación</h2>
+    <p>Usen la Bandera Blanca para resolver conflictos con amor.</p>
+    <button id="startAppBtn" style="margin-top:30px; background:#10b981;">¡Entendido!</button>
   </div>
   <div class="dots"><div class="dot active" id="dot1"></div><div class="dot" id="dot2"></div><div class="dot" id="dot3"></div></div>
   <button id="nextSlideBtn" style="position:absolute; bottom:30px; width:80%;">Siguiente</button>
 </div>
 
 <div id="userHeader" class="hidden">
-  <div style="display:flex; align-items:center;">
-    <span id="userNameDisplay" style="font-weight:bold; display:block;">Usuario</span>
-    <span id="myMoodDisplay" class="mood-indicator"></span>
+  <div style="text-align:left;">
+    <span id="userNameDisplay" style="font-weight:bold; display:block; font-size:0.9rem;">Pareja</span>
+    <div class="mood-container">
+      <div class="mood-box"><span id="myMoodDisplay">😶</span><span class="mood-label">Tú</span></div>
+      <div class="mood-box"><span id="partnerMoodDisplay">❓</span><span class="mood-label">Pareja</span></div>
+    </div>
   </div>
   <button id="logoutBtn" class="btn-small" style="background:#ef4444;">Salir</button>
 </div>
@@ -81,10 +84,10 @@
 
 <section id="app" class="hidden">
   <div id="gardenContainer" class="garden-container">
-    <h3 style="margin:0; font-size:1rem; text-transform:uppercase; letter-spacing:2px; color:#a7f3d0;">Jardín Espiritual</h3>
+    <h3 style="margin:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; color:#a7f3d0;">Jardín Espiritual</h3>
     <span id="gardenPlant" class="plant-stage">🌱</span>
-    <p id="gardenLevel" class="garden-info">Nivel 1: Semilla de Fe</p>
-    <div id="waterEffect"></div>
+    <p id="gardenLevel" class="garden-info">Nivel 1: Semilla</p>
+    <p id="gardenProgressText" class="garden-progress">Faltan 4 días para evolucionar</p>
   </div>
 
   <h2 style="text-align:left; margin-left:10px;">Tu Calendario</h2>
@@ -93,8 +96,10 @@
 
 <div id="toolsBar" class="tools-bar hidden">
   <button class="tool-btn" id="openPrayerBtn" title="Orar">🙏</button>
-  <button class="tool-btn" id="openQuestionsBtn" title="Pregunta del Alma">✨</button>
-  <button class="tool-btn" id="openPeaceBtn" title="Bandera Blanca">🏳️</button>
+  <button class="tool-btn" id="openQuestionsBtn" title="Preguntas">✨</button>
+  <div style="position:relative;">
+    <button class="tool-btn" id="openPeaceBtn" title="Bandera Blanca">🏳️</button>
+    <div id="peaceBadge" class="notification-dot hidden"></div> </div>
   <button class="tool-btn" id="openDateBtn" title="Cita">📅</button>
   <button class="tool-btn" id="openFeedbackBtn" title="Ayuda">💬</button>
 </div>
@@ -127,18 +132,23 @@
 </div>
 
 <div id="peaceModal" class="modal-overlay hidden">
-  <div class="modal-content peace-modal">
-    <span class="white-flag-icon">🏳️</span>
-    <h3 style="margin-top:10px;">Bandera Blanca</h3>
-    <div id="peaceContent">
-      <p>¿Quieres romper el hielo y buscar la paz con tu pareja?</p>
-      <button id="sendPeaceBtn" style="background:#fff; color:#1e293b;">Enviar Petición de Paz</button>
+  <div class="modal-content" style="text-align:center; background:linear-gradient(135deg, #1e293b, #334155);">
+    <span style="font-size:4rem;">🏳️</span>
+    <h3 style="margin-top:10px;">Zona de Reconciliación</h3>
+    
+    <div id="peaceInitSection">
+      <p>¿Quieres invitar a la paz?</p>
+      <button id="sendPeaceBtn" style="background:#fff; color:#1e293b;">Levantar Bandera Blanca</button>
+      <p id="peaceStats" style="font-size:0.8rem; color:#94a3b8; margin-top:10px;">Veces que buscaste paz: 0</p>
     </div>
-    <div id="peaceReceiver" class="hidden">
-      <p><strong>Tu pareja quiere la paz.</strong> <br>¿Aceptas dejar el orgullo y reconciliarte?</p>
-      <button id="acceptPeaceBtn" style="background:#10b981;">🤝 Acepto Reconciliarme</button>
+
+    <div id="peaceReceiveSection" class="hidden">
+      <p style="color:#fbbf24; font-weight:bold;">¡Tu pareja quiere arreglar las cosas!</p>
+      <p>¿Aceptas dejar el orgullo?</p>
+      <button id="acceptPeaceBtn" style="background:#10b981;">🤝 Aceptar Abrazo</button>
     </div>
-    <button onclick="closeModals()" style="background:transparent; border:none; text-decoration:underline; margin-top:10px; color:#ccc;">Cancelar</button>
+
+    <button onclick="closeModals()" style="background:transparent; border:none; text-decoration:underline; margin-top:10px; color:#ccc;">Cerrar</button>
   </div>
 </div>
 
@@ -175,45 +185,10 @@
   </div>
 </div>
 
-<div id="prayerModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h3>Muro de Oración 🙏</h3>
-      <button class="close-modal" onclick="closeModals()" style="color:#fff; background:none; border:none; font-size:1.5rem;">&times;</button>
-    </div>
-    <div id="prayerList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
-    <textarea id="newPrayerText" rows="2" placeholder="Escribe tu petición..."></textarea>
-    <button id="addPrayerBtn" style="margin-top:10px;">Publicar</button>
-  </div>
-</div>
-
-<div id="dateModal" class="modal-overlay hidden">
-  <div class="modal-content" style="text-align:center;">
-    <h3>Cita del Día 📅</h3>
-    <div style="background:#334155; padding:20px; border-radius:10px; margin:20px 0; border:2px dashed #60a5fa;">
-        <div id="dateIdea" style="font-size:1.3rem; font-weight:bold; color:#fff;">...</div>
-    </div>
-    <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cerrar</button>
-  </div>
-</div>
-
-<div id="feedbackModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <h3>Sugerencias</h3>
-    <textarea id="feedbackText" rows="4"></textarea>
-    <button id="sendFeedbackBtn" style="margin-top:10px;">Enviar</button>
-    <button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cancelar</button>
-  </div>
-</div>
-
-<div id="rewardModal" class="modal-overlay hidden">
-  <div class="modal-content" style="text-align:center; border-color:#fbbf24;">
-    <div style="font-size:5rem;">🏆</div>
-    <h2 style="color:#fbbf24;">¡Nivel Desbloqueado!</h2>
-    <p id="rewardText"></p>
-    <button onclick="closeModals()">¡Genial!</button>
-  </div>
-</div>
+<div id="prayerModal" class="modal-overlay hidden"><div class="modal-content"><h3>Muro de Oración 🙏</h3><div id="prayerList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div><textarea id="newPrayerText" rows="2" placeholder="Escribe tu petición..."></textarea><button id="addPrayerBtn">Publicar</button><button onclick="closeModals()" style="background:transparent;border:none;color:#ccc;margin-top:10px;">Cerrar</button></div></div>
+<div id="dateModal" class="modal-overlay hidden"><div class="modal-content" style="text-align:center;"><h3>Cita del Día 📅</h3><div style="background:#334155; padding:20px; border-radius:10px; margin:20px 0; border:2px dashed #60a5fa;"><div id="dateIdea" style="font-size:1.3rem; font-weight:bold; color:#fff;">...</div></div><button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cerrar</button></div></div>
+<div id="feedbackModal" class="modal-overlay hidden"><div class="modal-content"><h3>Sugerencias</h3><textarea id="feedbackText" rows="4"></textarea><button id="sendFeedbackBtn" style="margin-top:10px;">Enviar</button><button onclick="closeModals()" style="background:transparent; border:1px solid #475569;">Cancelar</button></div></div>
+<div id="rewardModal" class="modal-overlay hidden"><div class="modal-content" style="text-align:center; border-color:#fbbf24;"><div style="font-size:5rem;">🏆</div><h2 style="color:#fbbf24;">¡Nivel Desbloqueado!</h2><p id="rewardText"></p><button onclick="closeModals()">¡Genial!</button></div></div>
 
 <script src="app.js" type="module"></script>
 </body>
