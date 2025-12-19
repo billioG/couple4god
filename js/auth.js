@@ -6,7 +6,7 @@ let isRegistering = false;
 
 window.toggleRegisterMode = function() {
   isRegistering = !isRegistering;
-
+  
   const nameInput = document.getElementById('full-name');
   const genderInput = document.getElementById('gender-selector');
   const btnLogin = document.getElementById('btn-login');
@@ -14,7 +14,11 @@ window.toggleRegisterMode = function() {
 
   // Verificar que los elementos existen antes de manipularlos
   if (!nameInput || !genderInput || !btnLogin || !btnToggle) {
-    console.error('Error: Elementos de formulario no encontrados');
+    console.warn('Esperando a que el DOM esté listo...');
+    // Reintentar después de un breve delay
+    setTimeout(() => {
+      window.toggleRegisterMode();
+    }, 100);
     return;
   }
 
@@ -40,7 +44,7 @@ window.selectGender = function(gender, element) {
     console.error('Error: Elemento selected-gender no encontrado');
     return;
   }
-
+  
   selectedInput.value = gender;
   document.querySelectorAll('.gender-option').forEach(el => el.classList.remove('selected'));
   if (element) {
@@ -99,10 +103,10 @@ window.handleLogin = async function() {
 
     if (error) {
       console.error('Error de login:', error);
-
+      
       // Mensajes específicos según el error
       let errorMessage = 'Error al iniciar sesión';
-
+      
       if (error.message.includes('Invalid login credentials') || 
           error.message.includes('Invalid email or password')) {
         errorMessage = 'Correo o contraseña incorrectos';
@@ -119,7 +123,7 @@ window.handleLogin = async function() {
       } else {
         alert(errorMessage);
       }
-
+      
       // Rehabilitar botón
       if (btn) {
         btn.disabled = false;
@@ -131,7 +135,7 @@ window.handleLogin = async function() {
     if (window.showToast) {
       window.showToast('Bienvenido!', 'success');
     }
-
+    
     setTimeout(() => window.location.reload(), 800);
 
   } catch (e) {
@@ -141,7 +145,7 @@ window.handleLogin = async function() {
     } else {
       alert('Error de conexión. Intenta de nuevo');
     }
-
+    
     // Rehabilitar botón
     if (btn) {
       btn.disabled = false;
@@ -223,10 +227,10 @@ window.handleSignUp = async function() {
 
     if (error) {
       console.error('Error de registro:', error);
-
+      
       // Mensajes específicos según el error
       let errorMessage = 'Error al crear la cuenta';
-
+      
       if (error.message.includes('already registered') || 
           error.message.includes('User already registered')) {
         errorMessage = 'Este correo ya está registrado';
@@ -243,7 +247,7 @@ window.handleSignUp = async function() {
       } else {
         alert(errorMessage);
       }
-
+      
       // Rehabilitar botón
       if (btn) {
         btn.disabled = false;
@@ -289,7 +293,7 @@ window.handleSignUp = async function() {
     } else {
       alert('Error de conexión. Intenta de nuevo');
     }
-
+    
     // Rehabilitar botón
     if (btn) {
       btn.disabled = false;
