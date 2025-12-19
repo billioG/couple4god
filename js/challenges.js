@@ -1,88 +1,112 @@
 // js/challenges.js
 
-async function loadDailyChallenge() {
-    if (!window.db) return;
+async function loadChallengeGrid() {
+    if (!window.currentProfile) return;
+    
+    // Resaltar icono del menú
+    document.querySelectorAll('.nav-icon').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('button[onclick="loadChallengeGrid()"]').classList.add('active');
 
-    const contentDiv = document.getElementById('content-area');
-    contentDiv.innerHTML = '<div class="loader">Cargando el reto de hoy...</div>';
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '<p style="text-align:center; width:100%">Cargando...</p>';
 
     try {
-        // Obtenemos el reto #1 (Puedes cambiar este número según la lógica de días)
-        const { data: challenge, error } = await window.db
-            .from('challenges')
-            .select('*')
-            .eq('day_number', 1) 
-            .single();
+        // 1. Obtener progreso
+        const { count } = await window.db
+            .from('user_progress')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', window.currentProfile.id);
 
-        if (error) throw error;
+        const currentDay = count + 1;
+        const totalDays = 21; // Total de retos
 
-        if (!challenge) {
-            contentDiv.innerHTML = '<p>No hay reto disponible para hoy.</p>';
-            return;
+        let html = '';
+
+        for (let i = 1; i <= totalDays; i++) {
+            let stateClass = '';
+            let icon = '';
+            let dots = '● ●'; // Los puntitos de abajo
+            let clickEvent = '';
+
+            if (i < currentDay) {
+                // Pasado
+                stateClass = 'completed';
+                icon = '✅'; 
+                clickEvent = `onclick="openChallengeModal(${i}, true)"`; // Ver solo lectura
+            } else if (i === currentDay) {
+                // Actual (Fuego)
+                stateClass = 'active';
+                icon = '🔥';
+                clickEvent = `onclick="openChallengeModal(${i}, false)"`; // Ver para completar
+            } else {
+                // Futuro (Bloqueado)
+                stateClass = 'locked';
+                icon = '🔒';
+                dots = '● ●';
+                clickEvent = `onclick="alert('¡No te adelantes! Completa el día actual.')"`;
+            }
+
+            html += `
+                <div class="day-btn ${stateClass}" ${clickEvent}>
+                    <div class="day-num">${i}</div>
+                    <div class="day-icon">${icon}</div>
+                    <div style="font-size: 0.6rem; opacity: 0.5; margin-top: 2px;">${dots}</div>
+                </div>
+            `;
         }
 
-        // Renderizar tarjeta HTML
-        contentDiv.innerHTML = `
-            <div class="challenge-card">
-                <div class="card-header">
-                    <span class="day-badge">Día ${challenge.day_number}</span>
-                    <h2>${challenge.author} dice:</h2>
-                </div>
-
-                <div class="quote-section">
-                    <p>"${challenge.quote}"</p>
-                </div>
-
-                <div class="wisdom-box">
-                    <h4>💡 Píldora de Sabiduría</h4>
-                    <p>${challenge.reflection || challenge.content}</p>
-                </div>
-
-                <div class="action-box">
-                    <h4>🔥 Misión de Hoy</h4>
-                    <p>${challenge.task}</p>
-                </div>
-
-                <div class="intention-box">
-                    <h4>✨ Intención</h4>
-                    <p>${challenge.intention}</p>
-                </div>
-
-                <button onclick="completeChallenge(${challenge.id})" class="btn-primary">
-                    ¡Misión Cumplida! (+100 XP)
-                </button>
-            </div>
-        `;
+        grid.innerHTML = html;
+        
+        // Actualizar el Jardín también
+        updateGardenDisplay(currentDay);
 
     } catch (err) {
-        console.error("Error cargando reto:", err);
-        contentDiv.innerHTML = `<p style="text-align:center; color:red">Error cargando el contenido. Revisa tu conexión.</p>`;
+        console.error(err);
+        grid.innerHTML = '<p>Error cargando calendario</p>';
     }
 }
 
-// Función global para completar reto
-window.completeChallenge = async function(challengeId) {
-    if (!window.currentProfile) return;
+// Actualizar la tarjeta verde de arriba
+function updateGardenDisplay(currentDay) {
+    const plants = ['Semilla 🌱', 'Brote 🌿', 'Tallo 🎋', 'Flor 🌷', 'Árbol 🌳'];
+    // Lógica simple para subir de nivel cada 5 días
+    const levelIndex = Math.floor((currentDay - 1) / 5); 
+    const currentPlant = plants[Math.min(levelIndex, plants.length - 1)];
+    const daysToNext = 5 - ((currentDay - 1) % 5);
 
-    try {
-        // 1. Guardar progreso
-        const { error: progressError } = await window.db.from('user_progress').insert({
-            user_id: window.currentProfile.id,
-            last_challenge_id: challengeId
-        });
+    document.getElementById('garden-plant').innerText = currentPlant.split(' ')[1];
+    document.getElementById('garden-level').innerText = `Nivel ${levelIndex + 1}: ${currentPlant.split(' ')[0]}`;
+    document.getElementById('garden-next').innerText = `Faltan ${daysToNext} día(s) para evolucionar 🚀`;
+}
 
-        if(progressError) throw progressError;
+// Abrir Modal
+window.openChallengeModal = async function(day, isCompleted) {
+    window.showModal(`Día ${day}`, "Cargando sabiduría...");
 
-        // 2. Dar XP
-        await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: 100 });
+    const { data: challenge } = await window.db
+        .from('challenges')
+        .select('*')
+        .eq('day_number', day)
+        .single();
 
-        showModal("¡Excelente!", "Has ganado 100 XP por invertir en tu relación.");
-        
-        // Actualizar UI
-        if(typeof refreshUserProfile === 'function') refreshUserProfile();
+    if(challenge) {
+        let content = `
+            <p style="font-style:italic; font-size: 1.1em">"${challenge.quote}"</p>
+            <p style="text-align:right; color: var(--primary); margin-bottom: 15px;">— ${challenge.author}</p>
+            <div style="background:#2d3436; padding:15px; border-radius:10px; margin-bottom:15px">
+                <h4 style="color:#aebbc9">Misión:</h4>
+                <p>${challenge.task}</p>
+            </div>
+        `;
 
-    } catch (error) {
-        console.log(error);
-        showModal("Aviso", "Ya has completado este reto anteriormente.");
+        if (!isCompleted) {
+            content += `<button class="btn-primary" onclick="completeChallenge(${challenge.id})">¡Completado! (+XP)</button>`;
+        } else {
+            content += `<p style="text-align:center; color: var(--accent-green)">✨ Reto completado</p>`;
+        }
+
+        // Actualizar modal ya abierto
+        document.getElementById('modal-body').innerHTML = content;
+        // Inyectar botón en acciones si es necesario (o dejarlo en el body como arriba)
     }
 }
