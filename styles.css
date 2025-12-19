@@ -121,3 +121,80 @@ body { background-color: var(--bg-dark); color: var(--text-white); height: 100vh
 .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; pointer-events: none; }
 .toast { background: #333; color: white; padding: 12px 20px; border-radius: 50px; margin-bottom: 10px; border: 1px solid #555; text-align: center; pointer-events: auto; animation: slideIn 0.3s; }
 @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ... (Mantén las variables y estilos base anteriores) ... */
+
+/* --- NUEVO: BARRA DE PROGRESO --- */
+.progress-container {
+    margin: 0 20px 25px 20px;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: 15px;
+    border: 1px solid #333;
+}
+
+.progress-track {
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    position: relative;
+    margin: 20px 10px 10px 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 4px;
+    width: 0%; /* Se llena con JS */
+    transition: width 1s ease;
+}
+
+/* Hitos (Iconos encima de la barra) */
+.milestone {
+    position: absolute;
+    top: -25px;
+    transform: translateX(-50%);
+    font-size: 1.2rem;
+    filter: grayscale(1);
+    transition: 0.3s;
+}
+.milestone.unlocked { filter: grayscale(0); transform: translateX(-50%) scale(1.2); }
+
+/* --- NUEVO: INDICADORES DE RETO (Puntos y Estrella) --- */
+.indicators {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+    align-items: center;
+    justify-content: center;
+    height: 15px;
+}
+
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-blue { background-color: #4e8eff; box-shadow: 0 0 5px #4e8eff; }
+.dot-pink { background-color: #ff7675; box-shadow: 0 0 5px #ff7675; }
+.star-icon { font-size: 0.8rem; animation: pop 0.5s; }
+
+/* --- LOGIN: Selector de Género --- */
+.gender-select {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.gender-option {
+    flex: 1;
+    padding: 10px;
+    background: #252a35;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #888;
+    cursor: pointer;
+    text-align: center;
+}
+.gender-option.selected {
+    border-color: var(--primary);
+    color: white;
+    background: rgba(78, 142, 255, 0.2);
+}
+
+@keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
