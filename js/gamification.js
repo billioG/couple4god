@@ -11,7 +11,6 @@ window.checkWhiteFlagStatus = async function() {
     try {
         const { data: c } = await window.db.from('couples').select('*').eq('id', window.currentCouple.id).single();
         let h = '<div style="padding:0 20px">';
-        
         if(c.white_flag_status==='none'||!c.white_flag_status) h+=`<div style="text-align:center; padding:30px; background:var(--card-bg); border:1px solid #333; border-radius:15px;"><div style="font-size:3rem">🏳️</div><h3>Zona de Tregua</h3><p style="color:#aaa">Pide paz.<br><small style="color:var(--accent)">+10 XP</small></p><button onclick="sendFlag('${c.id}')" class="btn-primary" style="background:#636e72">Levantar Bandera</button></div>`;
         else if(c.white_flag_status==='sent') h+= (c.white_flag_sender===window.currentProfile.id) ? `<div class="garden-card"><h3>🏳️ Bandera Enviada</h3><p>Esperando...</p></div>` : `<div class="garden-card" style="border-color:var(--primary)"><h3 style="color:white">🏳️ Piden Paz</h3><p>Acepta para restaurar armonía.<br><small style="color:var(--accent)">+25 XP</small></p><button onclick="acceptFlag('${c.id}')" class="btn-primary">Aceptar</button></div>`;
         else if(c.white_flag_status==='accepted') h+=`<div class="garden-card" style="border-color:var(--accent)"><h3 style="color:var(--accent)">✨ Paz Restaurada</h3><button onclick="resetFlag('${c.id}')" class="btn-primary" style="background:#333; margin-top:10px">Cerrar</button></div>`;
@@ -22,7 +21,7 @@ window.sendFlag=async(id)=>{await window.db.from('couples').update({white_flag_s
 window.acceptFlag=async(id)=>{await window.db.from('couples').update({white_flag_status:'accepted'}).eq('id',id);await window.db.rpc('add_xp',{user_id:window.currentProfile.id,points:25});await window.refreshUserProfile();window.showToast("Aceptada (+25 XP)");window.checkNotifications();window.checkWhiteFlagStatus();};
 window.resetFlag=async(id)=>{await window.db.from('couples').update({white_flag_status:'none'}).eq('id',id);window.checkWhiteFlagStatus();};
 
-// 2. PETICIONES (ENTERADO ARREGLADO)
+// 2. PETICIONES
 window.loadPrayers = async function() {
     const c = document.getElementById('dynamic-content'); c.innerHTML='<div class="loader">Cargando...</div>';
     const {data:items} = await window.db.from('shared_content').select('*').eq('couple_id',window.currentCouple.id).eq('type','request').order('created_at',{ascending:false}).limit(10);
@@ -34,11 +33,11 @@ window.loadPrayers = async function() {
         const status = i.status || 'pending';
         let statusHtml = '';
 
-        if (!mine) { // Petición de mi pareja
+        if (!mine) { // Pareja
             if(status === 'pending') statusHtml = `<button onclick="updatePrayerStatus('${i.id}', 'ack')" class="btn-primary" style="margin:5px 0; font-size:0.8rem; background:var(--primary)">👁️ Enterado</button>`;
-            else if(status === 'ack') statusHtml = `<button onclick="updatePrayerStatus('${i.id}', 'done')" class="btn-primary" style="margin:5px 0; font-size:0.8rem; background:var(--accent); color:black;">✅ Marcar Cumplido</button>`;
+            else if(status === 'ack') statusHtml = `<button onclick="updatePrayerStatus('${i.id}', 'done')" class="btn-action-green" style="margin:5px 0;">✅ Marcar Cumplido</button>`;
             else statusHtml = `<span class="status-badge status-done">¡Cumplido! 🎉</span>`;
-        } else { // Mi petición
+        } else { // Mío
             if(status === 'pending') statusHtml = `<span class="status-badge status-pending">Esperando...</span>`;
             else if(status === 'ack') statusHtml = `<span class="status-badge status-process">En Proceso ⏳</span>`;
             else statusHtml = `<span class="status-badge status-done">¡Tu pareja cumplió! ❤️</span>`;
@@ -63,17 +62,13 @@ window.updatePrayerStatus = async function(id, status) {
             window.showToast("Estado actualizado");
         }
         window.loadPrayers();
-    } catch(e) { 
-        console.error(e); 
-        window.showToast("Error al actualizar (Revisar permisos SQL)", "error");
-    }
+    } catch(e) { console.error(e); window.showToast("Error al actualizar", "error"); }
 };
 
-// 3. PREMIOS (LÓGICA INVERTIDA CORRECTA)
+// 3. PREMIOS
 window.loadRewards = async function() {
     const c = document.getElementById('dynamic-content'); c.innerHTML='<div class="loader">Cargando...</div>';
     
-    // Premios activos (Deudas)
     const { data: active } = await window.db.from('active_redemptions').select('*').eq('couple_id', window.currentCouple.id).eq('status', 'pending');
     const { data: rw } = await window.db.from('rewards').select('*').order('cost');
     const xp = window.currentProfile.xp || 0;
@@ -83,21 +78,18 @@ window.loadRewards = async function() {
             <h2 style="color:var(--accent); margin:0">${xp} XP</h2><p style="color:#888">Disponibles</p>
         </div>`;
 
-    // LISTA DE DEUDAS
     if(active && active.length > 0) {
         h += `<h3>⚠️ Canjes Activos</h3>`;
         active.forEach(a => {
             const iRedeemed = a.user_id === window.currentProfile.id; 
-            
-            // CORRECCIÓN: Si YO canjeé (pedí), YO tengo el botón de confirmar que recibí
             if (iRedeemed) {
+                // AQUÍ ESTÁ EL BOTÓN MEJORADO
                 h += `<div class="reward-card pending-reward">
                     <div><b>PEDISTE:</b> ${a.reward_title}</div>
-                    <button onclick="completeRedemption('${a.id}')" class="btn-primary" style="width:auto; padding:5px; margin:0; font-size:0.8rem; background:var(--accent); color:black;">✅ Ya lo recibí</button>
+                    <button onclick="completeRedemption('${a.id}')" class="btn-action-green">✅ Ya lo recibí</button>
                 </div>`;
             } else {
-                // Mi pareja canjeó, yo debo cumplir (sin botón, solo aviso)
-                h += `<div class="reward-card pending-reward"><div><b>DEBES CUMPLIR:</b> ${a.reward_title}</div><small>Tu pareja debe confirmar</small></div>`;
+                h += `<div class="reward-card pending-reward"><div><b>DEBES CUMPLIR:</b> ${a.reward_title}</div><small style="color:var(--text-gray)">Tu pareja debe confirmar</small></div>`;
             }
         });
         h += `<hr style="border:0; border-top:1px solid #333; margin:20px 0;">`;
@@ -145,10 +137,13 @@ window.loadTips = function() {
     document.getElementById('dynamic-content').innerHTML = `<div style="padding:40px; text-align:center;"><h1>💡</h1><h3>Consejo</h3><div style="background:#222; padding:20px; border-radius:10px; margin-top:20px">"${tips[Math.floor(Math.random()*tips.length)]}"</div></div>`;
 };
 
+// Se agregó el parámetro 'btn' para deshabilitarlo
 window.saveSharedContent=async(type,extra='', btn)=>{ 
     const id=type==='request'?'prayer-input':'answer-input'; const val=document.getElementById(id).value.trim();
     if(!val)return window.showToast("Escribe algo","error");
-    if(btn) { btn.disabled=true; btn.innerText="Guardando..."; } // DESHABILITAR BOTÓN
+    
+    // BLOQUEO DEL BOTÓN
+    if(btn) { btn.disabled = true; btn.innerText = "Guardando..."; btn.style.opacity = "0.5"; }
 
     await window.db.from('shared_content').insert({user_id:window.currentProfile.id,couple_id:window.currentCouple.id,type,content:(type==='answer'?`[P: ${extra}]\n${val}`:val)});
     await window.db.rpc('add_xp',{user_id:window.currentProfile.id,points:5}); 
