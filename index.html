@@ -3,55 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Couple Garden</title>
+    <title>Couple Garden - Crecimiento en Pareja</title>
+    
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/components.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
     <div id="app-container">
+        
         <section id="auth-view" class="view hidden">
-            <div style="padding: 40px; text-align: center; margin-top: 30%;">
-                <h1>🌱 Couple Garden</h1>
-                <br>
-                <input type="email" id="email" placeholder="Email" style="width:100%; padding:15px; margin-bottom:10px; border-radius:10px; border:none;">
-                <input type="password" id="password" placeholder="Contraseña" style="width:100%; padding:15px; margin-bottom:20px; border-radius:10px; border:none;">
-                <button onclick="handleLogin()" class="btn-primary">Entrar</button>
+            <div class="login-container">
+                <div style="margin-bottom: 30px;">
+                    <span style="font-size: 4rem;">🌱</span>
+                    <h1>Couple Garden</h1>
+                    <p style="color: var(--text-gray);">Cultiva tu relación día a día</p>
+                </div>
+                
+                <input type="email" id="email" class="login-input" placeholder="Tu correo electrónico">
+                <input type="password" id="password" class="login-input" placeholder="Contraseña">
+                
+                <button onclick="handleLogin()" class="btn-primary">Iniciar Sesión</button>
+                <button onclick="handleSignUp()" class="btn-primary" style="background:transparent; border:1px solid var(--primary); margin-top:10px;">Registrarse</button>
+                
+                <p id="auth-message" style="margin-top: 15px; font-size: 0.9rem; color: var(--danger);"></p>
             </div>
         </section>
 
-        <section id="main-view" class="view">
+        <section id="main-view" class="view hidden">
+            
             <div class="top-bar">
                 <div class="user-info">
                     <div class="user-name">Hola, <span id="display-name">Usuario</span></div>
                     <div class="avatars">
-                        <span>🧔</span> <span>👱‍♀️</span> </div>
+                        <span>🧔</span> 
+                        <span>👱‍♀️</span> 
+                    </div>
                 </div>
-                <button onclick="handleLogout()" class="btn-logout">Salir</button>
+                <div style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 15px; font-weight: bold; border: 1px solid #333;">
+                    ✨ <span id="user-xp">0</span> XP
+                </div>
+                <button onclick="handleLogout()" class="btn-logout" style="margin-left: 10px;">Salir</button>
             </div>
 
             <div id="content-area">
                 
                 <div class="garden-card">
-                    <div class="garden-title">JARDÍN DE PAREJA</div>
+                    <div class="garden-header">JARDÍN ESPIRITUAL</div>
                     <div class="plant-icon" id="garden-plant">🌱</div>
                     <div class="level-text" id="garden-level">Nivel 1: Semilla</div>
-                    <div class="sub-text" id="garden-next">Faltan 4 días juntos para evolucionar 🚀</div>
+                    <div class="sub-text" id="garden-next">Cargando progreso...</div>
                 </div>
 
                 <h2 class="section-title">Tu Calendario</h2>
+
                 <div id="calendar-grid" class="calendar-grid">
-                    </div>
+                    <p style="grid-column: 1/-1; text-align: center; color: #666;">Cargando calendario...</p>
+                </div>
 
             </div>
 
             <nav class="floating-nav">
-                <button class="nav-icon" onclick="showSection('prayer')">🙏</button>
-                <button class="nav-icon" onclick="openRewards()">✨</button>
-                <button class="nav-icon" onclick="checkWhiteFlagStatus()">🏳️</button>
-                <button class="nav-icon active" onclick="loadChallengeGrid()">📅</button>
-                <button class="nav-icon" onclick="showSection('chat')">💬</button>
+                <button class="nav-icon" onclick="showSection('rewards')" title="Premios">
+                    ✨
+                </button>
+                
+                <button class="nav-icon" onclick="showSection('peace')" title="Bandera Blanca">
+                    🏳️
+                </button>
+                
+                <button class="nav-icon active" onclick="showSection('calendar')" title="Retos">
+                    📅
+                </button>
+                
+                <button class="nav-icon" onclick="showSection('chat')" title="Chat">
+                    💬
+                </button>
             </nav>
 
         </section>
@@ -60,18 +88,19 @@
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <button onclick="closeModal()" class="btn-close-modal">✕</button>
-            <div style="padding: 20px; padding-top: 40px;">
-                <h3 id="modal-title" style="color: var(--primary); margin-bottom: 10px;">Título</h3>
-                <div id="modal-body" style="color: #ccc; line-height: 1.5;">Contenido...</div>
-                <div id="modal-actions"></div>
+            
+            <div style="padding-top: 20px;">
+                <h3 id="modal-title" style="color: var(--primary); margin-bottom: 15px; font-size: 1.4rem;">Título</h3>
+                
+                <div id="modal-body" style="color: #ccc; line-height: 1.6; font-size: 0.95rem; text-align: left;">
+                    Contenido...
+                </div>
+
+                <div id="modal-actions" style="margin-top: 20px;">
+                    </div>
             </div>
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/gamification.js"></script>
-    <script src="js/challenges.js"></script>
-    <script src="js/app.js"></script>
-</body>
+    <script src="js/config.js"></script>         <script src="js/auth.js"></script>           <script src="js/gamification.js"></script>   <script src="js/challenges.js"></script>     <script src="js/app.js"></script>            </body>
 </html>
