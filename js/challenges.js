@@ -1,31 +1,36 @@
 // ==========================================
-// LÓGICA DE RETOS Y CALENDARIO (SIMPLIFICADA)
+// LÓGICA DE RETOS Y CALENDARIO (BLINDADO)
 // ==========================================
 
 // 1. Cargar Grid
 window.loadChallengeGrid = async function() {
+    // Si no hay perfil o pareja, detenemos (evita errores de carga prematura)
     if (!window.currentProfile || !window.currentCouple) return;
 
-    // Asegurar contenedor
+    // Asegurar contenedor dinámico
     const dynamicContainer = document.getElementById('dynamic-content');
-    if (!document.getElementById('calendar-grid')) {
-        // Restaurar estructura si se perdió
+    
+    // Si el contenedor del grid no existe, restauramos la estructura de la Barra de Progreso
+    if (!document.getElementById('calendar-grid') && dynamicContainer) {
         dynamicContainer.innerHTML = `
             <div class="progress-container">
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-bottom:5px;">
+                    <span>Tu Progreso</span>
+                    <span id="progress-text">0%</span>
+                </div>
                 <div class="progress-track">
                     <div class="progress-fill" id="progress-bar"></div>
                     <div class="milestone" style="left: 33%;" id="milestone-7">👫</div>
                     <div class="milestone" style="left: 66%;" id="milestone-14">🎁</div>
                     <div class="milestone" style="left: 100%;" id="milestone-21">❤️</div>
                 </div>
-                <p style="text-align:center; font-size:0.8rem; color:#888; margin-top:5px;">Tu Progreso</p>
             </div>
             <div id="calendar-grid" class="calendar-grid"></div>
         `;
     }
 
     const grid = document.getElementById('calendar-grid');
-    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center">Cargando...</p>';
+    if (grid) grid.innerHTML = '<p style="grid-column:1/-1; text-align:center">Cargando...</p>';
 
     try {
         const partnerId = (window.currentCouple.user1_id === window.currentProfile.id) 
@@ -43,7 +48,6 @@ window.loadChallengeGrid = async function() {
         const partnerCompleted = new Set(allProgress.filter(p => p.user_id === partnerId).map(p => p.last_challenge_id));
 
         // Lógica Secuencial: El día actual es el siguiente al último que YO completé
-        // (Buscamos el hueco más pequeño. Si hice el 1, 2 y 4, mi día actual debería ser el 3)
         let currentDay = 1;
         while (myCompleted.has(currentDay)) {
             currentDay++;
@@ -51,8 +55,8 @@ window.loadChallengeGrid = async function() {
         
         const totalDays = 21;
 
-        // Actualizar Barra
-        window.updateProgressBar(myCompleted.size, totalDays);
+        // Actualizar Barra (con seguridad)
+        if (window.updateProgressBar) window.updateProgressBar(myCompleted.size, totalDays);
 
         let html = '';
 
@@ -94,14 +98,16 @@ window.loadChallengeGrid = async function() {
             `;
         }
 
-        grid.innerHTML = html;
+        if (grid) grid.innerHTML = html;
         
-        // Actualizar Jardín (Definida abajo para evitar errores)
-        if (window.updateGardenDisplay) window.updateGardenDisplay(currentDay);
+        // Actualizar Jardín (Llamada segura)
+        if (typeof window.updateGardenDisplay === 'function') {
+            window.updateGardenDisplay(currentDay);
+        }
 
     } catch (err) {
-        console.error(err);
-        grid.innerHTML = '<p>Error de conexión</p>';
+        console.error("Error en loadChallengeGrid:", err);
+        if (grid) grid.innerHTML = '<p>Error de conexión</p>';
     }
 };
 
@@ -109,29 +115,33 @@ window.loadChallengeGrid = async function() {
 window.updateProgressBar = function(count, total) {
     const percent = (count / total) * 100;
     const bar = document.getElementById('progress-bar');
+    const txt = document.getElementById('progress-text');
+    
     if(bar) bar.style.width = `${percent}%`;
+    if(txt) txt.innerText = `${Math.round(percent)}%`;
 
-    // Desbloquear iconos visualmente
+    // Desbloquear iconos visualmente con seguridad (?.)
     if (count >= 7) document.getElementById('milestone-7')?.classList.add('unlocked');
     if (count >= 14) document.getElementById('milestone-14')?.classList.add('unlocked');
     if (count >= 21) document.getElementById('milestone-21')?.classList.add('unlocked');
 };
 
-// 3. Jardín (Definición Explícita)
+// 3. Jardín (CORREGIDO ERROR NULL)
 window.updateGardenDisplay = function(day) {
     const plants = ['Semilla 🌱', 'Brote 🌿', 'Tallo 🎋', 'Flor 🌷', 'Árbol 🌳'];
-    // Asegurar que day no sea mayor al máximo posible para el array
     const levelIndex = Math.min(Math.floor((day - 1) / 5), plants.length - 1);
     const plant = plants[levelIndex];
     
+    // Obtenemos elementos
     const iconEl = document.getElementById('garden-plant');
     const levelEl = document.getElementById('garden-level');
-    const nextEl = document.getElementById('garden-next');
+    const nextEl = document.getElementById('garden-next'); // Este es el que suele fallar
 
-    if(iconEl) {
-        iconEl.innerText = plant.split(' ')[1];
-        levelEl.innerText = `Nivel ${levelIndex + 1}: ${plant.split(' ')[0]}`;
-        
+    // Verificamos que existan ANTES de escribir (Esto soluciona tu error)
+    if(iconEl) iconEl.innerText = plant.split(' ')[1];
+    if(levelEl) levelEl.innerText = `Nivel ${levelIndex + 1}: ${plant.split(' ')[0]}`;
+    
+    if(nextEl) {
         const daysLeft = 5 - ((day - 1) % 5);
         nextEl.innerText = (levelIndex >= 4) ? "¡Máximo Nivel!" : `Faltan ${daysLeft} días para evolucionar 🚀`;
     }
@@ -159,29 +169,28 @@ window.openChallengeModal = async function(day, isCompleted) {
             </div>
         `;
         
-        // Campo de Reflexión (Obligatorio)
+        // Campo de Reflexión
         if (!isCompleted) {
             html += `
                 <div style="margin-top:20px; text-align:left;">
-                    <label style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:5px;">Para completar, escribe una breve reflexión:</label>
+                    <label style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:5px;">Para completar, escribe una reflexión:</label>
                     <textarea id="challenge-reflection" class="input-field" style="height:80px; font-size:0.9rem; width:100%;" placeholder="¿Cómo te sentiste? ¿Qué aprendiste?"></textarea>
                 </div>
             `;
-            // Botón de acción
-            // Nota: Pasamos el ID del reto directamente
             const actions = document.getElementById('modal-actions');
-            actions.innerHTML = `<button class="btn-primary" onclick="completeChallenge(${data.id})">Completar (+20 XP)</button>`;
+            if(actions) actions.innerHTML = `<button class="btn-primary" onclick="completeChallenge(${data.id})">Completar (+20 XP)</button>`;
         } else {
-             // Si ya está completado, mostrar mensaje
              html += `<div style="text-align:center; padding:10px; border:1px dashed var(--accent); border-radius:8px; margin-top:10px; color:var(--accent);">✅ Reto Completado</div>`;
-             document.getElementById('modal-actions').innerHTML = '';
+             const actions = document.getElementById('modal-actions');
+             if(actions) actions.innerHTML = '';
         }
 
-        document.getElementById('modal-body').innerHTML = html;
+        const bodyEl = document.getElementById('modal-body');
+        if(bodyEl) bodyEl.innerHTML = html;
     }
 };
 
-// 5. Completar Reto (Validar Reflexión)
+// 5. Completar Reto
 window.completeChallenge = async function(id) {
     const reflectionInput = document.getElementById('challenge-reflection');
     const reflectionText = reflectionInput ? reflectionInput.value.trim() : '';
@@ -190,6 +199,10 @@ window.completeChallenge = async function(id) {
         return window.showToast("Escribe una reflexión real para continuar", "error");
     }
 
+    // Deshabilitar botón para evitar doble click
+    const btn = document.querySelector('#modal-actions button');
+    if(btn) { btn.disabled = true; btn.innerText = "Guardando..."; }
+
     try {
         // A. Guardar progreso
         await window.db.from('user_progress').insert({ 
@@ -197,32 +210,31 @@ window.completeChallenge = async function(id) {
             last_challenge_id: id 
         });
 
-        // B. Guardar la reflexión en 'shared_content' para historial (y futuro uso)
+        // B. Guardar la reflexión
         await window.db.from('shared_content').insert({
             user_id: window.currentProfile.id,
             couple_id: window.currentCouple.id,
-            type: 'reflection',
-            content: `[Día ${id}] ${reflectionText}`
+            type: `reflection_day_${id}`,
+            content: reflectionText
         });
 
-        // C. Dar XP (20 puntos como pediste)
+        // C. Dar XP
         await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: 20 });
         
         window.closeModal();
         window.showToast("¡Reto Completado! +20 XP", "success");
         
-        // Recargar todo
         if(window.refreshUserProfile) window.refreshUserProfile();
         window.loadChallengeGrid();
 
     } catch(e) {
         console.error(e);
-        // Si es error de duplicado (código 23505), lo manejamos suavemente
         if (e.code === '23505') {
             window.closeModal();
-            window.loadChallengeGrid();
+            window.loadChallengeGrid(); // Ya estaba hecho, solo recargamos
         } else {
             window.showToast("Error al guardar", "error");
+            if(btn) { btn.disabled = false; btn.innerText = "Intentar de nuevo"; }
         }
     }
 };
