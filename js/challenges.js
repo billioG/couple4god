@@ -1,11 +1,14 @@
-// Cargar el reto del día
+// js/challenges.js
+
 async function loadDailyChallenge() {
+    if (!window.db) return;
+
     const contentDiv = document.getElementById('content-area');
-    contentDiv.innerHTML = '<div class="loader">Buscando tu reto...</div>';
+    contentDiv.innerHTML = '<div class="loader">Cargando el reto de hoy...</div>';
 
     try {
-        // Obtenemos el reto #1 (Puedes hacerlo dinámico según la fecha o progreso)
-        const { data: challenge, error } = await supabase
+        // Obtenemos el reto #1 (Puedes cambiar este número según la lógica de días)
+        const { data: challenge, error } = await window.db
             .from('challenges')
             .select('*')
             .eq('day_number', 1) 
@@ -13,22 +16,26 @@ async function loadDailyChallenge() {
 
         if (error) throw error;
 
-        // Renderizar tarjeta
+        if (!challenge) {
+            contentDiv.innerHTML = '<p>No hay reto disponible para hoy.</p>';
+            return;
+        }
+
+        // Renderizar tarjeta HTML
         contentDiv.innerHTML = `
             <div class="challenge-card">
                 <div class="card-header">
                     <span class="day-badge">Día ${challenge.day_number}</span>
-                    <h2>${challenge.title || 'Reto de Relación'}</h2>
+                    <h2>${challenge.author} dice:</h2>
                 </div>
 
                 <div class="quote-section">
                     <p>"${challenge.quote}"</p>
-                    <span class="author-cite">- ${challenge.author}</span>
                 </div>
 
                 <div class="wisdom-box">
-                    <h4>🧠 Psicología Práctica</h4>
-                    <p>${challenge.reflection}</p>
+                    <h4>💡 Píldora de Sabiduría</h4>
+                    <p>${challenge.reflection || challenge.content}</p>
                 </div>
 
                 <div class="action-box">
@@ -48,30 +55,34 @@ async function loadDailyChallenge() {
         `;
 
     } catch (err) {
-        console.error(err);
-        contentDiv.innerHTML = `<p>Error al cargar el reto. ¿Has corrido el script SQL?</p>`;
+        console.error("Error cargando reto:", err);
+        contentDiv.innerHTML = `<p style="text-align:center; color:red">Error cargando el contenido. Revisa tu conexión.</p>`;
     }
 }
 
-// Completar reto y dar XP
-async function completeChallenge(challengeId) {
-    if (!currentProfile) return;
+// Función global para completar reto
+window.completeChallenge = async function(challengeId) {
+    if (!window.currentProfile) return;
 
     try {
-        // 1. Guardar progreso (Evitar duplicados)
-        await supabase.from('user_progress').insert({
-            user_id: currentProfile.id,
+        // 1. Guardar progreso
+        const { error: progressError } = await window.db.from('user_progress').insert({
+            user_id: window.currentProfile.id,
             last_challenge_id: challengeId
         });
 
-        // 2. Dar XP (Llamada a función segura SQL)
-        await supabase.rpc('add_xp', { user_id: currentProfile.id, points: 100 });
+        if(progressError) throw progressError;
 
-        // Feedback
+        // 2. Dar XP
+        await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: 100 });
+
         showModal("¡Excelente!", "Has ganado 100 XP por invertir en tu relación.");
-        refreshUserProfile(); // Actualizar contador visual
+        
+        // Actualizar UI
+        if(typeof refreshUserProfile === 'function') refreshUserProfile();
 
     } catch (error) {
-        showModal("Aviso", "Parece que ya completaste este reto hoy.");
+        console.log(error);
+        showModal("Aviso", "Ya has completado este reto anteriormente.");
     }
 }
