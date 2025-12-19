@@ -328,7 +328,114 @@ window.finishOnboarding = () => {
     // Reiniciar app para que el Router decida a dónde ir (Auth o Main)
     App.init();
 };
+// ==========================================
+// AYUDA Y SUGERENCIAS
+// ==========================================
 
+window.showHelpGuide = function () {
+    const content = document.getElementById('dynamic-content');
+
+    // Contenido HTML dinámico
+    content.innerHTML = `
+    <div class="fade-in">
+        <div class="help-intro">
+            <p><strong>Couple Garden</strong> está diseñado para fortalecer tu relación mediante pequeños hábitos diarios, comunicación profunda y gamificación.</p>
+        </div>
+
+        <div class="help-list">
+            <div class="help-item">
+                <div class="help-icon">📅</div>
+                <div class="help-text">
+                    <h4>Retos Diarios</h4>
+                    <p>Cada día se desbloquea una actividad nueva. Complétala y deja una reflexión para ganar XP y hacer crecer tu jardín.</p>
+                </div>
+            </div>
+
+            <div class="help-item">
+                <div class="help-icon">🙏</div>
+                <div class="help-text">
+                    <h4>Peticiones</h4>
+                    <p>Pide lo que necesitas sin rodeos. Tu pareja recibirá la notificación y podrá marcarla como "Cumplida" cuando lo haga.</p>
+                </div>
+            </div>
+
+            <div class="help-item">
+                <div class="help-icon">💬</div>
+                <div class="help-text">
+                    <h4>Conexión Profunda</h4>
+                    <p>Una pregunta nueva cada día (o aleatoria) para conocerse mejor. Responde para ver la respuesta de tu pareja.</p>
+                </div>
+            </div>
+
+            <div class="help-item">
+                <div class="help-icon">🏳️</div>
+                <div class="help-text">
+                    <h4>Bandera de Paz</h4>
+                    <p>Si hay una discusión, usa esta herramienta para pedir una tregua sin necesidad de palabras. Es el primer paso para reconciliarse.</p>
+                </div>
+            </div>
+
+             <div class="help-item">
+                <div class="help-icon">🎁</div>
+                <div class="help-text">
+                    <h4>Premios</h4>
+                    <p>Acumula XP completando acciones y canjéalos por premios reales (masajes, cenas, etc.) que tu pareja deberá cumplir.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="feedback-section">
+            <h3 style="color:white; margin-bottom:10px;">💡 Buzón de Sugerencias</h3>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">
+                ¿Tienes una idea para mejorar la app o encontraste un error? Cuéntanos.
+            </p>
+            <textarea id="feedback-text" class="input-field" style="height:100px; background:#13151b;" placeholder="Escribe tu sugerencia aquí..."></textarea>
+            <button onclick="submitFeedback(this)" class="btn-primary" style="margin-top:10px;">Enviar Sugerencia</button>
+        </div>
+    </div>`;
+};
+
+window.submitFeedback = async function (btn) {
+    const txt = document.getElementById('feedback-text');
+    const content = txt.value.trim();
+
+    if (content.length < 5) return App.ui.showToast('Escribe un poco más...', 'error');
+
+    btn.disabled = true;
+    btn.innerText = "Enviando...";
+
+    try {
+        // 1. Guardar la sugerencia
+        const { error } = await window.db.from('feedback').insert({
+            user_id: App.state.user.id,
+            content: content
+        });
+
+        if (error) throw error;
+
+        // 2. Dar la recompensa (+5 XP)
+        await window.db.rpc('add_xp', { user_id: App.state.user.id, points: 5 });
+
+        // 3. Actualizar la UI de puntos
+        await App.actions.refreshProfile();
+
+        App.ui.showToast('¡Gracias! (+5 XP)', 'success');
+        txt.value = ''; // Limpiar campo
+
+        // Efecto visual de éxito
+        btn.innerText = "¡Enviado! ✓";
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerText = "Enviar Sugerencia";
+        }, 2000);
+
+    } catch (e) {
+        console.error(e);
+        App.ui.showToast('Error al enviar', 'error');
+        btn.disabled = false;
+        btn.innerText = "Intentar de nuevo";
+    }
+};
 // Inicializar
 App.init();
 

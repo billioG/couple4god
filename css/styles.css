@@ -409,25 +409,31 @@ body {
 }
 
 
-.toast-container {
+/* ==========================================
+   TOASTS (NOTIFICACIONES) EN LA PARTE SUPERIOR
+   ========================================== */
+
+#toast-container {
     position: fixed;
-    top: auto;
-    bottom: 180px;
+    top: 30px;
+    /* CAMBIO: Ahora arriba (ajustado para no chocar con notificaciones del móvil) */
+    bottom: auto;
+    /* CAMBIO: Quitamos la posición de abajo */
     left: 50%;
     transform: translateX(-50%);
     z-index: 10000;
     width: 90%;
     max-width: 400px;
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-/* Cuando está en la vista de autenticación */
-#auth-view .toast-container {
-    position: absolute;
-    top: 80px;
-    bottom: auto;
-    left: 50%;
-    transform: translateX(-50%);
+/* Regla especial para la vista de login (Auth) si es necesaria, 
+   o puedes borrarla para que sea igual en todas las pantallas */
+#auth-view #toast-container {
+    top: 30px;
 }
 
 .toast {
@@ -435,25 +441,45 @@ body {
     color: white;
     padding: 16px 24px;
     border-radius: 16px;
-    margin-bottom: 10px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     pointer-events: auto;
-    animation: slideIn 0.3s;
     font-weight: 600;
     border: 1px solid #555;
+
+    /* Animación de entrada */
+    animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* Tipos de Toast (Colores) */
 .toast.error {
     background: linear-gradient(135deg, #ff4757, #e84118);
     border-color: #ff4757;
-    box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
 }
 
 .toast.success {
     background: linear-gradient(135deg, #00d285, #00a86b);
     border-color: #00d285;
-    box-shadow: 0 10px 30px rgba(0, 210, 133, 0.4);
+}
+
+.toast.info {
+    background: #252a35;
+    border-color: var(--primary);
+}
+
+/* ANIMACIÓN CORREGIDA: Entrar desde arriba hacia abajo */
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        /* Empieza más arriba */
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        /* Termina en su sitio */
+        opacity: 1;
+    }
 }
 
 @keyframes slideIn {
@@ -738,6 +764,70 @@ body {
     border-bottom: none;
     /* Quitar el subrayado punteado por defecto */
     margin-top: 5px;
+}
+
+/* ==========================================
+   SECCIÓN DE AYUDA Y FEEDBACK
+   ========================================== */
+
+.help-intro {
+    text-align: center;
+    padding: 20px;
+    color: #ccc;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.help-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 0 25px;
+}
+
+.help-item {
+    background: var(--card-bg);
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.help-icon {
+    font-size: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.help-text h4 {
+    color: var(--primary);
+    margin-bottom: 5px;
+    font-size: 1rem;
+}
+
+.help-text p {
+    color: #999;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.feedback-section {
+    margin: 40px 25px 90px;
+    padding: 25px;
+    background: linear-gradient(180deg, rgba(30, 34, 45, 0.5) 0%, rgba(78, 142, 255, 0.05) 100%);
+    border: 1px solid var(--primary);
+    border-radius: 20px;
+    text-align: center;
 }
 
 @keyframes float {
