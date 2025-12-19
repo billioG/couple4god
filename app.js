@@ -4,7 +4,6 @@ const supabaseUrl = "https://dsiuuymgyzkcksaqtoqk.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// SERVICE WORKER
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.error);
 
 // STATE
@@ -15,17 +14,17 @@ let isRegistering = false;
 let pollingInterval = null;
 let selectedDay = 1;
 
-// CONTENT LISTS
-const dateIdeas = [
-  "🍝 Cocinar juntos una receta nueva", "✨ Caminar bajo las estrellas", "🎲 Noche de juegos de mesa", "📸 Ver fotos viejas", 
-  "🙏 Orar juntos de la mano", "🦶 Masajes de pies mutuos", "💌 Escribirse cartas de amor", "🥐 Desayuno en la cama",
-  "🍦 Salir por un helado", "🎬 Noche de película en casa", "🎤 Karaoke casero", "🧹 Limpiar con música",
-  "🗺️ Planear viaje soñado", "🚲 Paseo en bicicleta", "🍫 Cata de chocolates", "🖌️ Pintar algo juntos",
-  "🧘 Clase de yoga juntos", "📚 Leer en voz alta", "🛁 Spa en casa", "🍕 Pizza casera",
-  "❓ Jugar a preguntas profundas", "🌅 Ver el amanecer", "📵 Tarde sin tecnología", "🕺 Bailar en la sala",
-  "🧺 Picnic en la sala", "🍷 Noche de quesos", "📝 Lista de agradecimientos", "🎢 Turista en tu ciudad",
-  "🧩 Armar rompecabezas", "🍪 Hornear galletas", "💕 Renovación de votos"
+// ASSETS
+const gardenLevels = [
+  { icon: "🌱", name: "Semilla de Fe" },
+  { icon: "🌿", name: "Brote de Esperanza" },
+  { icon: "🌳", name: "Arbusto de Amor" },
+  { icon: "🌺", name: "Jardín Floreciente" },
+  { icon: "🍎", name: "Árbol de Vida" },
+  { icon: "🏞️", name: "Jardín del Edén" }
 ];
+
+const dateIdeas = ["🍝 Cocinar juntos", "✨ Caminar bajo las estrellas", "🎲 Juegos de mesa", "📸 Ver fotos viejas", "🙏 Orar juntos", "🦶 Masajes mutuos", "💌 Cartas de amor", "🥐 Desayuno en cama", "🍦 Salir por helado", "🎬 Cine en casa", "🎤 Karaoke", "🧹 Limpiar con música", "🗺️ Planear viaje", "🚲 Bici", "🍫 Cata de chocolates", "🖌️ Pintar", "🧘 Yoga", "📚 Leer juntos", "🛁 Spa", "🍕 Pizza casera", "❓ Preguntas profundas", "🌅 Amanecer", "📵 Sin tecnología", "💃 Bailar", "🧺 Picnic", "🍷 Quesos y vino", "📝 Agradecimientos", "🎢 Turista local", "🧩 Rompecabezas", "🍪 Hornear", "💕 Votos"];
 
 const content21Days = {
   1: { tema: "Identidad", lectura: "Salmo 139:14", oracion: "Ayúdame a amarme.", tarea: "Escribe 3 cualidades tuyas." },
@@ -104,12 +103,8 @@ async function initApp() {
 
     coupleId = member.couple_id;
     document.getElementById("userHeader").classList.remove("hidden");
-    if(member.current_streak > 0) {
-        document.getElementById("streakBadge").textContent = `🔥 ${member.current_streak}`;
-        document.getElementById("streakBadge").style.display = 'block';
-    }
 
-    // Check Mood
+    // Mood Check
     const today = new Date().toISOString().split('T')[0];
     if(member.last_mood_date !== today) document.getElementById("moodModal").classList.remove("hidden");
     else document.getElementById("myMoodDisplay").textContent = member.current_mood;
@@ -128,7 +123,7 @@ async function initApp() {
       document.getElementById("toolsBar").classList.remove("hidden");
       
       setupRealtime();
-      await loadData();
+      await loadData(); // Carga calendario y jardín
       
       if(!pollingInterval) pollingInterval = setInterval(loadData, 10000);
 
@@ -138,7 +133,7 @@ async function initApp() {
     }
   } catch(err) {
     console.error(err);
-    showToast("Error de conexión.", "error");
+    showToast("Error de conexión. Recarga.", "error");
   } finally {
     document.getElementById("globalLoader").classList.add("hidden");
   }
@@ -154,6 +149,19 @@ function setupRealtime() {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entries', filter: `couple_id=eq.${coupleId}` }, payload => {
       if (payload.new.user_id !== user.id) { showToast("⚡ Tu pareja completó un reto", "success"); loadData(); }
     })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reconciliations', filter: `couple_id=eq.${coupleId}` }, payload => {
+      if (payload.eventType === 'INSERT' && payload.new.initiator_id !== user.id) {
+        document.getElementById("peaceModal").classList.remove("hidden");
+        document.getElementById("peaceContent").classList.add("hidden");
+        document.getElementById("peaceReceiver").classList.remove("hidden");
+        showToast("🏳️ Tu pareja quiere paz", "success");
+      }
+      if (payload.eventType === 'UPDATE' && payload.new.status === 'accepted') {
+        showToast("🤝 ¡Paz restaurada! Amén.", "success");
+        document.getElementById("peaceModal").classList.add("hidden");
+        fireConfetti();
+      }
+    })
     .subscribe();
 }
 
@@ -166,7 +174,7 @@ function showWaitingRoom(code) {
   if (!pollingInterval) pollingInterval = setInterval(initApp, 5000);
 }
 
-// --- DATA ---
+// --- DATA & GARDEN ---
 async function loadData() {
   const { data: entries } = await supabase.from("entries").select("*").eq("couple_id", coupleId);
   const myEntries = entries.filter(e => e.user_id === user.id);
@@ -177,11 +185,11 @@ async function loadData() {
   const joint = Math.min(myMax, pMax);
   const unlockable = joint + 1;
 
-  const pct = (joint / 21) * 100;
-  document.getElementById("progressBarFill").style.width = `${pct}%`;
-  if(joint>=7) document.getElementById("m7").classList.add("active");
-  if(joint>=14) document.getElementById("m14").classList.add("active");
-  if(joint>=21) document.getElementById("m21").classList.add("active");
+  // Lógica del Jardín (Nivel basado en días completados juntos)
+  const gardenLvl = Math.min(Math.floor(joint / 4), 5); // Sube nivel cada 4 días
+  const plant = gardenLevels[gardenLvl];
+  document.getElementById("gardenPlant").textContent = plant.icon;
+  document.getElementById("gardenLevel").textContent = `Nivel ${gardenLvl+1}: ${plant.name}`;
 
   const grid = document.getElementById("calendarGrid");
   grid.innerHTML = "";
@@ -197,9 +205,7 @@ async function loadData() {
       if ([7,14,21].includes(i) && pDone) { icon="🏆"; css="reward-day"; }
     } else if (i === myMax + 1 && i <= unlockable) {
       icon="🔥"; css="active";
-    } else if (i === myMax + 1 && i > unlockable) {
-      icon="⏳"; 
-    }
+    } else if (i === myMax + 1 && i > unlockable) { icon="⏳"; }
 
     box.className = `day-box ${css}`;
     box.innerHTML = `<div style="font-weight:bold;">${i}</div><div style="font-size:1.5rem">${icon}</div><div class="partner-dots"><div class="dot me ${done?'done':''}"></div><div class="dot partner ${pDone?'done':''}"></div></div>`;
@@ -209,6 +215,7 @@ async function loadData() {
 }
 
 // --- FEATURES ---
+// 1. Mood
 window.saveMood = async (emoji) => {
   try {
     const today = new Date().toISOString().split('T')[0];
@@ -218,46 +225,35 @@ window.saveMood = async (emoji) => {
   } catch (e) { console.error(e); }
 };
 
-// PRAYERS
-document.getElementById("openPrayerBtn").onclick = async () => {
-  document.getElementById("prayerModal").classList.remove("hidden");
-  loadPrayers();
-};
+// 2. Prayer
+document.getElementById("openPrayerBtn").onclick = async () => { document.getElementById("prayerModal").classList.remove("hidden"); loadPrayers(); };
 async function loadPrayers() {
   const { data } = await supabase.from("prayers").select("*").eq("couple_id", coupleId).order("created_at", {ascending:false});
-  const list = document.getElementById("prayerList");
-  list.innerHTML = "";
+  const list = document.getElementById("prayerList"); list.innerHTML = "";
   if(data) data.forEach(p => {
     const isMine = p.user_id === user.id;
-    const div = document.createElement("div");
-    div.className = "prayer-item";
+    const div = document.createElement("div"); div.className = "prayer-item";
     div.innerHTML = `<span>${isMine?'Yo':'Pareja'}: ${p.content}</span> ${!isMine ? `<span class="pray-action ${p.partner_praying?'active':''}" onclick="prayFor('${p.id}')">${p.partner_praying ? '🙏 Orando' : 'Orar'}</span>` : (p.partner_praying ? '<span style="color:#10b981; font-size:0.8rem">✅ Orando</span>' : '')}`;
     list.appendChild(div);
   });
 }
 window.prayFor = async (id) => {
   await supabase.from("prayers").update({ partner_praying: true }).eq("id", id);
-  loadPrayers();
-  showToast("Le avisaremos a tu pareja 🙏", "success");
+  loadPrayers(); showToast("Le avisaremos a tu pareja 🙏", "success");
 };
 document.getElementById("addPrayerBtn").onclick = async () => {
   const txt = document.getElementById("newPrayerText").value;
-  if(txt) {
-    await supabase.from("prayers").insert({ couple_id: coupleId, user_id: user.id, content: txt });
-    document.getElementById("newPrayerText").value = "";
-    loadPrayers();
-  }
+  if(txt) { await supabase.from("prayers").insert({ couple_id: coupleId, user_id: user.id, content: txt }); document.getElementById("newPrayerText").value = ""; loadPrayers(); }
 };
 
-// DAILY DATE
+// 3. Date
 document.getElementById("openDateBtn").onclick = () => {
   document.getElementById("dateModal").classList.remove("hidden");
-  const today = new Date();
-  const index = (today.getDate() - 1) % dateIdeas.length;
+  const today = new Date(); const index = (today.getDate() - 1) % dateIdeas.length;
   document.getElementById("dateIdea").textContent = dateIdeas[index];
 };
 
-// SOUL QUESTIONS
+// 4. Soul Questions
 document.getElementById("openQuestionsBtn").onclick = () => {
   document.getElementById("questionsModal").classList.remove("hidden");
   loadDailyQuestion();
@@ -265,61 +261,37 @@ document.getElementById("openQuestionsBtn").onclick = () => {
 async function loadDailyQuestion() {
   const today = new Date();
   const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-  const questionIndex = (dayOfYear % 30) + 1; // 1 to 30
-
+  const questionIndex = (dayOfYear % 30) + 1; 
   const { data: qData } = await supabase.from('daily_questions').select('*').eq('id', questionIndex).maybeSingle();
-  
-  if(qData) {
-    document.getElementById("soulQuestionText").textContent = qData.content;
-    loadAnswers(qData.id);
-  } else {
-    document.getElementById("soulQuestionText").textContent = "Pregunta del día...";
-  }
+  if(qData) { document.getElementById("soulQuestionText").textContent = qData.content; loadAnswers(qData.id); } 
+  else document.getElementById("soulQuestionText").textContent = "Pregunta del día...";
 }
 async function loadAnswers(questionId) {
   const container = document.getElementById("answersContainer");
   const inputSection = document.getElementById("answerInputSection");
   const waitingMsg = document.getElementById("waitingMessage");
-  
   container.innerHTML = 'Cargando...';
-
   const { data: answers } = await supabase.from('user_answers').select('*').eq('couple_id', coupleId).eq('question_id', questionId);
   container.innerHTML = "";
-
   const myAnswer = answers.find(a => a.user_id === user.id);
   const partnerAnswer = answers.find(a => a.user_id === partnerId);
 
-  // Partner Bubble
   if (partnerAnswer) {
     const bubble = document.createElement("div");
-    if (myAnswer) {
-      bubble.className = "chat-bubble partner";
-      bubble.innerHTML = `<strong>Pareja:</strong><br>${partnerAnswer.answer}`;
-    } else {
-      bubble.className = "chat-bubble partner blurred-text";
-      bubble.textContent = "Texto oculto secreto";
-      const lock = document.createElement("div");
-      lock.className = "blur-overlay"; lock.innerHTML = "🔒 Responde para ver";
-      const wrap = document.createElement("div"); wrap.style.position="relative";
-      wrap.appendChild(bubble); wrap.appendChild(lock);
-      container.appendChild(wrap);
+    if (myAnswer) { bubble.className = "chat-bubble partner"; bubble.innerHTML = `<strong>Pareja:</strong><br>${partnerAnswer.answer}`; } 
+    else {
+      bubble.className = "chat-bubble partner blurred-text"; bubble.textContent = "Texto oculto secreto";
+      const lock = document.createElement("div"); lock.className = "blur-overlay"; lock.innerHTML = "🔒 Responde para ver";
+      const wrap = document.createElement("div"); wrap.style.position="relative"; wrap.appendChild(bubble); wrap.appendChild(lock); container.appendChild(wrap);
     }
     if(myAnswer) container.appendChild(bubble); 
-  } else {
-    const w = document.createElement("p"); w.className="waiting-badge"; w.textContent="Tu pareja no ha respondido...";
-    container.appendChild(w);
-  }
+  } else { container.innerHTML += '<p style="color:#94a3b8;font-size:0.8rem">Tu pareja no ha respondido...</p>'; }
 
-  // My Bubble
   if (myAnswer) {
-    const b = document.createElement("div"); b.className="chat-bubble me";
-    b.innerHTML = `<strong>Tú:</strong><br>${myAnswer.answer}`;
-    container.appendChild(b);
-    inputSection.classList.add("hidden");
-    if (!partnerAnswer) waitingMsg.classList.remove("hidden"); else waitingMsg.classList.add("hidden");
+    const b = document.createElement("div"); b.className="chat-bubble me"; b.innerHTML = `<strong>Tú:</strong><br>${myAnswer.answer}`;
+    container.appendChild(b); inputSection.classList.add("hidden"); if (!partnerAnswer) waitingMsg.classList.remove("hidden"); else waitingMsg.classList.add("hidden");
   } else {
-    inputSection.classList.remove("hidden");
-    waitingMsg.classList.add("hidden");
+    inputSection.classList.remove("hidden"); waitingMsg.classList.add("hidden");
     document.getElementById("sendAnswerBtn").onclick = async () => {
       const txt = document.getElementById("myAnswer").value.trim();
       if(txt.length < 2) return showToast("Escribe más...", "error");
@@ -329,14 +301,29 @@ async function loadAnswers(questionId) {
   }
 }
 
-// FEEDBACK
-document.getElementById("openFeedbackBtn").onclick = () => document.getElementById("feedbackModal").classList.remove("hidden");
-document.getElementById("sendFeedbackBtn").onclick = async () => {
-  const msg = document.getElementById("feedbackText").value;
-  if(msg) { await supabase.from("feedback").insert({ user_id: user.id, message: msg }); showToast("Enviado", "success"); document.getElementById("feedbackModal").classList.add("hidden"); }
+// 5. White Flag (Peace)
+document.getElementById("openPeaceBtn").onclick = () => {
+  document.getElementById("peaceModal").classList.remove("hidden");
+  document.getElementById("peaceContent").classList.remove("hidden");
+  document.getElementById("peaceReceiver").classList.add("hidden");
+};
+document.getElementById("sendPeaceBtn").onclick = async () => {
+  await supabase.from("reconciliations").insert({ couple_id: coupleId, initiator_id: user.id });
+  showToast("Bandera blanca levantada 🏳️", "success");
+  document.getElementById("peaceModal").classList.add("hidden");
+};
+document.getElementById("acceptPeaceBtn").onclick = async () => {
+  // Buscar la última reconciliación pendiente
+  const { data } = await supabase.from("reconciliations").select("id").eq("couple_id", coupleId).eq("status", "pending").order("created_at", {ascending:false}).limit(1).single();
+  if (data) {
+    await supabase.from("reconciliations").update({ status: "accepted" }).eq("id", data.id);
+    showToast("¡Paz aceptada!", "success");
+    document.getElementById("peaceModal").classList.add("hidden");
+    fireConfetti();
+  }
 };
 
-// AUTH
+// AUTH & UTILS
 document.getElementById("toggleAuth").onclick = () => {
   isRegistering = !isRegistering;
   document.getElementById("authTitle").textContent = isRegistering ? "Crear Cuenta" : "Iniciar Sesión";
@@ -344,96 +331,49 @@ document.getElementById("toggleAuth").onclick = () => {
   document.getElementById("registerFields").classList.toggle("hidden");
   document.getElementById("toggleAuth").textContent = isRegistering ? "¿Ya tienes cuenta? Ingresa" : "¿Crear cuenta nueva?";
 };
-
 document.getElementById("authBtn").onclick = async () => {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+  const email = document.getElementById("email").value.trim(); const password = document.getElementById("password").value.trim();
   if (!email || !password) return showToast("Faltan datos", "error");
   document.getElementById("globalLoader").classList.remove("hidden");
-
   try {
     if (isRegistering) {
-      const name = document.getElementById("userNameInput").value.trim();
-      if (!name) throw new Error("Falta nombre");
+      const name = document.getElementById("userNameInput").value.trim(); if(!name) throw new Error("Falta nombre");
       const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } });
-      if (error) throw error;
-      showToast("Cuenta creada. Ingresa.", "success");
+      if (error) throw error; showToast("Cuenta creada. Ingresa.", "success");
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw new Error("Credenciales incorrectas");
+      const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) throw new Error("Credenciales incorrectas");
     }
-  } catch (err) {
-    console.error(err);
-    let msg = err.message;
-    if(msg.includes("Invalid login")) msg = "Contraseña incorrecta";
-    showToast(msg, "error");
-  } finally {
-    document.getElementById("globalLoader").classList.add("hidden");
-  }
+  } catch (err) { console.error(err); showToast(err.message, "error"); } finally { document.getElementById("globalLoader").classList.add("hidden"); }
 };
 
-// MODAL DÍA
 function openDayModal(day, isDone, status, content) {
   if (status === "locked" || status === "reward-day") return;
   if (status !== "active" && status !== "completed") return showToast("Tu pareja debe completar los anteriores.", "error");
-
   selectedDay = day;
   const d = content21Days[day] || { tema: "Día " + day, lectura: "", oracion: "", tarea: "" };
-  document.getElementById("modalTitle").textContent = d.tema;
-  document.getElementById("modalLectura").textContent = d.lectura;
-  document.getElementById("modalOracion").textContent = d.oracion;
-  document.getElementById("modalTarea").textContent = d.tarea;
-  
-  const btn = document.getElementById("saveDayBtn");
-  const txt = document.getElementById("dayReflection");
-  const ev = document.getElementById("evidenceSection");
-
+  document.getElementById("modalTitle").textContent = d.tema; document.getElementById("modalLectura").textContent = d.lectura;
+  document.getElementById("modalOracion").textContent = d.oracion; document.getElementById("modalTarea").textContent = d.tarea;
+  const btn = document.getElementById("saveDayBtn"); const txt = document.getElementById("dayReflection"); const ev = document.getElementById("evidenceSection");
   document.getElementById("dayModal").classList.remove("hidden");
-
-  if(isDone) {
-    btn.textContent = "Completado"; btn.disabled = true; btn.style.background = "#064e3b";
-    txt.value = content || "Sin notas"; txt.disabled = true; ev.style.display = "block";
-  } else {
-    checkDate().then(can => {
-      if(!can) {
-        btn.textContent = "Vuelve mañana 🌙"; btn.disabled = true; btn.style.background = "#475569";
-        ev.style.display = "none";
-      } else {
-        btn.textContent = "Completar"; btn.disabled = false; btn.style.background = "#10b981";
-        txt.value = ""; txt.disabled = false; ev.style.display = "block";
-      }
-    });
-  }
+  if(isDone) { btn.textContent = "Completado"; btn.disabled = true; btn.style.background = "#064e3b"; txt.value = content || "Sin notas"; txt.disabled = true; ev.style.display = "block"; } 
+  else { checkDate().then(can => { if(!can) { btn.textContent = "Vuelve mañana 🌙"; btn.disabled = true; btn.style.background = "#475569"; ev.style.display = "none"; } else { btn.textContent = "Completar"; btn.disabled = false; btn.style.background = "#10b981"; txt.value = ""; txt.disabled = false; ev.style.display = "block"; } }); }
 }
-
 async function checkDate() {
   const { data } = await supabase.from("entries").select("created_at").eq("user_id", user.id).order("created_at", {ascending:false}).limit(1);
-  if(data && data.length > 0) return new Date(data[0].created_at).toDateString() !== new Date().toDateString();
-  return true;
+  if(data && data.length > 0) return new Date(data[0].created_at).toDateString() !== new Date().toDateString(); return true;
 }
-
 document.getElementById("saveDayBtn").onclick = async () => {
-  const note = document.getElementById("dayReflection").value;
-  if(note.length < 5) return showToast("Escribe algo...", "error");
+  const note = document.getElementById("dayReflection").value; if(note.length < 5) return showToast("Escribe algo...", "error");
   const { error } = await supabase.from("entries").insert({ couple_id: coupleId, user_id: user.id, day: selectedDay, content: note });
-  if(!error) {
-    document.getElementById("dayModal").classList.add("hidden");
-    fireConfetti();
-    showToast("¡Listo!", "success");
-    await loadData();
-    if([7,14,21].includes(selectedDay)) {
-      document.getElementById("rewardText").textContent = content21Days[selectedDay].premio;
-      document.getElementById("rewardModal").classList.remove("hidden");
-    }
-  } else showToast("Error", "error");
+  if(!error) { document.getElementById("dayModal").classList.add("hidden"); fireConfetti(); showToast("¡Listo!", "success"); await loadData(); if([7,14,21].includes(selectedDay)) { document.getElementById("rewardText").textContent = content21Days[selectedDay].premio; document.getElementById("rewardModal").classList.remove("hidden"); } } else showToast("Error", "error");
 };
 
-// UTILS
 document.getElementById("logoutBtn").onclick = async () => { await supabase.auth.signOut(); window.location.reload(); };
 document.getElementById("removeAdsBtn").onclick = async () => { if(confirm("¿Pagar?")) { await supabase.from("couples").update({ is_premium: true }).eq("id", coupleId); initApp(); } };
+document.getElementById("openFeedbackBtn").onclick = () => document.getElementById("feedbackModal").classList.remove("hidden");
+document.getElementById("sendFeedbackBtn").onclick = async () => { const msg = document.getElementById("feedbackText").value; if(msg) { await supabase.from("feedback").insert({ user_id: user.id, message: msg }); showToast("Enviado", "success"); document.getElementById("feedbackModal").classList.add("hidden"); } };
 window.closeModals = () => document.querySelectorAll(".modal-overlay").forEach(m => m.classList.add("hidden"));
 function showToast(msg, type) { const d = document.createElement("div"); d.className="toast"; d.style.borderLeftColor = type==='error'?'#ef4444':'#10b981'; d.textContent = msg; document.getElementById("toast-container").appendChild(d); setTimeout(()=>d.remove(),3000); }
 function fireConfetti() { const c = document.getElementById('confetti-canvas'); const x = c.getContext('2d'); c.width=window.innerWidth; c.height=window.innerHeight; let p=[]; for(let i=0;i<100;i++) p.push({x:Math.random()*c.width,y:Math.random()*c.height-c.height,c:`hsl(${Math.random()*360},100%,50%)`,s:Math.random()*5+2}); function a(){x.clearRect(0,0,c.width,c.height);p.forEach(o=>{o.y+=o.s;x.fillStyle=o.c;x.fillRect(o.x,o.y,5,5)});if(p.some(o=>o.y<c.height))requestAnimationFrame(a);else x.clearRect(0,0,c.width,c.height);} a(); }
-
 document.getElementById("createCoupleBtn").onclick = async () => { const c=Math.random().toString(36).substring(2,8).toUpperCase(); const {data}=await supabase.from("couples").insert({code:c}).select().single(); await supabase.from("couple_members").insert({couple_id:data.id, user_id:user.id}); initApp(); };
 document.getElementById("joinCoupleBtn").onclick = async () => { const c=document.getElementById("joinCode").value.toUpperCase(); const {data:cp}=await supabase.from("couples").select("id").eq("code",c).maybeSingle(); if(cp){ await supabase.from("couple_members").insert({couple_id:cp.id, user_id:user.id}); initApp(); } else showToast("Código inválido", "error"); };
