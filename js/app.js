@@ -1,31 +1,27 @@
 async function initApp() {
     if (!window.db) return;
 
-    // Verificar sesión
     const { data: { user } } = await window.db.auth.getUser();
 
     if (user) {
         window.currentUser = user;
-        // Intentar cargar perfil
+        
+        // 1. Cargar Perfil (Con auto-creación si falta)
         let { data: profile } = await window.db
             .from('profiles')
             .select('*')
             .eq('id', user.id)
             .maybeSingle();
         
-        // Si no existe perfil (caso raro), crearlo vacío
         if (!profile) {
-            const { data: newProfile } = await window.db
-                .from('profiles')
-                .insert([{ id: user.id, email: user.email }])
-                .select().single();
-            profile = newProfile;
+            const { data: newP } = await window.db.from('profiles').insert([{ id: user.id, email: user.email }]).select().single();
+            profile = newP;
         }
-        
         window.currentProfile = profile;
         updateHeaderUI();
 
-        // CHECK DE PAREJA (Nueva Lógica)
+        // 2. BUSCAR PAREJA (Sintaxis corregida)
+        // Usamos sintaxis correcta para Postgrest: or=(condition,condition)
         const { data: couple } = await window.db
             .from('couples')
             .select('*')
@@ -35,23 +31,25 @@ async function initApp() {
         document.getElementById('auth-view').classList.add('hidden');
 
         if (couple) {
-            // Ya tiene pareja: Ir al App Principal
+            // CONECTADOS
             document.getElementById('main-view').classList.remove('hidden');
             document.getElementById('sync-view').classList.add('hidden');
-            window.loadChallengeGrid(); // Cargar calendario
+            window.loadChallengeGrid();
+            // Escuchar notificaciones de paz
+            startRealtimeListener(couple.id);
         } else {
-            // No tiene pareja: Ir a Sincronización
+            // SIN PAREJA
             document.getElementById('sync-view').classList.remove('hidden');
-            document.getElementById('my-code').innerText = user.id; // Su ID es su código
+            document.getElementById('my-code').innerText = profile.share_code || '...';
+            // Escuchar si alguien me añade
+            startCoupleListener(user.id);
         }
 
     } else {
-        // No hay sesión: Ir a Login
         document.getElementById('auth-view').classList.remove('hidden');
     }
 }
 
-// Actualizar Header
 function updateHeaderUI() {
     if(window.currentProfile) {
         document.getElementById('display-name').innerText = window.currentProfile.full_name || 'Amor';
@@ -59,46 +57,55 @@ function updateHeaderUI() {
     }
 }
 
-// Función para conectar pareja (Desde vista sync)
+// Escuchar cuando me añaden como pareja
+function startCoupleListener(userId) {
+    window.db.channel('public:couples')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'couples' }, payload => {
+            if(payload.new.user1_id === userId || payload.new.user2_id === userId) {
+                window.showToast("¡Tu pareja se ha unido! 💖", "success");
+                setTimeout(() => window.location.reload(), 1500);
+            }
+        }).subscribe();
+}
+
+// Conectar Pareja (Botón)
 window.connectCouple = async function() {
-    const partnerCode = document.getElementById('partner-code').value.trim();
-    if (!partnerCode) return window.showToast("Ingresa un código", "error");
+    const code = document.getElementById('partner-code').value.toUpperCase().trim();
+    if (!code) return window.showToast("Ingresa un código", "error");
+    if (code === window.currentProfile.share_code) return window.showToast("No uses tu propio código", "error");
+
+    // Buscar pareja
+    const { data: partner } = await window.db.from('profiles').select('id').eq('share_code', code).maybeSingle();
     
-    if (partnerCode === window.currentUser.id) return window.showToast("No puedes usar tu propio código", "error");
+    if (!partner) return window.showToast("Código no encontrado", "error");
 
-    // Verificar si el código existe (es un ID de usuario válido)
-    const { data: partner, error } = await window.db
-        .from('profiles')
-        .select('id')
-        .eq('id', partnerCode)
-        .maybeSingle();
+    // Crear relación (IDs ordenados para evitar duplicados A-B vs B-A)
+    const [u1, u2] = [window.currentUser.id, partner.id].sort();
+    
+    const { error } = await window.db.from('couples').insert([{ user1_id: u1, user2_id: u2 }]);
 
-    if (!partner) return window.showToast("Código inválido", "error");
-
-    // Crear la pareja
-    const { error: linkError } = await window.db
-        .from('couples')
-        .insert([{ user1_id: window.currentUser.id, user2_id: partner.id }]);
-
-    if (linkError) {
-        window.showToast("Error al vincular. ¿Ya tienen pareja?", "error");
+    if (error) {
+        if(error.code === '23505') { // Código de error 'Unique violation'
+             window.showToast("¡Ya están conectados!", "success");
+             window.location.reload();
+        } else {
+            window.showToast("Error al conectar", "error");
+        }
     } else {
         window.showToast("¡Conectados! 🎉", "success");
-        window.location.reload(); // Recargar para ir a la vista principal
+        window.location.reload();
     }
 };
 
 window.copyCode = function() {
     const code = document.getElementById('my-code').innerText;
     navigator.clipboard.writeText(code);
-    window.showToast("Código copiado al portapapeles", "success");
+    window.showToast("Copiado", "success");
 };
 
-// Navegación del Menú Flotante
+// Navegación
 window.showSection = function(section) {
-    // Actualizar iconos activos
     document.querySelectorAll('.nav-icon').forEach(btn => btn.classList.remove('active'));
-    // Encontrar el botón clickeado y activarlo (lógica simplificada)
     event.currentTarget.classList.add('active'); 
 
     const content = document.getElementById('dynamic-content');
@@ -108,36 +115,27 @@ window.showSection = function(section) {
         title.innerText = "Tu Calendario";
         content.innerHTML = '<div id="calendar-grid" class="calendar-grid"></div>';
         window.loadChallengeGrid();
-    } 
-    else if (section === 'peace') {
+    } else if (section === 'peace') {
         title.innerText = "Bandera de Paz";
         content.innerHTML = '<div id="peace-area"></div>';
-        window.checkWhiteFlagStatus(); // Función en gamification.js
-    } 
-    else {
-        title.innerText = section.charAt(0).toUpperCase() + section.slice(1);
-        content.innerHTML = `
-            <div style="text-align:center; padding:40px; color:var(--text-gray);">
-                <h3>🚧 En construcción</h3>
-                <p>Pronto disponible...</p>
-            </div>`;
+        window.checkWhiteFlagStatus();
+    } else {
+        title.innerText = "Próximamente";
+        content.innerHTML = `<div style="text-align:center; padding:50px; color:#666;">En construcción 🚧</div>`;
     }
 };
 
-// Sistema de Toasts
-window.showToast = function(msg, type = 'info') {
+// Toasts & Modales
+window.showToast = function(msg, type='info') {
     const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerText = msg;
-    container.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-};
-
-// Modales
-window.showModal = function(title, body) {
-    document.getElementById('modal-title').innerText = title;
-    document.getElementById('modal-body').innerHTML = body;
+    const t = document.createElement('div');
+    t.className = `toast ${type}`; t.innerText = msg;
+    container.appendChild(t);
+    setTimeout(()=>t.remove(), 3000);
+}
+window.showModal = function(t, b) {
+    document.getElementById('modal-title').innerText = t;
+    document.getElementById('modal-body').innerHTML = b;
     document.getElementById('modal-overlay').classList.remove('hidden');
 }
 window.closeModal = function() {
