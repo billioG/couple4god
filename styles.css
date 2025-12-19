@@ -27,8 +27,13 @@ button:active { transform: scale(0.97); }
   padding: 15px; background: #1e293b; border-radius: 12px;
   margin-bottom: 20px; border: 1px solid #334155;
 }
-.mood-indicator { font-size: 1.5rem; margin-left: 5px; animation: pop 0.5s; }
-
+.mood-container { display: flex; align-items: center; gap: 8px; }
+.mood-box { 
+  font-size: 1.4rem; background: #0f172a; width: 40px; height: 40px; 
+  display: flex; align-items: center; justify-content: center; 
+  border-radius: 50%; border: 1px solid #334155; position: relative;
+}
+.mood-label { font-size: 0.6rem; position: absolute; bottom: -12px; color: #94a3b8; width: 100%; text-align: center; }
 /* --- CALENDAR --- */
 .progress-container { position: relative; width: 100%; height: 12px; background: #334155; border-radius: 20px; margin: 30px 0 40px 0; }
 .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 20px; width: 0%; transition: width 1s; }
@@ -157,8 +162,9 @@ button:active { transform: scale(0.97); }
   border: 2px solid #10b981; position: relative; overflow: hidden;
   box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
 }
-.plant-stage { font-size: 5rem; animation: grow 2s ease-in-out; display: block; margin: 10px 0; }
-.garden-info { font-size: 0.9rem; color: #a7f3d0; }
+.plant-stage { font-size: 5rem; animation: grow 2s ease-in-out; display: block; margin: 10px 0; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+.garden-info { font-size: 1rem; color: #a7f3d0; font-weight: bold; }
+.garden-progress { font-size: 0.8rem; color: #6ee7b7; margin-top: 5px; opacity: 0.8; }
 .water-drop { position: absolute; font-size: 1.5rem; animation: rain 1s infinite; top: -20px; }
 
 @keyframes grow { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
@@ -174,6 +180,12 @@ button:active { transform: scale(0.97); }
 .mood-indicator { font-size: 1.5rem; margin-left: 5px; animation: pop 0.5s; }
 
 /* --- CALENDARIO --- */
+.progress-container { position: relative; width: 100%; height: 12px; background: #334155; border-radius: 20px; margin: 30px 0 40px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 20px; width: 0%; transition: width 1s; }
+.milestone { position: absolute; top: -30px; transform: translateX(-50%); font-size: 1.8rem; opacity: 0.3; filter: grayscale(1); }
+.milestone.m-7 { left: 33%; } .milestone.m-14 { left: 66%; } .milestone.m-21 { left: 100%; }
+.milestone.active { opacity: 1; filter: grayscale(0); transform: translateX(-50%) scale(1.2); }
+
 .calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; max-width: 600px; margin: 0 auto; }
 .day-box { aspect-ratio: 1; background: #1e293b; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border: 2px solid #334155; cursor: pointer; }
 .day-box.locked { opacity: 0.5; cursor: not-allowed; }
@@ -185,16 +197,40 @@ button:active { transform: scale(0.97); }
 .dot.me.done { background: #3b82f6; } .dot.partner.done { background: #ec4899; }
 
 /* --- TOOLS BAR --- */
-.tools-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 30px; border: 1px solid #475569; display: flex; gap: 15px; z-index: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-.tool-btn { font-size: 1.6rem; background: none; border: none; cursor: pointer; padding: 0; width: auto; margin: 0; transition: transform 0.2s; }
+.tools-bar { 
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
+  background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); 
+  padding: 12px 25px; border-radius: 40px; border: 1px solid #334155; 
+  display: flex; gap: 20px; z-index: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.6); 
+}
+.tool-btn { font-size: 1.6rem; background: none; border: none; cursor: pointer; padding: 0; width: auto; margin: 0; transition: transform 0.2s; position: relative; }
 .tool-btn:hover { transform: scale(1.2); }
-
+/* NOTIFICACIÓN ROJA (Punto 2) */
+.notification-dot {
+  position: absolute; top: -2px; right: -2px;
+  width: 10px; height: 10px; background: #ef4444;
+  border-radius: 50%; border: 2px solid #0f172a;
+  animation: pulse-red 1.5s infinite;
+}
+@keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 /* --- EXTRAS --- */
+.ad-banner { position: fixed; bottom: 85px; left: 0; width: 100%; height: 50px; background: #0f172a; border-top: 1px solid #334155; display: flex; justify-content: center; align-items: center; font-size: 0.7rem; color: #64748b; z-index: 800; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+.modal-content { background: #1e293b; padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; text-align: left; border: 1px solid #475569; max-height: 85vh; overflow-y: auto; }
+.mood-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+.mood-btn { font-size: 2.5rem; background: #0f172a; border-radius: 10px; border: 2px solid transparent; cursor: pointer; }
 .prayer-item { background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; text-align: left; }
-.pray-action { font-size: 0.8rem; background: #334155; padding: 5px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap; margin-left: 10px;}
-.pray-action.active { background: #10b981; color: white; }
-.ad-banner { position: fixed; bottom: 80px; left: 0; width: 100%; height: 40px; background: #0f172a; border-top: 1px solid #334155; display: flex; justify-content: center; align-items: center; font-size: 0.7rem; color: #64748b; z-index: 800; }
-
+.pray-action { font-size: 0.8rem; background: #334155; padding: 5px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap; margin-left: 10px;} .pray-action.active { background: #10b981; color: white; }
+.onboarding-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+.slide { display: none; text-align: center; width: 100%; max-width: 400px; animation: fadeIn 0.5s; } .slide.active { display: block; }
+.dots { display: flex; gap: 10px; margin-top: 30px; } .dot { width: 10px; height: 10px; background: #334155; border-radius: 50%; } .dot.active { background: #3b82f6; }
+.hidden { display: none !important; }
+#toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.toast { background: #334155; padding: 12px 20px; border-radius: 8px; border-left: 4px solid #3b82f6; animation: slideIn 0.3s; pointer-events: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+#confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 /* --- PREGUNTAS DEL ALMA --- */
 .question-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #3b82f6; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
 .chat-container { display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; margin: 15px 0; }
