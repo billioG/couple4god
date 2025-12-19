@@ -1,412 +1,140 @@
-// ==========================================
-// LÓGICA PRINCIPAL (ROUTER, ESTADO Y REALTIME)
-// ==========================================
-
-// VARIABLES GLOBALES DE ESTADO
+// --- ESTADO GLOBAL ---
 window.currentUser = null;
 window.currentProfile = null;
 window.currentCouple = null;
-window.currentSection = 'calendar'; // Sección por defecto
+window.currentSection = 'calendar';
 
-// ------------------------------------------
-// 1. LÓGICA DE ONBOARDING (CARRUSEL)
-// ------------------------------------------
+// --- ONBOARDING CARRUSEL ---
 let currentSlide = 0;
 const totalSlides = 6;
-
 window.nextSlide = function() {
-    if (currentSlide < totalSlides - 1) {
-        currentSlide++;
-        updateSlider();
-    } else {
-        window.finishOnboarding();
-    }
+    if (currentSlide < totalSlides - 1) { currentSlide++; updateSlider(); } 
+    else { window.finishOnboarding(); }
 };
-
 function updateSlider() {
-    const slider = document.getElementById('ob-slider');
+    const s = document.getElementById('ob-slider');
     const dots = document.querySelectorAll('.dot');
-    const btnNext = document.getElementById('btn-ob-next');
-    const btnSkip = document.getElementById('btn-ob-skip');
-
-    if(slider) slider.style.transform = `translateX(-${currentSlide * 100}%)`;
-    
-    dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
-
-    if (btnNext && btnSkip) {
-        if (currentSlide === totalSlides - 1) {
-            btnNext.innerText = "¡Comenzar!";
-            btnSkip.classList.add('hidden');
-        } else {
-            btnNext.innerText = "Siguiente";
-            btnSkip.classList.remove('hidden');
-        }
+    const bn = document.getElementById('btn-ob-next');
+    const bs = document.getElementById('btn-ob-skip');
+    if(s) s.style.transform = `translateX(-${currentSlide * 100}%)`;
+    dots.forEach((d,i) => d.classList.toggle('active', i===currentSlide));
+    if(bn) {
+        bn.innerText = (currentSlide === totalSlides - 1) ? "¡Comenzar!" : "Siguiente";
+        if(currentSlide === totalSlides -1) bs.classList.add('hidden'); else bs.classList.remove('hidden');
     }
 }
-
 window.checkOnboarding = function() {
-    // Si no existe la marca en localStorage, mostramos el onboarding
-    if (!localStorage.getItem('onboarding_seen')) {
-        const view = document.getElementById('onboarding-view');
-        if(view) view.classList.remove('hidden');
-    }
+    if(!localStorage.getItem('ob_seen')) document.getElementById('onboarding-view').classList.remove('hidden');
 };
-
 window.finishOnboarding = function() {
-    localStorage.setItem('onboarding_seen', 'true');
-    const view = document.getElementById('onboarding-view');
-    if(view) view.classList.add('hidden');
+    localStorage.setItem('ob_seen', 'true');
+    document.getElementById('onboarding-view').classList.add('hidden');
 };
 
-
-// ------------------------------------------
-// 2. GESTIÓN DE PERFIL
-// ------------------------------------------
+// --- GESTIÓN PERFIL ---
 window.refreshUserProfile = async function() {
-    if (!window.currentUser) return;
-
-    try {
-        let { data, error } = await window.db
-            .from('profiles')
-            .select('*')
-            .eq('id', window.currentUser.id)
-            .maybeSingle();
-
-        // Auto-crear perfil si no existe
-        if (!data) {
-            const { data: newP } = await window.db
-                .from('profiles')
-                .insert([{ id: window.currentUser.id, email: window.currentUser.email, xp: 0 }])
-                .select()
-                .single();
-            data = newP;
-        }
-
-        window.currentProfile = data;
-        
-        // Actualizar UI Header
-        const nameEl = document.getElementById('display-name');
-        const xpEl = document.getElementById('user-xp');
-        if(nameEl) nameEl.innerText = data.full_name || 'Amor';
-        if(xpEl) xpEl.innerText = data.xp || 0;
-
-        // Verificar notificaciones después de cargar perfil
-        await window.checkNotifications();
-
-    } catch (err) {
-        console.error("Error perfil:", err);
+    if(!window.currentUser) return;
+    let { data } = await window.db.from('profiles').select('*').eq('id', window.currentUser.id).maybeSingle();
+    if(!data) {
+        const { data: newP } = await window.db.from('profiles').insert([{ id:window.currentUser.id, email:window.currentUser.email, xp:0 }]).select().single();
+        data = newP;
     }
+    window.currentProfile = data;
+    document.getElementById('display-name').innerText = data.full_name || 'Amor';
+    document.getElementById('user-xp').innerText = data.xp || 0;
+    await window.checkNotifications();
 };
 
-
-// ------------------------------------------
-// 3. SISTEMA DE NOTIFICACIONES (CORREGIDO)
-// ------------------------------------------
+// --- NOTIFICACIONES (CORREGIDO) ---
 window.checkNotifications = async function() {
-    // Necesitamos tener pareja y perfil cargados
-    if (!window.currentCouple || !window.currentProfile) return;
+    if(!window.currentCouple || !window.currentProfile) return;
+    const { data: c } = await window.db.from('couples').select('white_flag_status, white_flag_sender').eq('id', window.currentCouple.id).single();
+    if(!c) return;
 
-    const myId = window.currentProfile.id;
+    // Header Flag
+    const ad = document.querySelector('.avatars');
+    const old = document.getElementById('flag-ind');
+    if(old) old.remove();
+    if(c.white_flag_status === 'sent') {
+        const s = document.createElement('span'); s.id='flag-ind'; s.innerText=' 🏳️'; s.style.animation='pop 1s infinite';
+        if(ad) ad.appendChild(s);
+    }
 
-    try {
-        // CONSULTA FRESCA: No confiamos en window.currentCouple, pedimos el dato real a la DB
-        const { data: couple, error } = await window.db
-            .from('couples')
-            .select('white_flag_status, white_flag_sender')
-            .eq('id', window.currentCouple.id)
-            .single();
-
-        if (error || !couple) return;
-
-        // A. INDICADOR EN HEADER (Banderita al lado de los avatares)
-        const avatarsDiv = document.querySelector('.avatars');
-        const existingFlag = document.getElementById('header-flag-indicator');
-        if(existingFlag) existingFlag.remove(); // Limpiar siempre primero
-
-        if (couple.white_flag_status === 'sent') {
-            const flag = document.createElement('span');
-            flag.id = 'header-flag-indicator';
-            flag.innerText = ' 🏳️';
-            flag.style.animation = 'pop 1s infinite'; // Animación para llamar la atención
-            flag.title = "Bandera Blanca Activa";
-            flag.style.cursor = "help";
-            if(avatarsDiv) avatarsDiv.appendChild(flag);
-        }
-
-        // B. INDICADOR EN MENÚ INFERIOR (Punto rojo en botón Paz)
-        // Buscamos el botón por el atributo onclick o title
-        const peaceBtn = document.querySelector('button[onclick="showSection(\'peace\')"]');
-        
-        if (peaceBtn) {
-            // Lógica: Si está enviada Y NO fui yo quien la envió, muéstrame el punto rojo
-            if (couple.white_flag_status === 'sent' && couple.white_flag_sender !== myId) {
-                peaceBtn.classList.add('has-notification');
-            } else {
-                peaceBtn.classList.remove('has-notification');
-            }
-        }
-
-    } catch (e) {
-        console.error("Error checkNotifications:", e);
+    // Menu Dot
+    const pb = document.querySelector('button[title="Paz"]');
+    if(pb) {
+        if(c.white_flag_status === 'sent' && c.white_flag_sender !== window.currentProfile.id) pb.classList.add('has-notification');
+        else pb.classList.remove('has-notification');
     }
 };
 
+// --- ROUTER (CORREGIDO CALENDARIO) ---
+window.showSection = async function(sid) {
+    document.querySelectorAll('.nav-icon').forEach(b => b.classList.remove('active'));
+    if(event && event.currentTarget) event.currentTarget.classList.add('active');
+    window.currentSection = sid;
+    const c = document.getElementById('dynamic-content');
+    const t = document.getElementById('section-title');
+    c.innerHTML = ''; // LIMPIAR SIEMPRE
 
-// ------------------------------------------
-// 4. ROUTER / NAVEGACIÓN (CORREGIDO CALENDARIO)
-// ------------------------------------------
-window.showSection = async function(sectionId) {
-    // Actualizar estado visual de botones
-    document.querySelectorAll('.nav-icon').forEach(btn => btn.classList.remove('active'));
-    if(event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-        // Si entro a Paz, quito la notificación visualmente (opcional)
-        if(sectionId === 'peace') event.currentTarget.classList.remove('has-notification');
-    }
-
-    // Guardar sección actual para el Realtime
-    window.currentSection = sectionId;
-
-    const content = document.getElementById('dynamic-content');
-    const title = document.getElementById('section-title');
-    
-    // LIMPIEZA TOTAL DEL CONTENIDO
-    content.innerHTML = ''; 
-
-    switch(sectionId) {
+    switch(sid) {
         case 'calendar':
-            if(title) title.innerText = "Tu Calendario";
-            // Inyectamos la estructura base del calendario y barra
-            content.innerHTML = `
-                <div class="progress-container">
-                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-bottom:5px;">
-                        <span>Tu Progreso</span><span id="progress-text">0%</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill" id="progress-bar"></div>
-                        <div class="milestone" style="left:33%" id="milestone-7">👫</div>
-                        <div class="milestone" style="left:66%" id="milestone-14">🎁</div>
-                        <div class="milestone" style="left:100%" id="milestone-21">❤️</div>
-                    </div>
-                </div>
-                <div id="calendar-grid" class="calendar-grid"></div>
-            `;
-            // Llamamos a la función que llena la cuadrícula
+            t.innerText = "Tu Calendario";
+            c.innerHTML = `<div class="progress-container"><div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888;"><span>Progreso</span><span id="progress-text">0%</span></div><div class="progress-track"><div class="progress-fill" id="progress-bar"></div><div class="milestone" style="left:33%" id="milestone-7">👫</div><div class="milestone" style="left:66%" id="milestone-14">🎁</div><div class="milestone" style="left:100%" id="milestone-21">❤️</div></div></div><div id="calendar-grid" class="calendar-grid"></div>`;
             if(window.loadChallengeGrid) await window.loadChallengeGrid();
             break;
-
-        case 'peace':
-            if(title) title.innerText = "Bandera de Paz";
-            content.innerHTML = '<div id="peace-area"></div>';
-            if(window.checkWhiteFlagStatus) await window.checkWhiteFlagStatus();
-            break;
-
-        case 'prayer':
-            if(title) title.innerText = "Peticiones";
-            // Aseguramos que el perfil esté cargado para saber si "yo" ya apoyé
-            if(!window.currentProfile) await window.refreshUserProfile();
-            if(window.loadPrayers) await window.loadPrayers();
-            break;
-
-        case 'questions':
-            if(title) title.innerText = "Conexión Profunda";
-            if(window.loadDeepQuestion) await window.loadDeepQuestion();
-            break;
-
-        case 'tips': // Sugerencias
-            if(title) title.innerText = "Sugerencias";
-            if(window.loadTips) window.loadTips();
-            break;
-
-        case 'rewards': // Premios
-            if(title) title.innerText = "Canjear Premios";
-            if(window.loadRewards) await window.loadRewards();
-            break;
-            
-        default:
-            console.log("Sección desconocida:", sectionId);
+        case 'peace': t.innerText="Bandera de Paz"; c.innerHTML='<div id="peace-area"></div>'; if(window.checkWhiteFlagStatus) await window.checkWhiteFlagStatus(); break;
+        case 'prayer': t.innerText="Peticiones"; if(!window.currentProfile) await window.refreshUserProfile(); if(window.loadPrayers) await window.loadPrayers(); break;
+        case 'questions': t.innerText="Conexión Profunda"; if(window.loadDeepQuestion) await window.loadDeepQuestion(); break;
+        case 'tips': t.innerText="Sugerencias"; if(window.loadTips) window.loadTips(); break;
+        case 'rewards': t.innerText="Premios"; if(window.loadRewards) await window.loadRewards(); break;
     }
 };
 
+// --- INIT ---
+async function initApp() {
+    if(!window.db) return;
+    window.checkOnboarding();
+    const { data: { user } } = await window.db.auth.getUser();
 
-// ------------------------------------------
-// 5. GESTIÓN DE PAREJA (CONEXIÓN)
-// ------------------------------------------
-window.connectCouple = async function() {
-    const codeInput = document.getElementById('partner-code');
-    const code = codeInput.value.toUpperCase().trim();
-    const myId = window.currentUser.id;
+    if(user) {
+        window.currentUser = user;
+        await window.refreshUserProfile();
+        const { data: couple } = await window.db.from('couples').select('*').or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`).maybeSingle();
+        document.getElementById('auth-view').classList.add('hidden');
 
-    if (!code) return window.showToast("Ingresa el código", "error");
-    if (code === window.currentProfile.share_code) return window.showToast("No puedes usar tu propio código", "error");
+        if(couple) {
+            window.currentCouple = couple;
+            document.getElementById('main-view').classList.remove('hidden');
+            if(window.loadChallengeGrid) await window.loadChallengeGrid();
+            await window.checkNotifications();
 
-    const { data: partner } = await window.db.from('profiles').select('id').eq('share_code', code).maybeSingle();
-    
-    if (!partner) return window.showToast("Código no encontrado", "error");
-    if (partner.id === myId) return window.showToast("Error de identidad", "error");
+            // REALTIME
+            window.db.channel('public:couples').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'couples', filter:`id=eq.${couple.id}` }, async () => {
+                await window.checkNotifications();
+                if(window.currentSection==='peace') window.checkWhiteFlagStatus();
+                window.showToast("🔔 Actualización de pareja");
+            }).subscribe();
 
-    // Ordenar IDs para evitar duplicados
-    const [u1, u2] = [myId, partner.id].sort();
+            window.db.channel('public:shared').on('postgres_changes', { event: '*', schema: 'public', table: 'shared_content', filter:`couple_id=eq.${couple.id}` }, () => {
+                if(window.currentSection==='prayer') window.loadPrayers();
+                if(window.currentSection==='questions') window.loadDeepQuestion();
+            }).subscribe();
 
-    const { error: insertError } = await window.db.from('couples').insert([{ user1_id: u1, user2_id: u2 }]);
-
-    if (insertError) {
-        if (insertError.code === '23505') {
-            window.showToast("¡Ya están conectados!", "success");
-            setTimeout(() => window.location.reload(), 1000);
         } else {
-            console.error(insertError);
-            window.showToast("Error al conectar", "error");
+            document.getElementById('sync-view').classList.remove('hidden');
+            if(document.getElementById('my-code')) document.getElementById('my-code').innerText = window.currentProfile.share_code;
         }
     } else {
-        window.showToast("¡Conectados! 🎉", "success");
-        setTimeout(() => window.location.reload(), 1000);
-    }
-};
-
-window.copyCode = function() {
-    navigator.clipboard.writeText(document.getElementById('my-code').innerText);
-    window.showToast("Código copiado", "success");
-};
-
-window.handleLogout = async function() {
-    await window.db.auth.signOut();
-    window.location.reload();
-};
-
-
-// ------------------------------------------
-// 6. UTILIDADES UI
-// ------------------------------------------
-window.showToast = function(msg, type='info') {
-    const container = document.getElementById('toast-container');
-    if(!container) return alert(msg);
-    
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.innerText = msg;
-    container.appendChild(t);
-    
-    // Animación
-    setTimeout(() => {
-        t.style.opacity = '0';
-        t.style.transform = 'translateY(-20px)';
-        setTimeout(() => t.remove(), 300);
-    }, 3000);
-};
-
-window.showModal = function(title, body) {
-    document.getElementById('modal-title').innerText = title;
-    document.getElementById('modal-body').innerHTML = body;
-    document.getElementById('modal-actions').innerHTML = '';
-    document.getElementById('modal-overlay').classList.remove('hidden');
-};
-
-window.closeModal = function() {
-    document.getElementById('modal-overlay').classList.add('hidden');
-};
-
-
-// ------------------------------------------
-// 7. INICIALIZACIÓN Y REALTIME
-// ------------------------------------------
-async function initApp() {
-    if (!window.db) {
-        console.error("⛔ Falta config.js o conexión a DB");
-        return;
-    }
-
-    // Verificar si mostramos Onboarding
-    window.checkOnboarding();
-
-    try {
-        const { data: { user } } = await window.db.auth.getUser();
-
-        if (user) {
-            window.currentUser = user;
-            
-            // 1. Cargar Perfil (ESENCIAL para que funcionen los botones de peticiones al recargar)
-            await window.refreshUserProfile();
-
-            // 2. Buscar Pareja
-            const { data: couple } = await window.db
-                .from('couples')
-                .select('*')
-                .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-                .maybeSingle();
-
-            document.getElementById('auth-view').classList.add('hidden');
-
-            if (couple) {
-                // --- USUARIO CON PAREJA ---
-                window.currentCouple = couple;
-                document.getElementById('main-view').classList.remove('hidden');
-                document.getElementById('sync-view').classList.add('hidden');
-                
-                // Cargar vista inicial (Calendario)
-                if (window.loadChallengeGrid) await window.loadChallengeGrid();
-                
-                // --- LISTENERS DE REALTIME (ACTUALIZACIÓN EN VIVO) ---
-                const channel = window.db.channel('public:app_changes');
-
-                // A. Escuchar cambios en la PAREJA (Bandera Blanca)
-                channel.on('postgres_changes', 
-                    { event: 'UPDATE', schema: 'public', table: 'couples', filter: `id=eq.${couple.id}` }, 
-                    () => {
-                        window.checkNotifications(); // Actualiza punto rojo
-                        // Si el usuario está viendo la pantalla de paz, recargarla
-                        if (window.currentSection === 'peace' && window.checkWhiteFlagStatus) {
-                            window.checkWhiteFlagStatus();
-                        }
-                        window.showToast("🔔 Tu pareja actualizó el estado de la relación", "info");
-                    }
-                );
-
-                // B. Escuchar cambios en CONTENIDO COMPARTIDO (Peticiones, Preguntas, Respuestas)
-                // Esto permite que si tu pareja apoya tu petición, tu pantalla se actualice sola
-                channel.on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'shared_content', filter: `couple_id=eq.${couple.id}` }, 
-                    () => {
-                        // Recargar solo la sección activa
-                        if (window.currentSection === 'prayer' && window.loadPrayers) window.loadPrayers();
-                        if (window.currentSection === 'questions' && window.loadDeepQuestion) window.loadDeepQuestion();
-                    }
-                );
-
-                channel.subscribe();
-
-            } else {
-                // --- USUARIO SIN PAREJA (SYNC) ---
-                document.getElementById('sync-view').classList.remove('hidden');
-                document.getElementById('main-view').classList.add('hidden');
-                
-                if(document.getElementById('my-code')) {
-                    document.getElementById('my-code').innerText = window.currentProfile.share_code || '...';
-                }
-                
-                // Escuchar si alguien me añade
-                window.db.channel('public:couples_insert').on(
-                    'postgres_changes', 
-                    { event: 'INSERT', schema: 'public', table: 'couples' }, 
-                    payload => {
-                        if(payload.new.user1_id === user.id || payload.new.user2_id === user.id) {
-                            window.showToast("¡Pareja encontrada! Entrando...", "success");
-                            setTimeout(() => window.location.reload(), 1500);
-                        }
-                    }
-                ).subscribe();
-            }
-
-        } else {
-            // --- NO LOGUEADO ---
-            document.getElementById('auth-view').classList.remove('hidden');
-            document.getElementById('main-view').classList.add('hidden');
-        }
-
-    } catch (err) {
-        console.error("Error init:", err);
+        document.getElementById('auth-view').classList.remove('hidden');
     }
 }
 
-// Arrancar la aplicación
+// --- UTILS ---
+window.connectCouple=async function(){const c=document.getElementById('partner-code').value.toUpperCase().trim();const m=window.currentUser.id;if(!c)return window.showToast("Ingresa código","error");if(c===window.currentProfile.share_code)return window.showToast("No tu código","error");const{data:p}=await window.db.from('profiles').select('id').eq('share_code',c).maybeSingle();if(!p)return window.showToast("Inválido","error");const[u1,u2]=[m,p.id].sort();const{error}=await window.db.from('couples').insert([{user1_id:u1,user2_id:u2}]);if(error&&error.code!=='23505')window.showToast("Error","error");else{window.showToast("¡Conectados!");location.reload();}};
+window.copyCode=function(){navigator.clipboard.writeText(document.getElementById('my-code').innerText);window.showToast("Copiado");};
+window.handleLogout=async function(){await window.db.auth.signOut();location.reload();};
+window.showToast=function(m,t='info'){const c=document.getElementById('toast-container');const d=document.createElement('div');d.className=`toast ${t}`;d.innerText=m;c.appendChild(d);setTimeout(()=>d.remove(),3000);};
+window.showModal=function(t,b){document.getElementById('modal-title').innerText=t;document.getElementById('modal-body').innerHTML=b;document.getElementById('modal-actions').innerHTML='';document.getElementById('modal-overlay').classList.remove('hidden');};
+window.closeModal=function(){document.getElementById('modal-overlay').classList.add('hidden');};
 initApp();
