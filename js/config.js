@@ -3,7 +3,6 @@
 // --- 1. PEGA AQUÍ TUS CREDENCIALES DE SUPABASE ---
 const PROJECT_URL = 'https://dsiuuymgyzkcksaqtoqk.supabase.co'; 
 const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg';
-'; 
 
 // --- 2. INICIALIZACIÓN SEGURA ---
 // Verificamos si la librería cargó
