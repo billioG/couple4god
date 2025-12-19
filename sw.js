@@ -1,26 +1,55 @@
-const CACHE_NAME = "c4g-v5-fix"; // Cambiamos versión para limpiar caché
-const ASSETS = ["./", "./index.html", "./styles.css", "./app.js"];
+const CACHE_NAME = 'couple-garden-v1';
+const urlsToCache = [
+  './',
+  './index.html',
+  './css/styles.css',
+  './js/app.js',
+  './js/auth.js',
+  './js/challenges.js',
+  './js/config.js',
+  './js/gamification.js'
+];
 
-self.addEventListener("install", (e) => {
-  self.skipWaiting(); // Obliga a instalarse de inmediato
-  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+// Instalación
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
+  );
 });
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
+// Activación
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key); // Borra caché vieja
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
         })
       );
     })
   );
-  self.clients.claim(); // Toma control inmediato
 });
 
-self.addEventListener("fetch", (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => response || fetch(e.request))
+// Interceptar peticiones (Offline first)
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        return response || fetch(event.request);
+      })
   );
+});
+
+// Preparado para Notificaciones Push
+self.addEventListener('push', function(event) {
+  const title = 'Couple Garden';
+  const options = {
+    body: event.data ? event.data.text() : '¡Tienes una novedad en tu relación!',
+    icon: 'https://cdn-icons-png.flaticon.com/512/616/616490.png',
+    badge: 'https://cdn-icons-png.flaticon.com/512/616/616490.png'
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
 });
