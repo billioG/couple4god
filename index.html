@@ -3,40 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amor Consciente</title>
+    <title>Conexión de Pareja</title>
+    
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/components.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <div class="xp-badge">✨ <span id="user-xp">0</span> XP</div>
-            <button id="btn-shop" class="icon-btn">🎁</button>
-        </header>
 
-        <main id="main-content">
-            <div id="loading" class="loader">Cargando...</div>
-        </main>
+    <div id="app-container">
+        
+        <section id="auth-view" class="view">
+            <div class="login-box">
+                <h1>Bienvenido</h1>
+                <p>Fortalece tu relación día a día.</p>
+                <input type="email" id="email" placeholder="Tu correo electrónico">
+                <input type="password" id="password" placeholder="Contraseña">
+                <button onclick="handleLogin()" class="btn-primary">Iniciar Sesión</button>
+                <button onclick="handleSignUp()" class="btn-secondary">Registrarse</button>
+                <p id="auth-message"></p>
+            </div>
+        </section>
 
-        <nav class="bottom-nav">
-            <button onclick="navigate('home')">🏠 Hoy</button>
-            <button onclick="navigate('peace')">🏳️ Paz</button>
-            <button onclick="navigate('profile')">👤 Perfil</button>
-        </nav>
+        <section id="main-view" class="view hidden">
+            <header class="top-bar">
+                <div class="xp-badge">
+                    <span>✨</span> <span id="user-xp">0</span> <span>XP</span>
+                </div>
+                <button onclick="openRewards()" class="icon-btn">🎁 Canjear</button>
+            </header>
+
+            <main id="content-area">
+                <div class="loader">Cargando tu dosis de sabiduría...</div>
+            </main>
+
+            <nav class="bottom-nav">
+                <button onclick="loadDailyChallenge()" class="nav-item">
+                    <span>📖</span> Hoy
+                </button>
+                <button onclick="checkWhiteFlagStatus()" class="nav-item">
+                    <span>🏳️</span> Paz
+                </button>
+                <button onclick="handleLogout()" class="nav-item">
+                    <span>🚪</span> Salir
+                </button>
+            </nav>
+        </section>
+
     </div>
 
-    <div id="modal-overlay" class="hidden">
+    <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h3 id="modal-title">Título</h3>
-            <p id="modal-body">Contenido...</p>
-            <button id="modal-action-btn" class="btn-primary">Aceptar</button>
-            <button onclick="closeModal()" class="btn-close-modal">Cerrar</button>
+            <div id="modal-body">Contenido...</div>
+            <div class="modal-actions">
+                <button id="modal-primary-btn" class="btn-primary hidden">Aceptar</button>
+                <button onclick="closeModal()" class="btn-close-modal">Cerrar</button>
+            </div>
         </div>
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/challenges.js"></script>
     <script src="js/gamification.js"></script>
     <script src="js/app.js"></script>
+
 </body>
 </html>
