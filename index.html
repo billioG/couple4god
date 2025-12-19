@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Couple Garden</title>
-    
     <link rel="stylesheet" href="css/styles.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -15,56 +13,45 @@
         
         <section id="onboarding-view" class="view hidden">
             <div class="onboarding-slider" id="ob-slider">
-                
                 <div class="slide">
                     <div class="slide-icon">🌱</div>
                     <h2>Couple Garden</h2>
-                    <p>Bienvenido a tu espacio sagrado. Aquí cultivarás tu relación día a día con pequeñas acciones que crean grandes cambios.</p>
+                    <p>Bienvenido a tu espacio sagrado. Cultiva tu relación día a día con pequeñas acciones.</p>
                 </div>
-
                 <div class="slide">
                     <div class="slide-icon">🔗</div>
                     <h2>Conéctate</h2>
-                    <p>Vincula tu cuenta con tu pareja usando un código único. Ambos verán el mismo jardín y progresarán juntos.</p>
+                    <p>Vincula tu cuenta con tu pareja. Ambos verán el mismo jardín y progresarán juntos.</p>
                 </div>
-
                 <div class="slide">
                     <div class="slide-icon">📅</div>
-                    <h2>Reto de 21 Días</h2>
-                    <p>Cada día desbloquean un reto nuevo. Complétalo escribiendo una reflexión. Solo uno al día para crear el hábito real.</p>
+                    <h2>Reto Diario</h2>
+                    <p>Un reto nuevo cada día. Complétalo con una reflexión real. La constancia es la clave.</p>
                 </div>
-
                 <div class="slide">
                     <div class="slide-icon">🏳️</div>
                     <h2>Bandera Blanca</h2>
-                    <p>¿Discutieron? Usa la bandera para pedir una tregua sin palabras. Al aceptarla, ganan XP y restauran la armonía.</p>
+                    <p>¿Discusión? Pide una tregua sin palabras usando la bandera. Restaura la paz y gana XP.</p>
                 </div>
-
                 <div class="slide">
                     <div class="slide-icon">🙏</div>
-                    <h2>Conexión Profunda</h2>
-                    <p>Deja peticiones para que tu pareja las apoye ("Lo tomo en cuenta") y responde preguntas profundas para redescubrirse.</p>
+                    <h2>Apoyo Mutuo</h2>
+                    <p>Deja peticiones y apoya las de tu pareja. La comunicación es la base de todo.</p>
                 </div>
-
                 <div class="slide">
                     <div class="slide-icon">🎁</div>
-                    <h2>Cosecha Premios</h2>
-                    <p>Gana XP por cada acción positiva y canjéalos por premios reales: masajes, cenas o citas. ¡Empieza ahora!</p>
+                    <h2>Premios</h2>
+                    <p>Gana XP por cada acción positiva y canjéalos por premios reales. ¡Empieza ahora!</p>
                 </div>
-
             </div>
 
             <div class="onboarding-controls">
-                <div class="dots-container" id="ob-dots">
-                    <div class="dot active"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
+                <div class="dots-container">
+                    <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
                 </div>
                 <button onclick="nextSlide()" class="btn-primary" id="btn-ob-next">Siguiente</button>
-                <button onclick="finishOnboarding()" class="btn-link" id="btn-ob-skip">Saltar</button>
+                <button onclick="finishOnboarding()" class="btn-text" id="btn-ob-skip">Saltar</button>
             </div>
         </section>
 
@@ -72,15 +59,11 @@
             <div class="center-content">
                 <span style="font-size: 4rem;">🏡</span>
                 <h1>Couple Garden</h1>
-                <p style="color: var(--text-gray); margin-bottom: 30px;">El amor se construye a diario</p>
-                
+                <p style="color: var(--text-gray); margin-bottom: 30px;">Construye amor a diario</p>
                 <input type="text" id="full-name" class="input-field hidden" placeholder="Tu Nombre">
-                
                 <input type="hidden" id="selected-gender" value="neutral">
-
                 <input type="email" id="email" class="input-field" placeholder="Correo electrónico">
                 <input type="password" id="password" class="input-field" placeholder="Contraseña">
-                
                 <button onclick="handleLogin()" id="btn-login" class="btn-primary">Iniciar Sesión</button>
                 <button onclick="toggleRegisterMode()" id="btn-toggle" class="btn-text">¿No tienes cuenta? Regístrate</button>
             </div>
@@ -89,29 +72,16 @@
         <section id="sync-view" class="view hidden">
             <div class="center-content scrollable">
                 <h2>Tu Equipo</h2>
-                
                 <div class="sync-card">
-                    <h3 style="color:white; margin-bottom:10px;">¡Código Creado!</h3>
-                    <p style="color:var(--text-gray); font-size:0.9rem;">Comparte este código con tu pareja:</p>
-                    
+                    <h3>¡Tu Código!</h3>
+                    <p style="color:#aaa; font-size:0.9rem;">Compártelo con tu pareja:</p>
                     <div id="my-code" class="code-display" onclick="copyCode()">...</div>
-                    
-                    <div class="sync-status">
-                        <span>⏳</span> Esperando vinculación...
-                    </div>
-                    
-                    <button onclick="window.location.reload()" class="btn-text" style="font-size:0.8rem; margin-top:15px; color:var(--primary)">
-                        🔄 Toca aquí si ya se vincularon
-                    </button>
+                    <div class="sync-status"><span>⏳</span> Esperando...</div>
+                    <button onclick="window.location.reload()" class="btn-text" style="color:var(--primary)">🔄 Ya se unieron</button>
                 </div>
-
                 <div class="divider">O ingresa su código</div>
-
-                <div style="width:100%">
-                    <input type="text" id="partner-code" class="input-field" placeholder="EJ: JFU2QD" style="text-align:center; text-transform:uppercase; letter-spacing: 2px;">
-                    <button onclick="connectCouple()" class="btn-primary">Conectar</button>
-                </div>
-
+                <input type="text" id="partner-code" class="input-field" placeholder="CÓDIGO PAREJA" style="text-align:center; text-transform:uppercase; letter-spacing:2px;">
+                <button onclick="connectCouple()" class="btn-primary">Conectar</button>
                 <button onclick="handleLogout()" class="btn-text" style="color:var(--danger); margin-top:30px;">Cerrar Sesión</button>
             </div>
         </section>
@@ -119,7 +89,7 @@
         <section id="main-view" class="view hidden">
             <div class="top-bar">
                 <div class="user-info">
-                    <div class="user-name">Hola, <span id="display-name">Usuario</span></div>
+                    <div class="user-name">Hola, <span id="display-name">...</span></div>
                     <div class="avatars"><span>🧔</span><span>👱‍♀️</span></div>
                 </div>
                 <div class="xp-pill">✨ <span id="user-xp">0</span> XP</div>
@@ -127,7 +97,6 @@
             </div>
 
             <div id="content-area">
-                
                 <div class="garden-card">
                     <div class="garden-header">JARDÍN ESPIRITUAL</div>
                     <div class="plant-icon" id="garden-plant">🌱</div>
@@ -136,23 +105,8 @@
                 </div>
 
                 <h2 class="section-title" id="section-title">Tu Calendario</h2>
-                
                 <div id="dynamic-content">
-                    <div class="progress-container">
-                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-bottom:5px;">
-                            <span>Tu Progreso</span>
-                            <span id="progress-text">0%</span>
-                        </div>
-                        <div class="progress-track">
-                            <div class="progress-fill" id="progress-bar"></div>
-                            <div class="milestone" style="left: 33%;" id="milestone-7">👫</div>
-                            <div class="milestone" style="left: 66%;" id="milestone-14">🎁</div>
-                            <div class="milestone" style="left: 100%;" id="milestone-21">❤️</div>
-                        </div>
                     </div>
-                    <div id="calendar-grid" class="calendar-grid"></div>
-                </div>
-
             </div>
 
             <nav class="floating-nav">
@@ -169,14 +123,13 @@
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <button onclick="closeModal()" class="btn-close-modal">✕</button>
-            <div style="padding-top: 25px;">
-                <h3 id="modal-title" style="color: var(--primary); margin-bottom: 15px;">Título</h3>
-                <div id="modal-body" style="color: #ccc; line-height: 1.6; text-align: left;"></div>
-                <div id="modal-actions" style="margin-top: 20px;"></div>
+            <div style="padding-top:20px;">
+                <h3 id="modal-title" style="color:var(--primary); margin-bottom:10px;">Titulo</h3>
+                <div id="modal-body" style="color:#ccc; line-height:1.5; text-align:left;"></div>
+                <div id="modal-actions" style="margin-top:20px;"></div>
             </div>
         </div>
     </div>
-
     <div id="toast-container"></div>
 
     <script src="js/config.js"></script>
@@ -184,6 +137,5 @@
     <script src="js/gamification.js"></script>
     <script src="js/challenges.js"></script>
     <script src="js/app.js"></script>
-
 </body>
 </html>
