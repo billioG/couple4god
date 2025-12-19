@@ -1,12 +1,22 @@
 :root { --bg-dark:#13151b; --card-bg:#1e222d; --primary:#4e8eff; --accent:#00d285; --text-white:#fff; --text-gray:#8b9bb4; --danger:#ff4757; }
 * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+
 body { background:var(--bg-dark); color:var(--text-white); height:100vh; overflow:hidden; }
 #app-container { max-width:480px; margin:0 auto; height:100%; display:flex; flex-direction:column; background:var(--bg-dark); position:relative; }
 
-/* ONBOARDING FIX */
+/* --- ONBOARDING ARREGLADO --- */
 #onboarding-view { position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg-dark); z-index:9999; display:flex; flex-direction:column; }
-.onboarding-slider { flex:1; display:flex; width:100%; overflow:hidden; }
-.slide { min-width:100%; flex:0 0 100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:40px; text-align:center; transition:transform 0.3s ease-out; }
+.onboarding-slider { flex:1; display:flex; width:100%; overflow-x:hidden; /* Oculta scroll lateral */ }
+
+/* ESTO ARREGLA QUE LAS PANTALLAS SALGAN VACÍAS */
+.slide { 
+    min-width:100%; 
+    flex: 0 0 100%; /* Obliga a cada slide a tener el 100% del ancho */
+    height:100%; 
+    display:flex; flex-direction:column; justify-content:center; align-items:center; 
+    padding:40px; text-align:center; transition:transform 0.3s ease-out; 
+}
+
 .slide-icon { font-size:5rem; margin-bottom:30px; animation:float 3s infinite ease-in-out; }
 .slide h2 { color:var(--primary); font-size:2rem; margin-bottom:15px; }
 .slide p { color:#ccc; font-size:1.1rem; line-height:1.6; }
@@ -15,17 +25,26 @@ body { background:var(--bg-dark); color:var(--text-white); height:100vh; overflo
 .dot { width:10px; height:10px; background:#333; border-radius:50%; transition:0.3s; }
 .dot.active { background:var(--primary); transform:scale(1.3); }
 
-/* CONTENT & SCROLL */
-#content-area { flex:1; overflow-y:auto; padding-bottom:120px; width:100%; -webkit-overflow-scrolling:touch; }
-.center-content { padding:40px; display:flex; flex-direction:column; justify-content:center; height:100%; text-align:center; overflow-y:auto; }
-.scrollable { justify-content:flex-start; padding-top:60px; }
+/* --- BOTONES ARREGLADOS --- */
+.btn-primary { background:var(--primary); color:white; width:100%; padding:14px; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer; font-size:1rem; }
+.btn-primary:disabled { opacity:0.6; cursor:not-allowed; }
 
-/* COMPONENTS */
+/* Botones de texto (Registrarse / Saltar) */
+.btn-text { background:none; border:none; color:var(--text-gray); margin-top:15px; cursor:pointer; text-decoration:underline; font-size:0.9rem; }
+
+/* Botón Salir */
+.btn-logout { background:var(--danger); color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:0.8rem; }
+
+/* --- RESTO DEL DISEÑO --- */
 .top-bar { padding:15px 20px; display:flex; justify-content:space-between; align-items:center; background:var(--bg-dark); border-bottom:1px solid #222; flex-shrink:0; }
 .floating-nav { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:#252a35; padding:12px 20px; border-radius:50px; display:flex; gap:15px; box-shadow:0 10px 40px rgba(0,0,0,0.8); border:1px solid #444; z-index:1000; width:auto; max-width:95%; }
 .nav-icon { background:none; border:none; font-size:1.5rem; cursor:pointer; opacity:0.5; position:relative; transition:0.2s; }
 .nav-icon.active, .nav-icon:hover { opacity:1; transform:scale(1.1); color:white; }
 .nav-icon.has-notification::after { content:""; position:absolute; top:0; right:0; width:10px; height:10px; background:var(--danger); border-radius:50%; border:2px solid #252a35; }
+
+#content-area { flex:1; overflow-y:auto; padding-bottom:120px; width:100%; -webkit-overflow-scrolling:touch; }
+.center-content { padding:40px; display:flex; flex-direction:column; justify-content:center; height:100%; text-align:center; overflow-y:auto; }
+.scrollable { justify-content:flex-start; padding-top:60px; }
 
 .garden-card { margin:20px; background:linear-gradient(180deg,rgba(0,210,133,0.15) 0%,rgba(30,34,45,0) 100%); border:1px solid var(--accent); border-radius:20px; padding:20px; text-align:center; }
 .plant-icon { font-size:3.5rem; margin:10px 0; filter:drop-shadow(0 0 10px var(--accent)); }
@@ -35,15 +54,12 @@ body { background:var(--bg-dark); color:var(--text-white); height:100vh; overflo
 .day-card.completed { border:2px solid var(--accent); background:rgba(0,210,133,0.1); }
 .day-card.locked { opacity:0.5; }
 
-.btn-primary { background:var(--primary); color:white; width:100%; padding:14px; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer; }
-.btn-primary:disabled { opacity:0.6; cursor:not-allowed; }
 .input-field { width:100%; padding:15px; margin-bottom:10px; border-radius:12px; border:1px solid #333; background:#252a35; color:white; outline:none; }
 .btn-support { background:transparent; border:1px solid var(--accent); color:var(--accent); padding:6px 12px; border-radius:20px; font-size:0.8rem; font-weight:bold; cursor:pointer; display:flex; gap:5px; align-items:center; }
 .btn-support:disabled, .btn-support.active { background:var(--accent); color:#000; opacity:0.8; cursor:default; }
 .reward-card { background:var(--card-bg); border:1px solid #333; padding:15px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .reward-cost { background:rgba(78,142,255,0.1); color:var(--primary); padding:5px 10px; border-radius:10px; font-weight:bold; font-size:0.8rem; }
 
-/* PROGRESS BAR */
 .progress-container { margin:0 20px 30px; padding:15px; background:var(--card-bg); border-radius:15px; border:1px solid #333; position:relative; padding-top:30px; }
 .progress-track { height:10px; background:#13151b; border-radius:10px; margin-top:10px; position:relative; overflow:visible; }
 .progress-fill { height:100%; background:linear-gradient(90deg,var(--primary),var(--accent)); border-radius:10px; width:0%; transition:width 0.5s; }
@@ -56,6 +72,12 @@ body { background:var(--bg-dark); color:var(--text-white); height:100vh; overflo
 .btn-close-modal { position:absolute; top:10px; right:10px; background:#333; color:white; border:none; width:30px; height:30px; border-radius:50%; }
 .toast-container { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:10000; width:90%; pointer-events:none; }
 .toast { background:#333; color:white; padding:12px 20px; border-radius:50px; margin-bottom:10px; border:1px solid #555; text-align:center; pointer-events:auto; animation:slideIn 0.3s; }
+
+.sync-card { background:#1e2532; border:2px dashed var(--primary); border-radius:20px; padding:30px; margin-bottom:20px; text-align:center; }
+.code-display { font-size:2.5rem; font-weight:800; color:var(--primary); letter-spacing:5px; margin:20px 0; cursor:pointer; }
+.divider { margin:20px 0; color:#666; display:flex; align-items:center; }
+.divider::before, .divider::after { content:""; flex:1; height:1px; background:#333; margin:0 10px; }
+
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 @keyframes slideIn { from{transform:translateY(-20px);opacity:0} to{transform:translateY(0);opacity:1} }
 @keyframes pop { 0%{transform:scale(0)} 50%{transform:scale(1.3)} 100%{transform:scale(1)} }
