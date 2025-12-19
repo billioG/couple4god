@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Couple Garden</title>
-    
+
     <link rel="stylesheet" href="css/styles.css">
-    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#13151b">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/628/628283.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 
     <div id="app-container">
-        
+
         <section id="onboarding-view" class="view hidden">
             <div class="onboarding-slider" id="ob-slider">
                 <div class="slide">
@@ -38,7 +44,10 @@
             </div>
             <div class="onboarding-controls">
                 <div class="dots-container">
-                    <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
                 </div>
                 <button onclick="nextSlide()" class="btn-primary" id="btn-ob-next">Siguiente</button>
                 <button onclick="finishOnboarding()" class="btn-text" id="btn-ob-skip">Saltar</button>
@@ -49,34 +58,36 @@
                 <span style="font-size: 4rem;">🏡</span>
                 <h1>Couple Garden</h1>
                 <p style="color: var(--text-gray); margin-bottom: 30px;">El amor se construye a diario</p>
-                
+
                 <input type="text" id="full-name" class="input-field hidden" placeholder="Tu Nombre">
-                
+
                 <input type="hidden" id="selected-gender" value="neutral">
 
                 <input type="email" id="email" class="input-field" placeholder="Correo electrónico">
                 <input type="password" id="password" class="input-field" placeholder="Contraseña">
-                
+
                 <button onclick="handleLogin()" id="btn-login" class="btn-primary">Iniciar Sesión</button>
-                <button onclick="toggleRegisterMode()" id="btn-toggle" class="btn-text">¿No tienes cuenta? Regístrate</button>
+                <button onclick="toggleRegisterMode()" id="btn-toggle" class="btn-text">¿No tienes cuenta?
+                    Regístrate</button>
             </div>
         </section>
 
         <section id="sync-view" class="view hidden">
             <div class="center-content scrollable">
                 <h2>Tu Equipo</h2>
-                
+
                 <div class="sync-card">
                     <h3 style="color:white; margin-bottom:10px;">¡Código Creado!</h3>
                     <p style="color:var(--text-gray); font-size:0.9rem;">Comparte este código con tu pareja:</p>
-                    
+
                     <div id="my-code" class="code-display" onclick="copyCode()">...</div>
-                    
+
                     <div class="sync-status">
                         <span>⏳</span> Esperando vinculación...
                     </div>
-                    
-                    <button onclick="window.location.reload()" class="btn-text" style="font-size:0.8rem; margin-top:15px; color:var(--primary)">
+
+                    <button onclick="window.location.reload()" class="btn-text"
+                        style="font-size:0.8rem; margin-top:15px; color:var(--primary)">
                         🔄 Toca aquí si ya se vincularon
                     </button>
                 </div>
@@ -84,11 +95,13 @@
                 <div class="divider">O ingresa su código</div>
 
                 <div style="width:100%">
-                    <input type="text" id="partner-code" class="input-field" placeholder="EJ: JFU2QD" style="text-align:center; text-transform:uppercase; letter-spacing: 2px;">
+                    <input type="text" id="partner-code" class="input-field" placeholder="EJ: JFU2QD"
+                        style="text-align:center; text-transform:uppercase; letter-spacing: 2px;">
                     <button onclick="connectCouple()" class="btn-primary">Conectar</button>
                 </div>
 
-                <button onclick="handleLogout()" class="btn-text" style="color:var(--danger); margin-top:30px;">Cerrar Sesión</button>
+                <button onclick="handleLogout()" class="btn-text" style="color:var(--danger); margin-top:30px;">Cerrar
+                    Sesión</button>
             </div>
         </section>
 
@@ -103,7 +116,7 @@
             </div>
 
             <div id="content-area">
-                
+
                 <div class="garden-card">
                     <div class="garden-header">JARDÍN ESPIRITUAL</div>
                     <div class="plant-icon" id="garden-plant">🌱</div>
@@ -112,9 +125,9 @@
                 </div>
 
                 <h2 class="section-title" id="section-title">Tu Calendario</h2>
-                
+
                 <div id="dynamic-content">
-                    </div>
+                </div>
 
             </div>
 
@@ -151,12 +164,13 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW registrado: ', reg.scope))
-                    .catch(err => console.log('SW error: ', err));
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registrado', reg))
+                    .catch(err => console.log('Error SW:', err));
             });
         }
     </script>
 
 </body>
+
 </html>

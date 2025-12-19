@@ -3,14 +3,15 @@ const urlsToCache = [
   './',
   './index.html',
   './css/styles.css',
-  './js/app.js',
-  './js/auth.js',
-  './js/challenges.js',
   './js/config.js',
-  './js/gamification.js'
+  './js/auth.js',
+  './js/gamification.js',
+  './js/challenges.js',
+  './js/app.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 
-// Instalación
+// Instalación: Guardar archivos en caché
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -18,7 +19,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activación
+// Activación: Limpiar cachés viejas
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -33,23 +34,13 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Interceptar peticiones (Offline first)
+// Fetch: Servir desde caché si no hay internet (Básico)
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        return response || fetch(event.request);
+        if (response) return response;
+        return fetch(event.request);
       })
   );
-});
-
-// Preparado para Notificaciones Push
-self.addEventListener('push', function(event) {
-  const title = 'Couple Garden';
-  const options = {
-    body: event.data ? event.data.text() : '¡Tienes una novedad en tu relación!',
-    icon: 'https://cdn-icons-png.flaticon.com/512/616/616490.png',
-    badge: 'https://cdn-icons-png.flaticon.com/512/616/616490.png'
-  };
-  event.waitUntil(self.registration.showNotification(title, options));
 });

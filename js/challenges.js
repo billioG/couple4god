@@ -1,204 +1,269 @@
 // ==========================================
-// LÓGICA DE RETOS Y CALENDARIO
+// LÓGICA DE RETOS (OPTIMIZADA: CACHÉ + DOM FRAGMENTS)
 // ==========================================
 
-window.loadChallengeGrid = async function() {
-    if (!window.currentProfile || !window.currentCouple) return;
+window.loadChallengeGrid = async function () {
+    // 1. Validación de Estado (Usando el nuevo Namespace App)
+    if (!App.state.couple || !App.state.profile) return;
 
-    // Restaurar estructura de barra si falta (por cambio de vista)
-    const dynamicContainer = document.getElementById('dynamic-content');
-    if (!document.getElementById('calendar-grid') && dynamicContainer) {
-        dynamicContainer.innerHTML = `
-            <div class="progress-container">
-                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-bottom:5px;">
-                    <span>Tu Progreso</span><span id="progress-text">0%</span>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill" id="progress-bar"></div>
-                    <div class="milestone" style="left:33%" id="milestone-7">👫</div>
-                    <div class="milestone" style="left:66%" id="milestone-14">🎁</div>
-                    <div class="milestone" style="left:100%" id="milestone-21">❤️</div>
-                </div>
-            </div>
-            <div id="calendar-grid" class="calendar-grid"></div>
-        `;
+    const container = document.getElementById('calendar-grid');
+    if (!container) return;
+
+    // 2. Caché de Progreso (Evita llamadas a DB si cambias de tab rápido)
+    let progressData = App.utils.getCache('challenges_progress');
+
+    if (!progressData) {
+        container.innerHTML = '<p style="grid-column:1/-1; text-align:center">Cargando progreso...</p>';
+
+        const partnerId = (App.state.couple.user1_id === App.state.profile.id)
+            ? App.state.couple.user2_id
+            : App.state.couple.user1_id;
+
+        try {
+            // Fetch optimizado: Traemos progreso de ambos en una sola consulta
+            const { data, error } = await window.db
+                .from('user_progress')
+                .select('user_id, last_challenge_id, challenges(day_number), completed_at')
+                .in('user_id', [App.state.profile.id, partnerId]);
+
+            if (error) throw error;
+
+            progressData = { raw: data, partnerId: partnerId };
+            App.utils.setCache('challenges_progress', progressData); // Guardar en caché
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<p>Error de conexión</p>';
+            return;
+        }
     }
 
-    const grid = document.getElementById('calendar-grid');
-    if(grid) grid.innerHTML = '<p style="grid-column:1/-1; text-align:center">Cargando...</p>';
+    // 3. Procesamiento de Datos (Lógica)
+    const myProgress = progressData.raw.filter(p => p.user_id === App.state.profile.id);
+    const partnerProgress = progressData.raw.filter(p => p.user_id === progressData.partnerId);
 
-    try {
-        const partnerId = (window.currentCouple.user1_id === window.currentProfile.id) ? window.currentCouple.user2_id : window.currentCouple.user1_id;
+    // Mapear a Sets de Días (Más rápido que buscar en arrays)
+    const myCompletedDays = new Set(myProgress.map(p => p.challenges?.day_number || 0));
+    const partnerCompletedDays = new Set(partnerProgress.map(p => p.challenges?.day_number || 0));
 
-        // Obtener progreso con FECHA para validar "uno por día"
-        const { data: myData } = await window.db.from('user_progress').select('challenges(day_number), completed_at').eq('user_id', window.currentProfile.id);
-        const { data: partnerData } = await window.db.from('user_progress').select('challenges(day_number)').eq('user_id', partnerId);
+    // Calcular Día Actual (Secuencial)
+    let currentDay = 1;
+    while (myCompletedDays.has(currentDay)) {
+        currentDay++;
+    }
 
-        const myCompleted = new Set(myData.map(d => d.challenges?.day_number).filter(n => n));
-        const partnerCompleted = new Set(partnerData.map(d => d.challenges?.day_number).filter(n => n));
+    // Validación de Adviento (1 por día) - Opcional, para evitar trampas de fecha
+    const lastDone = myProgress.sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))[0];
+    let isTodayDone = false;
+    if (lastDone) {
+        const doneDate = new Date(lastDone.completed_at).toDateString();
+        const todayDate = new Date().toDateString();
+        if (doneDate === todayDate) isTodayDone = true;
+    }
 
-        // Calcular último día hecho y fecha
-        let lastDayDone = 0;
-        let lastDate = null;
-        
-        // Ordenamos para encontrar el último
-        const sortedProgress = myData.sort((a,b) => b.challenges.day_number - a.challenges.day_number);
-        if(sortedProgress.length > 0) {
-            lastDayDone = sortedProgress[0].challenges.day_number;
-            lastDate = new Date(sortedProgress[0].completed_at);
+    // 4. Renderizado Eficiente (DOM Fragment)
+    // Creamos los elementos en memoria, no en la pantalla
+    const fragment = document.createDocumentFragment();
+    const totalDays = 21;
+
+    // Actualizar Barra (Helper UI)
+    updateProgressBarInternal(myCompletedDays.size, totalDays);
+    updateGardenInternal(currentDay);
+
+    for (let i = 1; i <= totalDays; i++) {
+        const meDone = myCompletedDays.has(i);
+        const partnerDone = partnerCompletedDays.has(i);
+
+        const card = document.createElement('div');
+        let className = 'day-card';
+        let icon = '🔒';
+        let indicators = '';
+
+        // Determinar Estado
+        if (meDone) {
+            className += ' completed';
+            icon = '✅';
+            card.onclick = () => window.openChallengeModal(i, true);
+        } else if (i === currentDay) {
+            if (isTodayDone) {
+                className += ' locked'; // Bloqueado hasta mañana
+                icon = '⏳';
+                card.onclick = () => App.ui.showToast('¡Reto de hoy cumplido! Vuelve mañana.', 'info');
+            } else {
+                className += ' active';
+                icon = '🔥';
+                card.onclick = () => window.openChallengeModal(i, false);
+            }
+        } else if (i < currentDay) {
+            // Caso raro: Días anteriores no marcados (no debería pasar con lógica secuencial, pero por si acaso)
+            className += ' locked';
+            card.onclick = () => App.ui.showToast('Completa los días en orden.', 'error');
+        } else {
+            className += ' locked';
+            card.onclick = () => App.ui.showToast('Completa los días anteriores.', 'error');
         }
 
-        let currentDay = lastDayDone + 1;
-
-        // LÓGICA DE ADVIENTO (PUNTO 6): Si el último se hizo hoy, el siguiente se bloquea
-        const today = new Date();
-        let isTodayDone = false;
-        if (lastDate) {
-            if (lastDate.getDate() === today.getDate() && 
-                lastDate.getMonth() === today.getMonth() && 
-                lastDate.getFullYear() === today.getFullYear()) {
-                isTodayDone = true;
-            }
+        // Indicadores (Estrella o Puntos)
+        if (meDone && partnerDone) {
+            indicators = '<span class="star-icon">⭐️</span>';
+        } else {
+            indicators += `<span class="dot-check ${meDone ? 'done' : ''}"></span>`;
+            indicators += `<span class="dot-check ${partnerDone ? 'done' : ''}"></span>`;
         }
 
-        if(window.updateProgressBar) window.updateProgressBar(myCompleted.size, 21);
-        if(window.updateGardenDisplay) window.updateGardenDisplay(currentDay);
+        // Construcción del HTML interno de la tarjeta
+        card.className = className;
+        card.innerHTML = `
+            <div class="day-number">${i}</div>
+            <div class="day-icon">${icon}</div>
+            <div class="indicators">${indicators}</div>
+        `;
 
-        let html = '';
-        for (let i = 1; i <= 21; i++) {
-            const meDone = myCompleted.has(i);
-            const partnerDone = partnerCompleted.has(i);
-            
-            let className = 'locked';
-            let icon = '🔒';
-            let action = `onclick="window.showToast('Espera a mañana para el siguiente reto.', 'error')"`;
-            
-            if (i > currentDay) {
-                action = `onclick="window.showToast('Completa los días anteriores.', 'error')"`;
-            }
+        fragment.appendChild(card);
+    }
 
-            if (meDone) {
-                className = 'completed';
-                icon = '✅';
-                action = `onclick="openChallengeModal(${i}, true)"`;
-            } else if (i === currentDay) {
-                if (isTodayDone) {
-                    // Si ya hice uno hoy, este (el siguiente) se muestra bloqueado pero con aviso "Vuelve mañana"
-                    className = 'locked'; 
-                    icon = '⏳'; // Reloj de arena
-                    action = `onclick="window.showToast('¡Has cumplido por hoy! Vuelve mañana.', 'info')"`;
-                } else {
-                    className = 'active';
-                    icon = '🔥';
-                    action = `onclick="openChallengeModal(${i}, false)"`;
-                }
-            }
-
-            let indicators = '';
-            if (meDone && partnerDone) indicators = '<span class="star-icon">⭐️</span>';
-            else {
-                indicators += `<span class="dot-check ${meDone ? 'done' : ''}"></span>`;
-                indicators += `<span class="dot-check ${partnerDone ? 'done' : ''}"></span>`;
-            }
-
-            html += `
-                <div class="day-card ${className}" ${action}>
-                    <div class="day-number">${i}</div>
-                    <div class="day-icon">${icon}</div>
-                    <div class="indicators">${indicators}</div>
-                </div>`;
-        }
-        if(grid) grid.innerHTML = html;
-
-    } catch (e) { console.error(e); }
+    // 5. Inyección Única (Solo un Reflow)
+    container.innerHTML = '';
+    container.appendChild(fragment);
 };
 
-window.updateProgressBar = function(c, t) {
-    const p = (c / t) * 100;
+// --- Funciones Auxiliares Internas ---
+
+function updateProgressBarInternal(count, total) {
+    const percent = (count / total) * 100;
     const bar = document.getElementById('progress-bar');
-    if(bar) bar.style.width = `${p}%`;
     const txt = document.getElementById('progress-text');
-    if(txt) txt.innerText = `${Math.round(p)}%`;
-    if (c >= 7) document.getElementById('milestone-7')?.classList.add('unlocked');
-    if (c >= 14) document.getElementById('milestone-14')?.classList.add('unlocked');
-    if (c >= 21) document.getElementById('milestone-21')?.classList.add('unlocked');
-};
+    if (bar) bar.style.width = `${percent}%`;
+    if (txt) txt.innerText = `${Math.round(percent)}%`;
 
-window.updateGardenDisplay = function(day) {
+    // Desbloqueo visual de hitos
+    if (count >= 7) document.getElementById('milestone-7')?.classList.add('unlocked');
+    if (count >= 14) document.getElementById('milestone-14')?.classList.add('unlocked');
+    if (count >= 21) document.getElementById('milestone-21')?.classList.add('unlocked');
+}
+
+function updateGardenInternal(day) {
     const plants = ['Semilla 🌱', 'Brote 🌿', 'Tallo 🎋', 'Flor 🌷', 'Árbol 🌳'];
     const idx = Math.min(Math.floor((day - 1) / 5), plants.length - 1);
+    const plantData = plants[idx].split(' ');
+
     const elIcon = document.getElementById('garden-plant');
-    if(elIcon) elIcon.innerText = plants[idx].split(' ')[1];
     const elLevel = document.getElementById('garden-level');
-    if(elLevel) elLevel.innerText = `Nivel ${idx + 1}: ${plants[idx].split(' ')[0]}`;
     const elNext = document.getElementById('garden-next');
-    if(elNext) elNext.innerText = `Reto del día ${day}`;
-};
 
-// MODAL COMPLETO (PUNTO 3)
-window.openChallengeModal = async function(day, isCompleted) {
-    window.showModal(`Reto Día ${day}`, "Cargando...");
-    const { data } = await window.db.from('challenges').select('*').eq('day_number', day).single();
+    if (elIcon) elIcon.innerText = plantData[1];
+    if (elLevel) elLevel.innerText = `Nivel ${idx + 1}: ${plantData[0]}`;
+    if (elNext) elNext.innerText = `Reto actual: Día ${day}`;
+}
 
-    if(data) {
+// 6. MODAL Y COMPLETAR (Usando App.state)
+window.openChallengeModal = async function (day, isCompleted) {
+    App.ui.showModal(`Reto Día ${day}`, "Cargando contenido...");
+
+    // Intentar cache de textos de retos (rara vez cambian)
+    let challengeData = App.utils.getCache(`challenge_text_${day}`);
+
+    if (!challengeData) {
+        const { data } = await window.db.from('challenges').select('*').eq('day_number', day).single();
+        challengeData = data;
+        App.utils.setCache(`challenge_text_${day}`, data);
+    }
+
+    if (challengeData) {
+        // Sanitizamos contenido por seguridad (aunque venga de nuestra DB)
+        const quote = App.utils.escape(challengeData.quote);
+        const task = App.utils.escape(challengeData.task);
+        const reflection = App.utils.escape(challengeData.reflection);
+
         let html = `
             <div style="text-align:left;">
-                <blockquote style="font-style:italic; border-left:3px solid var(--primary); padding-left:10px; margin:10px 0; color:white;">"${data.quote}"</blockquote>
-                <p style="text-align:right; color:var(--primary); font-size:0.8rem; margin-bottom:20px">— ${data.author}</p>
+                <blockquote style="font-style:italic; border-left:3px solid var(--primary); padding-left:10px; margin:10px 0; color:white;">"${quote}"</blockquote>
+                <p style="text-align:right; color:var(--primary); font-size:0.8rem; margin-bottom:20px">— ${App.utils.escape(challengeData.author)}</p>
                 
                 <div style="background:#252a35; padding:15px; border-radius:10px; margin-bottom:15px;">
-                    <h4 style="color:var(--accent); text-transform:uppercase; font-size:0.75rem; margin-bottom:5px;">🧠 Reflexión</h4>
-                    <p style="font-size:0.9rem; color:#ddd; line-height:1.4;">${data.reflection}</p>
+                    <h4 style="color:var(--accent); font-size:0.75rem; margin-bottom:5px;">🧠 REFLEXIÓN</h4>
+                    <p style="font-size:0.9rem; color:#ddd; line-height:1.4;">${reflection}</p>
                 </div>
 
                 <div style="background:rgba(78, 142, 255, 0.1); padding:15px; border-radius:10px; border:1px solid var(--primary); margin-bottom:15px;">
-                    <h4 style="color:var(--primary); text-transform:uppercase; font-size:0.75rem; margin-bottom:5px;">🔥 Tarea</h4>
-                    <p style="font-size:0.95em; color:white;">${data.task}</p>
-                </div>
-
-                <div style="text-align:center; padding:10px; border-top:1px solid #333;">
-                    <p style="font-size:0.8rem; color:#888; font-style:italic;">✨ Intención: ${data.intention}</p>
+                    <h4 style="color:var(--primary); font-size:0.75rem; margin-bottom:5px;">🔥 TAREA</h4>
+                    <p style="font-size:0.95em; color:white;">${task}</p>
                 </div>
             </div>
         `;
+
+        const actionsDiv = document.getElementById('modal-actions');
+        const bodyDiv = document.getElementById('modal-body');
 
         if (!isCompleted) {
             html += `
                 <div style="margin-top:15px; text-align:left;">
-                    <label style="color:#aaa; font-size:0.8rem;">Tu Reflexión (Obligatoria):</label>
-                    <textarea id="challenge-reflection" class="input-field" style="height:70px;"></textarea>
+                    <label style="color:#aaa; font-size:0.8rem;">Tu Reflexión:</label>
+                    <textarea id="challenge-reflection" class="input-field" style="height:70px; margin-top:5px;" placeholder="¿Cómo te sentiste?"></textarea>
                 </div>`;
-            const actions = document.getElementById('modal-actions');
-            actions.innerHTML = `<button class="btn-primary" onclick="completeChallenge(${data.day_number})">Completar</button>`;
+            actionsDiv.innerHTML = `<button class="btn-primary" onclick="completeChallenge(${challengeData.day_number}, this)">Completar (+20 XP)</button>`;
         } else {
-             const actions = document.getElementById('modal-actions');
-             actions.innerHTML = `<p style="color:var(--accent); text-align:center;">✅ Completado</p>`;
+            actionsDiv.innerHTML = `<p style="color:var(--accent); text-align:center; font-weight:bold;">✅ Reto Completado</p>`;
         }
-        document.getElementById('modal-body').innerHTML = html;
+
+        bodyDiv.innerHTML = html;
     }
 };
 
-window.completeChallenge = async function(dayNumber) {
-    const txt = document.getElementById('challenge-reflection').value.trim();
-    if(txt.length < 5) return window.showToast("Escribe una reflexión válida.", "error");
+window.completeChallenge = async function (dayNumber, btnElement) {
+    const txtInput = document.getElementById('challenge-reflection');
+    const text = txtInput ? txtInput.value.trim() : '';
 
-    const btn = document.querySelector('#modal-actions button');
-    if(btn) btn.disabled = true;
+    if (text.length < 5) return App.ui.showToast("Escribe una reflexión válida.", "error");
+
+    // UX: Feedback inmediato en el botón
+    if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.innerText = "Guardando...";
+    }
 
     try {
-        const { data: c } = await window.db.from('challenges').select('id').eq('day_number', dayNumber).single();
-        
-        await window.db.from('user_progress').insert({ user_id: window.currentProfile.id, last_challenge_id: c.id });
-        await window.db.from('shared_content').insert({ user_id: window.currentProfile.id, couple_id: window.currentCouple.id, type: `reflection_day_${dayNumber}`, content: txt });
-        await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: 20 });
-        
-        window.closeModal();
-        window.showToast("¡Reto Completado! +20 XP", "success");
+        // Necesitamos el ID del reto, no el número de día
+        const { data: challenge } = await window.db.from('challenges').select('id').eq('day_number', dayNumber).single();
+
+        // Operaciones en paralelo para velocidad
+        await Promise.all([
+            window.db.from('user_progress').insert({
+                user_id: App.state.profile.id,
+                last_challenge_id: challenge.id
+            }),
+            window.db.from('shared_content').insert({
+                user_id: App.state.profile.id,
+                couple_id: App.state.couple.id,
+                type: `reflection_day_${dayNumber}`,
+                content: text
+            }),
+            window.db.rpc('add_xp', { user_id: App.state.profile.id, points: 20 })
+        ]);
+
+        // Limpiar caché para forzar recarga fresca del grid
+        App.utils.invalidateCache('challenges_progress');
+
+        // Actualizar UI Global
+        await App.actions.refreshProfile();
+
+        App.ui.closeModal();
+        App.ui.showToast("¡Excelente! +20 XP", "success");
+
+        // Recargar grid
         window.loadChallengeGrid();
-        if(window.refreshUserProfile) window.refreshUserProfile();
-    } catch(e) {
+
+    } catch (e) {
         console.error(e);
-        window.showToast("Error al guardar", "error");
-        if(btn) btn.disabled = false;
+        // Manejo de error de duplicado (si el usuario hizo doble clic muy rápido)
+        if (e.code === '23505') {
+            App.ui.closeModal();
+            window.loadChallengeGrid();
+        } else {
+            App.ui.showToast("Error al guardar", "error");
+            if (btnElement) {
+                btnElement.disabled = false;
+                btnElement.innerText = "Intentar de nuevo";
+            }
+        }
     }
 };
