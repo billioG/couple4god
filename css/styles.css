@@ -97,3 +97,82 @@ body { background-color: var(--bg-dark); color: var(--text-white); height: 100vh
 
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ... (Mantén las variables y estilos base anteriores) ... */
+
+/* --- BARRA DE PROGRESO (Corregida) --- */
+.progress-container {
+    margin: 0 20px 30px 20px;
+    padding: 15px;
+    background: var(--card-bg);
+    border-radius: 15px;
+    border: 1px solid #333;
+    position: relative;
+    padding-top: 30px; /* Espacio para los iconos de arriba */
+}
+
+.progress-track {
+    height: 10px;
+    background: #13151b; /* Fondo más oscuro */
+    border-radius: 10px;
+    position: relative;
+    margin-top: 10px;
+    overflow: visible; /* Para que se vean los iconos */
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.5s ease-out;
+    box-shadow: 0 0 10px rgba(78, 142, 255, 0.5);
+}
+
+/* Hitos (Iconos encima de la barra) */
+.milestone {
+    position: absolute;
+    top: -30px; /* Arriba de la barra */
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    filter: grayscale(1) opacity(0.5);
+    transition: 0.3s;
+}
+.milestone.unlocked { 
+    filter: grayscale(0) opacity(1); 
+    transform: translateX(-50%) scale(1.2); 
+    text-shadow: 0 0 10px var(--accent);
+}
+
+/* --- INDICADORES DE RETO (Simplificados) --- */
+.indicators {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    align-items: center;
+    justify-content: center;
+    height: 12px;
+}
+
+/* Punto genérico (si solo uno lo hizo) */
+.dot-check { 
+    width: 6px; height: 6px; 
+    background-color: var(--text-gray); 
+    border-radius: 50%; 
+    opacity: 0.5;
+}
+.dot-check.done { 
+    background-color: var(--accent); 
+    opacity: 1; 
+    box-shadow: 0 0 5px var(--accent);
+}
+
+/* Estrella (si ambos lo hicieron) */
+.star-icon { 
+    font-size: 0.8rem; 
+    color: #f1c40f; 
+    text-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
+    animation: pop 0.5s; 
+}
+
+@keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
