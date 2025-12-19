@@ -1,8 +1,8 @@
 // ==========================================
-// LÓGICA DE GAMIFICACIÓN, PAZ Y CONTENIDO COMPARTIDO
+// GAMIFICACIÓN, PAZ Y CONTENIDO SOCIAL
 // ==========================================
 
-// 1. BANDERA BLANCA (GESTIÓN DE CONFLICTOS)
+// 1. BANDERA BLANCA (CONFLICTOS)
 // ------------------------------------------
 
 window.checkWhiteFlagStatus = async function() {
@@ -125,98 +125,139 @@ window.resetFlag = async function(coupleId) {
 };
 
 
-// 2. PETICIONES CON APOYO (PRAYERS)
+// 2. PETICIONES (PRAYERS) CON LÓGICA DE PENALIZACIÓN
 // ------------------------------------------
 
 window.loadPrayers = async function() {
     const container = document.getElementById('dynamic-content');
-    container.innerHTML = '<div class="loader">Cargando intenciones...</div>';
+    container.innerHTML = '<div class="loader">Cargando...</div>';
 
-    try {
-        const { data: items, error } = await window.db
-            .from('shared_content')
-            .select('*')
-            .eq('couple_id', window.currentCouple.id)
-            .eq('type', 'request')
-            .order('created_at', { ascending: false })
-            .limit(10);
+    // 1. Revisar si hay peticiones ignoradas para restar XP
+    await checkExpiredRequests();
 
-        if (error) throw error;
+    // 2. Cargar lista
+    const { data: items } = await window.db
+        .from('shared_content')
+        .select('*')
+        .eq('couple_id', window.currentCouple.id)
+        .eq('type', 'request')
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-        let html = `
-            <div style="padding:0 20px 80px 20px;">
-                <div style="background:var(--card-bg); padding:20px; border-radius:15px; margin-bottom:20px; border:1px solid #333;">
-                    <div style="text-align:center; font-size:2rem; margin-bottom:10px">🙏</div>
-                    <h3 style="text-align:center;">Muro de Peticiones</h3>
-                    <p style="color:#888; font-size:0.9rem; text-align:center; margin-bottom:15px;"> Deja aquí tus deseos para que tu pareja los apoye.</p>
-                    <textarea id="prayer-input" class="input-field" style="height:70px; resize:none;" placeholder="Pido por..."></textarea>
-                    <button onclick="saveSharedContent('request')" class="btn-primary">Publicar</button>
-                </div>
-                
-                <h3 class="section-title" style="padding-left:0;">Intenciones Recientes</h3>
-                <div id="prayers-list">
-        `;
+    let html = `
+        <div style="padding:0 20px 80px 20px;">
+            <div style="background:var(--card-bg); padding:20px; border-radius:15px; margin-bottom:20px; border:1px solid #333;">
+                <h3>🙏 Petición</h3>
+                <textarea id="prayer-input" class="input-field" style="height:60px;" placeholder="¿Qué necesitas hoy?"></textarea>
+                <button onclick="saveSharedContent('request')" class="btn-primary">Publicar</button>
+            </div>
+            <div id="prayers-list">`;
 
-        if(items && items.length > 0) {
-            items.forEach(item => {
-                const isMine = item.user_id === window.currentProfile.id;
-                const supporters = item.supporters || [];
-                const amISupporting = supporters.includes(window.currentProfile.id);
-                
-                let footerAction = '';
-                
-                if (!isMine) {
-                    // Petición de mi pareja
-                    if (amISupporting) {
-                        footerAction = `<span style="color:var(--accent); font-size:0.8rem;">✨ Ya oraste por esto</span>`;
-                    } else {
-                        footerAction = `<button onclick="supportPrayer('${item.id}')" class="btn-support">🙏 Orar por esto (+5 XP)</button>`;
-                    }
+    if(items && items.length > 0) {
+        items.forEach(item => {
+            const isMine = item.user_id === window.currentProfile.id;
+            const supporters = item.supporters || [];
+            const amISupporting = supporters.includes(window.currentProfile.id);
+            let action = '';
+
+            if (!isMine) {
+                // Es petición de mi pareja
+                if (amISupporting) {
+                    action = `<button disabled class="btn-support active" style="opacity:0.7; cursor:default;">❤️ Lo tomaste en cuenta</button>`;
                 } else {
-                    // Mi petición
-                    if (supporters.length > 0) {
-                        footerAction = `<span style="color:var(--primary); font-size:0.8rem;">❤️ Tu pareja te apoya</span>`;
-                    } else {
-                        footerAction = `<span style="color:#666; font-size:0.8rem;">Esperando apoyo...</span>`;
-                    }
+                    action = `<button onclick="supportPrayer('${item.id}', this)" class="btn-support">🤝 Lo tomo en cuenta</button>`;
                 }
+            } else {
+                // Es mi petición
+                if(supporters.length > 0) action = `<span style="color:var(--primary); font-size:0.8rem;">❤️ Tu pareja te escuchó</span>`;
+                else action = `<span style="color:#666; font-size:0.8rem;">Esperando respuesta...</span>`;
+            }
 
-                html += `
-                    <div style="background:#252a35; padding:15px; border-radius:10px; margin-bottom:10px; border-left:3px solid ${isMine ? 'var(--primary)' : '#fff'};">
-                        <p style="color:#ddd; font-style:italic;">"${item.content}"</p>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                            <small style="color:#666;">${new Date(item.created_at).toLocaleDateString()}</small>
-                            ${footerAction}
-                        </div>
-                    </div>`;
-            });
-        } else {
-            html += `<p style="text-align:center; color:#666; margin-top:20px;">No hay peticiones aún.</p>`;
-        }
-        html += '</div></div>';
-        container.innerHTML = html;
-    } catch (err) { console.error(err); }
+            html += `
+                <div style="background:#252a35; padding:15px; border-radius:10px; margin-bottom:10px; border-left:3px solid ${isMine?'var(--primary)':'#fff'};">
+                    <p style="color:#ddd; font-style:italic;">"${item.content}"</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <small style="color:#666;">${new Date(item.created_at).toLocaleDateString()}</small>
+                        ${action}
+                    </div>
+                </div>`;
+        });
+    } else {
+        html += `<p style="text-align:center; color:#666; margin-top:20px;">No hay peticiones recientes.</p>`;
+    }
+    html += '</div></div>';
+    container.innerHTML = html;
 };
 
-// Función para apoyar petición
-window.supportPrayer = async function(contentId) {
+// Función para apoyar (Ganar 5 XP)
+window.supportPrayer = async function(id, btnElement) {
+    // Deshabilitar botón inmediatamente
+    if(btnElement) {
+        btnElement.disabled = true;
+        btnElement.innerText = "Enviando...";
+    }
+
     try {
-        const { data: item } = await window.db.from('shared_content').select('supporters').eq('id', contentId).single();
-        let supporters = item.supporters || [];
+        const { data: item } = await window.db.from('shared_content').select('supporters').eq('id', id).single();
+        let arr = item.supporters || [];
         
-        if(!supporters.includes(window.currentProfile.id)) {
-            supporters.push(window.currentProfile.id);
-            await window.db.from('shared_content').update({ supporters: supporters }).eq('id', contentId);
+        // Evitar doble apoyo
+        if(!arr.includes(window.currentProfile.id)) {
+            arr.push(window.currentProfile.id);
             
-            // +5 XP por apoyar
+            await window.db.from('shared_content').update({ supporters: arr }).eq('id', id);
             await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: 5 });
             
-            window.showToast("Apoyo enviado (+5 XP)", "success");
-            window.loadPrayers();
+            window.showToast("Gracias por escuchar (+5 XP)", "success");
+            window.loadPrayers(); // Recargar para ver cambios
             if(window.refreshUserProfile) window.refreshUserProfile();
         }
-    } catch (e) { console.error(e); }
+    } catch(e) { 
+        console.error(e); 
+        window.showToast("Error al apoyar", "error");
+        if(btnElement) {
+            btnElement.disabled = false;
+            btnElement.innerText = "Reintentar";
+        }
+    }
 };
+
+// Función para penalizar si se ignoró por 24h
+async function checkExpiredRequests() {
+    try {
+        // Calcular fecha de ayer (24h atrás)
+        const yesterday = new Date(Date.now() - 86400000).toISOString();
+        
+        // Identificar ID de la pareja
+        const partnerId = (window.currentCouple.user1_id === window.currentProfile.id) 
+            ? window.currentCouple.user2_id 
+            : window.currentCouple.user1_id;
+        
+        // Buscar peticiones de MI PAREJA que sean viejas y NO estén penalizadas
+        const { data: expired } = await window.db.from('shared_content')
+            .select('id, supporters')
+            .eq('user_id', partnerId)
+            .eq('type', 'request')
+            .lt('created_at', yesterday)
+            .eq('penalized', false);
+
+        if(expired && expired.length > 0) {
+            for(let req of expired) {
+                // Si nadie apoyó (array vacío o null)
+                if(!req.supporters || req.supporters.length === 0) {
+                    // RESTAR 5 XP A MÍ (porque yo ignoré a mi pareja)
+                    await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: -5 });
+                    
+                    // Marcar como penalizada para no restar de nuevo
+                    await window.db.from('shared_content').update({ penalized: true }).eq('id', req.id);
+                    
+                    window.showToast("Perdiste 5 XP por ignorar una petición 😢", "error");
+                    if(window.refreshUserProfile) window.refreshUserProfile();
+                }
+            }
+        }
+    } catch(e) { console.error("Error checkExpired:", e); }
+}
 
 
 // 3. PREGUNTAS PROFUNDAS
@@ -273,6 +314,8 @@ window.loadDeepQuestion = async function() {
                         <p style="color:#ddd; margin-top:5px;">${ans.content}</p>
                     </div>`;
             });
+        } else {
+            html += `<p style="text-align:center; color:#666; margin-top:20px;">Sé el primero en responder.</p>`;
         }
         html += '</div>';
         container.innerHTML = html;
@@ -280,7 +323,7 @@ window.loadDeepQuestion = async function() {
 };
 
 
-// 4. TIENDA DE PREMIOS (CANJEAR XP)
+// 4. TIENDA DE PREMIOS
 // ------------------------------------------
 window.loadRewards = async function() {
     const container = document.getElementById('dynamic-content');
@@ -330,21 +373,20 @@ window.loadRewards = async function() {
 };
 
 window.redeemReward = async function(title, cost) {
-    if(!confirm(`¿Estás seguro de canjear "${title}" por ${cost} XP?`)) return;
+    if(!confirm(`¿Canjear "${title}" por ${cost} XP?`)) return;
 
     try {
-        // Restar XP
         await window.db.rpc('add_xp', { user_id: window.currentProfile.id, points: -cost });
         
         window.showModal("¡Premio Canjeado!", 
             `<div style="text-align:center">
                 <p style="font-size:3rem; margin:10px;">🎁</p>
                 <p>Has obtenido: <b>${title}</b></p>
-                <p style="color:#aaa; font-size:0.9rem; margin-top:10px;">Toma una captura y envíasela a tu pareja para cobrar tu premio.</p>
+                <p style="color:#aaa; font-size:0.9rem; margin-top:10px;">Toma una captura y cobra tu premio.</p>
              </div>`);
         
         if(window.refreshUserProfile) window.refreshUserProfile();
-        window.loadRewards(); // Recargar pantalla
+        window.loadRewards();
     } catch (e) { 
         console.error(e); 
         window.showToast("Error al procesar canje", "error"); 
@@ -352,7 +394,29 @@ window.redeemReward = async function(title, cost) {
 };
 
 
-// 5. GUARDAR CONTENIDO COMPARTIDO
+// 5. SUGERENCIAS (TIPS) RESTAURADOS
+// ------------------------------------------
+window.loadTips = function() {
+    const tips = [
+        "Escucha para entender, no para responder.",
+        "Nunca se vayan a dormir enojados.",
+        "Un abrazo de 20 segundos libera oxitocina.",
+        "Agradece al menos una cosa que tu pareja haga hoy."
+    ];
+    const rnd = tips[Math.floor(Math.random() * tips.length)];
+    const container = document.getElementById('dynamic-content');
+    container.innerHTML = `
+        <div style="padding:40px 20px; text-align:center;">
+            <div style="font-size:3rem; margin-bottom:20px;">💡</div>
+            <h3>Consejo del Día</h3>
+            <div style="background:#252a35; padding:20px; border-radius:15px; border:1px solid var(--primary); margin-top:20px;">
+                "${rnd}"
+            </div>
+        </div>`;
+};
+
+
+// 6. FUNCIÓN GENÉRICA DE GUARDADO
 // ------------------------------------------
 window.saveSharedContent = async function(type, extra = '') {
     let inputId = type === 'request' ? 'prayer-input' : 'answer-input';
