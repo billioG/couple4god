@@ -196,6 +196,15 @@ button:active { transform: scale(0.97); }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: #475569; }
 .dot.me.done { background: #3b82f6; } .dot.partner.done { background: #ec4899; }
 
+/* Ejemplo de corrección */
+.modal-close-button {
+  width: auto; /* O un ancho fijo como 40px */
+  padding: 8px 16px;
+  align-self: center; /* Si está en un flex container */
+  border-radius: 50%; /* Si quieres que sea redondo */
+  margin-top: 10px;
+}
+
 /* --- TOOLS BAR --- */
 .tools-bar { 
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
