@@ -4,10 +4,20 @@ const supabaseUrl = "https://dsiuuymgyzkcksaqtoqk.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzaXV1eW1neXprY2tzYXF0b3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTg2NDksImV4cCI6MjA4MTUzNDY0OX0.BxxUrlixe9X-JA--G_0OUeqD5ZIDikIc2WcjcIbBamg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// REGISTRO PWA
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.error);
 
-// STATE
-let user = null, coupleId = null, partnerId = null, pollingInterval = null, selectedDay = 1, isRegistering = false;
+// SEGURIDAD ANTI-CONGELAMIENTO (Timeout)
+setTimeout(() => {
+  const loader = document.getElementById("globalLoader");
+  if(loader && !loader.classList.contains("hidden")) {
+    document.getElementById("forceReloadBtn").classList.remove("hidden");
+    document.getElementById("loaderText").textContent = "Tardando más de lo normal...";
+  }
+}, 8000);
+
+// ESTADO
+let user = null, coupleId = null, partnerId = null, isRegistering = false, pollingInterval = null, selectedDay = 1;
 
 // ASSETS
 const gardenLevels = [
@@ -76,6 +86,8 @@ async function initApp() {
   try {
     document.getElementById("auth").classList.add("hidden");
     const { data: member, error } = await supabase.from("couple_members").select("*").eq("user_id", user.id).maybeSingle();
+    
+    // Si error no es "no encontrado", lanzarlo
     if (error && error.code !== 'PGRST116') throw error;
 
     if (!member) {
@@ -89,7 +101,6 @@ async function initApp() {
     coupleId = member.couple_id;
     document.getElementById("userHeader").classList.remove("hidden");
 
-    // MOOD CHECK (Propio y Pareja)
     const today = new Date().toISOString().split('T')[0];
     if(member.last_mood_date !== today) document.getElementById("moodModal").classList.remove("hidden");
     else document.getElementById("myMoodDisplay").textContent = member.current_mood || '😶';
@@ -98,9 +109,8 @@ async function initApp() {
 
     if (partner) {
       partnerId = partner.user_id;
-      // MOOD PAREJA (Punto 3)
       document.getElementById("partnerMoodDisplay").textContent = partner.current_mood || '❓';
-
+      
       if (pollingInterval) clearInterval(pollingInterval);
       const { data: couple } = await supabase.from("couples").select("is_premium").eq("id", coupleId).single();
       if(!couple?.is_premium) document.getElementById("adBanner").classList.remove("hidden");
@@ -111,7 +121,7 @@ async function initApp() {
       
       setupRealtime();
       await loadData();
-      checkPeaceStatus(); // Revisar si hay paz pendiente
+      checkPeaceStatus();
       
       if(!pollingInterval) pollingInterval = setInterval(() => { loadData(); checkPeaceStatus(); }, 10000);
 
@@ -122,7 +132,7 @@ async function initApp() {
   } catch(err) { console.error(err); showToast("Error de conexión.", "error"); } finally { document.getElementById("globalLoader").classList.add("hidden"); }
 }
 
-// --- REALTIME ---
+// --- REALTIME & LOGIC ---
 function setupRealtime() {
   supabase.channel('room1')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'prayers', filter: `couple_id=eq.${coupleId}` }, payload => {
@@ -130,7 +140,7 @@ function setupRealtime() {
       if (payload.eventType === 'INSERT' && payload.new.user_id !== user.id) showToast("🔔 Tu pareja publicó una oración", "success");
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'reconciliations', filter: `couple_id=eq.${coupleId}` }, payload => {
-      checkPeaceStatus(); // Revisar notificación
+      checkPeaceStatus();
       if (payload.eventType === 'INSERT' && payload.new.initiator_id !== user.id) showToast("🏳️ Tu pareja pide paz", "success");
       if (payload.eventType === 'UPDATE' && payload.new.status === 'accepted') { showToast("🤝 ¡Reconciliados!", "success"); fireConfetti(); }
     })
@@ -149,7 +159,7 @@ function showWaitingRoom(code) {
   if (!pollingInterval) pollingInterval = setInterval(initApp, 5000);
 }
 
-// --- DATA & GARDEN (Punto 1: Progreso detallado) ---
+// --- DATA ---
 async function loadData() {
   const { data: entries } = await supabase.from("entries").select("*").eq("couple_id", coupleId);
   const myEntries = entries.filter(e => e.user_id === user.id);
@@ -160,22 +170,15 @@ async function loadData() {
   const joint = Math.min(myMax, pMax);
   const unlockable = joint + 1;
 
-  // Lógica Jardín
+  // JARDÍN
   const daysPerLevel = 4;
   const gardenLvl = Math.min(Math.floor(joint / daysPerLevel), 5);
   const daysForNext = ((gardenLvl + 1) * daysPerLevel) - joint;
-  
   const plant = gardenLevels[gardenLvl];
   document.getElementById("gardenPlant").textContent = plant.icon;
   document.getElementById("gardenLevel").textContent = `Nivel ${gardenLvl+1}: ${plant.name}`;
-  
-  if (gardenLvl < 5) {
-    document.getElementById("gardenProgressText").textContent = `Faltan ${daysForNext} día(s) juntos para evolucionar 🚀`;
-  } else {
-    document.getElementById("gardenProgressText").textContent = "¡Jardín al máximo nivel! 🌟";
-  }
+  document.getElementById("gardenProgressText").textContent = gardenLvl < 5 ? `Faltan ${daysForNext} día(s) juntos para evolucionar 🚀` : "¡Jardín al máximo nivel! 🌟";
 
-  // Grid
   const grid = document.getElementById("calendarGrid"); grid.innerHTML = "";
   for(let i=1; i<=21; i++) {
     const box = document.createElement("div");
@@ -192,51 +195,6 @@ async function loadData() {
   }
 }
 
-// --- PEACE FEATURE (Punto 2) ---
-document.getElementById("openPeaceBtn").onclick = () => {
-  document.getElementById("peaceModal").classList.remove("hidden");
-  checkPeaceStats();
-};
-
-async function checkPeaceStatus() {
-  // Buscar peticiones PENDIENTES donde NO soy el iniciador
-  const { data } = await supabase.from("reconciliations").select("*").eq("couple_id", coupleId).eq("status", "pending");
-  const incoming = data.find(r => r.initiator_id !== user.id);
-  
-  if (incoming) {
-    // Hay notificación
-    document.getElementById("peaceBadge").classList.remove("hidden");
-    document.getElementById("peaceInitSection").classList.add("hidden");
-    document.getElementById("peaceReceiveSection").classList.remove("hidden");
-    // Asignar ID al botón de aceptar
-    document.getElementById("acceptPeaceBtn").onclick = () => acceptPeace(incoming.id);
-  } else {
-    document.getElementById("peaceBadge").classList.add("hidden");
-    document.getElementById("peaceInitSection").classList.remove("hidden");
-    document.getElementById("peaceReceiveSection").classList.add("hidden");
-  }
-}
-
-async function checkPeaceStats() {
-  // Contador simple de mis peticiones
-  const { count } = await supabase.from("reconciliations").select("id", { count: 'exact' }).eq("initiator_id", user.id);
-  document.getElementById("peaceStats").textContent = `Veces que buscaste paz: ${count || 0}`;
-}
-
-document.getElementById("sendPeaceBtn").onclick = async () => {
-  await supabase.from("reconciliations").insert({ couple_id: coupleId, initiator_id: user.id });
-  showToast("Bandera blanca levantada 🏳️", "success");
-  document.getElementById("peaceModal").classList.add("hidden");
-};
-
-async function acceptPeace(id) {
-  await supabase.from("reconciliations").update({ status: "accepted" }).eq("id", id);
-  showToast("¡Paz restaurada!", "success");
-  document.getElementById("peaceModal").classList.add("hidden");
-  fireConfetti();
-  checkPeaceStatus();
-}
-
 // --- FEATURES ---
 window.saveMood = async (emoji) => {
   try {
@@ -247,7 +205,7 @@ window.saveMood = async (emoji) => {
   } catch (e) { console.error(e); }
 };
 
-// PRAYER
+// PRAYER & PEACE
 document.getElementById("openPrayerBtn").onclick = async () => { document.getElementById("prayerModal").classList.remove("hidden"); loadPrayers(); };
 async function loadPrayers() {
   const { data } = await supabase.from("prayers").select("*").eq("couple_id", coupleId).order("created_at", {ascending:false});
@@ -260,31 +218,33 @@ async function loadPrayers() {
   });
 }
 window.prayFor = async (id) => { await supabase.from("prayers").update({ partner_praying: true }).eq("id", id); loadPrayers(); showToast("Le avisaremos a tu pareja 🙏", "success"); };
-document.getElementById("addPrayerBtn").onclick = async () => {
-  const txt = document.getElementById("newPrayerText").value; if(txt) { await supabase.from("prayers").insert({ couple_id: coupleId, user_id: user.id, content: txt }); document.getElementById("newPrayerText").value = ""; loadPrayers(); }
-};
+document.getElementById("addPrayerBtn").onclick = async () => { const txt = document.getElementById("newPrayerText").value; if(txt) { await supabase.from("prayers").insert({ couple_id: coupleId, user_id: user.id, content: txt }); document.getElementById("newPrayerText").value = ""; loadPrayers(); } };
 
-// DATE
+document.getElementById("openPeaceBtn").onclick = () => { document.getElementById("peaceModal").classList.remove("hidden"); checkPeaceStatus(); };
+async function checkPeaceStatus() {
+  const { data } = await supabase.from("reconciliations").select("*").eq("couple_id", coupleId).eq("status", "pending");
+  const incoming = data.find(r => r.initiator_id !== user.id);
+  if (incoming) { document.getElementById("peaceBadge").classList.remove("hidden"); document.getElementById("peaceInitSection").classList.add("hidden"); document.getElementById("peaceReceiveSection").classList.remove("hidden"); document.getElementById("acceptPeaceBtn").onclick = () => acceptPeace(incoming.id); } 
+  else { document.getElementById("peaceBadge").classList.add("hidden"); document.getElementById("peaceInitSection").classList.remove("hidden"); document.getElementById("peaceReceiveSection").classList.add("hidden"); }
+}
+document.getElementById("sendPeaceBtn").onclick = async () => { await supabase.from("reconciliations").insert({ couple_id: coupleId, initiator_id: user.id }); showToast("Bandera blanca levantada 🏳️", "success"); document.getElementById("peaceModal").classList.add("hidden"); };
+async function acceptPeace(id) { await supabase.from("reconciliations").update({ status: "accepted" }).eq("id", id); showToast("¡Paz restaurada!", "success"); document.getElementById("peaceModal").classList.add("hidden"); fireConfetti(); checkPeaceStatus(); }
+
+// DATE & QUESTIONS
 document.getElementById("openDateBtn").onclick = () => { document.getElementById("dateModal").classList.remove("hidden"); const today = new Date(); const index = (today.getDate() - 1) % dateIdeas.length; document.getElementById("dateIdea").textContent = dateIdeas[index]; };
-
-// SOUL QUESTIONS
 document.getElementById("openQuestionsBtn").onclick = () => { document.getElementById("questionsModal").classList.remove("hidden"); loadDailyQuestion(); };
 async function loadDailyQuestion() {
-  const today = new Date(); const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-  const questionIndex = (dayOfYear % 30) + 1; 
+  const today = new Date(); const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24); const questionIndex = (dayOfYear % 30) + 1; 
   const { data: qData } = await supabase.from('daily_questions').select('*').eq('id', questionIndex).maybeSingle();
   if(qData) { document.getElementById("soulQuestionText").textContent = qData.content; loadAnswers(qData.id); } else document.getElementById("soulQuestionText").textContent = "Pregunta del día...";
 }
 async function loadAnswers(questionId) {
-  const container = document.getElementById("answersContainer"); const inputSection = document.getElementById("answerInputSection"); const waitingMsg = document.getElementById("waitingMessage");
-  container.innerHTML = 'Cargando...';
-  const { data: answers } = await supabase.from('user_answers').select('*').eq('couple_id', coupleId).eq('question_id', questionId);
-  container.innerHTML = "";
+  const container = document.getElementById("answersContainer"); const inputSection = document.getElementById("answerInputSection"); const waitingMsg = document.getElementById("waitingMessage"); container.innerHTML = 'Cargando...';
+  const { data: answers } = await supabase.from('user_answers').select('*').eq('couple_id', coupleId).eq('question_id', questionId); container.innerHTML = "";
   const myAnswer = answers.find(a => a.user_id === user.id); const partnerAnswer = answers.find(a => a.user_id === partnerId);
   if (partnerAnswer) {
     const bubble = document.createElement("div");
-    if (myAnswer) { bubble.className = "chat-bubble partner"; bubble.innerHTML = `<strong>Pareja:</strong><br>${partnerAnswer.answer}`; } 
-    else { bubble.className = "chat-bubble partner blurred-text"; bubble.textContent = "Texto oculto secreto"; const lock = document.createElement("div"); lock.className = "blur-overlay"; lock.innerHTML = "🔒 Responde para ver"; const wrap = document.createElement("div"); wrap.style.position="relative"; wrap.appendChild(bubble); wrap.appendChild(lock); container.appendChild(wrap); }
+    if (myAnswer) { bubble.className = "chat-bubble partner"; bubble.innerHTML = `<strong>Pareja:</strong><br>${partnerAnswer.answer}`; } else { bubble.className = "chat-bubble partner blurred-text"; bubble.textContent = "Texto oculto secreto"; const lock = document.createElement("div"); lock.className = "blur-overlay"; lock.innerHTML = "🔒 Responde para ver"; const wrap = document.createElement("div"); wrap.style.position="relative"; wrap.appendChild(bubble); wrap.appendChild(lock); container.appendChild(wrap); }
     if(myAnswer) container.appendChild(bubble); 
   } else { container.innerHTML += '<p style="color:#94a3b8;font-size:0.8rem">Tu pareja no ha respondido...</p>'; }
   if (myAnswer) {
@@ -295,19 +255,15 @@ async function loadAnswers(questionId) {
   }
 }
 
-// FEEDBACK & AUTH UI
+// FEEDBACK & AUTH
 document.getElementById("openFeedbackBtn").onclick = () => document.getElementById("feedbackModal").classList.remove("hidden");
 document.getElementById("sendFeedbackBtn").onclick = async () => { const msg = document.getElementById("feedbackText").value; if(msg) { await supabase.from("feedback").insert({ user_id: user.id, message: msg }); showToast("Enviado", "success"); document.getElementById("feedbackModal").classList.add("hidden"); } };
 document.getElementById("toggleAuth").onclick = () => { isRegistering = !isRegistering; document.getElementById("authTitle").textContent = isRegistering ? "Crear Cuenta" : "Iniciar Sesión"; document.getElementById("authBtn").textContent = isRegistering ? "Registrarse" : "Ingresar"; document.getElementById("registerFields").classList.toggle("hidden"); document.getElementById("toggleAuth").textContent = isRegistering ? "¿Ya tienes cuenta? Ingresa" : "¿Crear cuenta nueva?"; };
 document.getElementById("authBtn").onclick = async () => {
-  const email = document.getElementById("email").value.trim(); const password = document.getElementById("password").value.trim();
-  if (!email || !password) return showToast("Faltan datos", "error");
-  document.getElementById("globalLoader").classList.remove("hidden");
+  const email = document.getElementById("email").value.trim(); const password = document.getElementById("password").value.trim(); if (!email || !password) return showToast("Faltan datos", "error"); document.getElementById("globalLoader").classList.remove("hidden");
   try {
-    if (isRegistering) {
-      const name = document.getElementById("userNameInput").value.trim(); if(!name) throw new Error("Falta nombre");
-      const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } }); if (error) throw error; showToast("Cuenta creada. Ingresa.", "success");
-    } else { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) throw new Error("Credenciales incorrectas"); }
+    if (isRegistering) { const name = document.getElementById("userNameInput").value.trim(); if(!name) throw new Error("Falta nombre"); const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: name } } }); if (error) throw error; showToast("Cuenta creada. Ingresa.", "success"); } 
+    else { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) throw new Error("Credenciales incorrectas"); }
   } catch (err) { console.error(err); let msg = err.message; if(msg.includes("Invalid login")) msg = "Contraseña incorrecta"; showToast(msg, "error"); } finally { document.getElementById("globalLoader").classList.add("hidden"); }
 };
 
@@ -315,26 +271,16 @@ document.getElementById("authBtn").onclick = async () => {
 function openDayModal(day, isDone, status, content) {
   if (status === "locked" || status === "reward-day") return;
   if (status !== "active" && status !== "completed") return showToast("Tu pareja debe completar los anteriores.", "error");
-  selectedDay = day;
-  const d = content21Days[day] || { tema: "Día " + day, lectura: "", oracion: "", tarea: "" };
-  document.getElementById("modalTitle").textContent = d.tema; document.getElementById("modalLectura").textContent = d.lectura;
-  document.getElementById("modalOracion").textContent = d.oracion; document.getElementById("modalTarea").textContent = d.tarea;
+  selectedDay = day; const d = content21Days[day] || { tema: "Día " + day, lectura: "", oracion: "", tarea: "" };
+  document.getElementById("modalTitle").textContent = d.tema; document.getElementById("modalLectura").textContent = d.lectura; document.getElementById("modalOracion").textContent = d.oracion; document.getElementById("modalTarea").textContent = d.tarea;
   const btn = document.getElementById("saveDayBtn"); const txt = document.getElementById("dayReflection"); const ev = document.getElementById("evidenceSection");
   document.getElementById("dayModal").classList.remove("hidden");
   if(isDone) { btn.textContent = "Completado"; btn.disabled = true; btn.style.background = "#064e3b"; txt.value = content || "Sin notas"; txt.disabled = true; ev.style.display = "block"; } 
   else { checkDate().then(can => { if(!can) { btn.textContent = "Vuelve mañana 🌙"; btn.disabled = true; btn.style.background = "#475569"; ev.style.display = "none"; } else { btn.textContent = "Completar"; btn.disabled = false; btn.style.background = "#10b981"; txt.value = ""; txt.disabled = false; ev.style.display = "block"; } }); }
 }
-async function checkDate() {
-  const { data } = await supabase.from("entries").select("created_at").eq("user_id", user.id).order("created_at", {ascending:false}).limit(1);
-  if(data && data.length > 0) return new Date(data[0].created_at).toDateString() !== new Date().toDateString(); return true;
-}
-document.getElementById("saveDayBtn").onclick = async () => {
-  const note = document.getElementById("dayReflection").value; if(note.length < 5) return showToast("Escribe algo...", "error");
-  const { error } = await supabase.from("entries").insert({ couple_id: coupleId, user_id: user.id, day: selectedDay, content: note });
-  if(!error) { document.getElementById("dayModal").classList.add("hidden"); fireConfetti(); showToast("¡Listo!", "success"); await loadData(); if([7,14,21].includes(selectedDay)) { document.getElementById("rewardText").textContent = content21Days[selectedDay].premio; document.getElementById("rewardModal").classList.remove("hidden"); } } else showToast("Error", "error");
-};
+async function checkDate() { const { data } = await supabase.from("entries").select("created_at").eq("user_id", user.id).order("created_at", {ascending:false}).limit(1); if(data && data.length > 0) return new Date(data[0].created_at).toDateString() !== new Date().toDateString(); return true; }
+document.getElementById("saveDayBtn").onclick = async () => { const note = document.getElementById("dayReflection").value; if(note.length < 5) return showToast("Escribe algo...", "error"); const { error } = await supabase.from("entries").insert({ couple_id: coupleId, user_id: user.id, day: selectedDay, content: note }); if(!error) { document.getElementById("dayModal").classList.add("hidden"); fireConfetti(); showToast("¡Listo!", "success"); await loadData(); if([7,14,21].includes(selectedDay)) { document.getElementById("rewardText").textContent = content21Days[selectedDay].premio; document.getElementById("rewardModal").classList.remove("hidden"); } } else showToast("Error", "error"); };
 
-// UTILS
 document.getElementById("logoutBtn").onclick = async () => { await supabase.auth.signOut(); window.location.reload(); };
 document.getElementById("removeAdsBtn").onclick = async () => { if(confirm("¿Pagar?")) { await supabase.from("couples").update({ is_premium: true }).eq("id", coupleId); initApp(); } };
 window.closeModals = () => document.querySelectorAll(".modal-overlay").forEach(m => m.classList.add("hidden"));
