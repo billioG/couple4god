@@ -12,13 +12,10 @@ window.toggleRegisterMode = function() {
   const btnLogin = document.getElementById('btn-login');
   const btnToggle = document.getElementById('btn-toggle');
 
-  // Verificar que los elementos existen antes de manipularlos
+  // Verificar que los elementos existen
   if (!nameInput || !genderInput || !btnLogin || !btnToggle) {
-    console.warn('Esperando a que el DOM esté listo...');
-    // Reintentar después de un breve delay
-    setTimeout(() => {
-      window.toggleRegisterMode();
-    }, 100);
+    // No hacer nada si no estamos en la pantalla de login
+    console.warn('toggleRegisterMode: Elementos no encontrados (probablemente no estás en login)');
     return;
   }
 
@@ -41,7 +38,6 @@ window.toggleRegisterMode = function() {
 window.selectGender = function(gender, element) {
   const selectedInput = document.getElementById('selected-gender');
   if (!selectedInput) {
-    console.error('Error: Elemento selected-gender no encontrado');
     return;
   }
   
@@ -57,9 +53,7 @@ window.handleLogin = async function() {
   const passwordInput = document.getElementById('password');
   const btn = document.getElementById('btn-login');
 
-  // Verificar que los elementos existen
   if (!emailInput || !passwordInput) {
-    console.error('Error: Campos de email o password no encontrados');
     alert('Error: No se encontraron los campos del formulario');
     return;
   }
@@ -67,7 +61,6 @@ window.handleLogin = async function() {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
 
-  // VALIDACIÓN: Campos vacíos
   if (!email || !password) {
     if (window.showToast) {
       window.showToast('Por favor completa todos los campos', 'error');
@@ -77,7 +70,6 @@ window.handleLogin = async function() {
     return;
   }
 
-  // Validar formato de email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     if (window.showToast) {
@@ -88,10 +80,8 @@ window.handleLogin = async function() {
     return;
   }
 
-  // Deshabilitar botón
   if (btn) {
     btn.disabled = true;
-    const originalText = btn.innerText;
     btn.innerText = 'Iniciando...';
   }
 
@@ -102,9 +92,6 @@ window.handleLogin = async function() {
     });
 
     if (error) {
-      console.error('Error de login:', error);
-      
-      // Mensajes específicos según el error
       let errorMessage = 'Error al iniciar sesión';
       
       if (error.message.includes('Invalid login credentials') || 
@@ -124,10 +111,9 @@ window.handleLogin = async function() {
         alert(errorMessage);
       }
       
-      // Rehabilitar botón
       if (btn) {
         btn.disabled = false;
-        btn.innerText = isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión';
+        btn.innerText = 'Iniciar Sesión';
       }
       return;
     }
@@ -146,10 +132,9 @@ window.handleLogin = async function() {
       alert('Error de conexión. Intenta de nuevo');
     }
     
-    // Rehabilitar botón
     if (btn) {
       btn.disabled = false;
-      btn.innerText = isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión';
+      btn.innerText = 'Iniciar Sesión';
     }
   }
 };
@@ -161,9 +146,7 @@ window.handleSignUp = async function() {
   const genderInput = document.getElementById('selected-gender');
   const btn = document.getElementById('btn-login');
 
-  // Verificar que los elementos existen
   if (!nameInput || !emailInput || !passwordInput || !genderInput) {
-    console.error('Error: Campos del formulario no encontrados');
     alert('Error: No se encontraron todos los campos del formulario');
     return;
   }
@@ -173,7 +156,6 @@ window.handleSignUp = async function() {
   const password = passwordInput.value.trim();
   const gender = genderInput.value;
 
-  // VALIDACIÓN: Campos vacíos
   if (!name || !email || !password) {
     if (window.showToast) {
       window.showToast('Por favor completa todos los campos', 'error');
@@ -192,7 +174,6 @@ window.handleSignUp = async function() {
     return;
   }
 
-  // Validar formato de email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     if (window.showToast) {
@@ -203,7 +184,6 @@ window.handleSignUp = async function() {
     return;
   }
 
-  // Validar longitud de contraseña
   if (password.length < 6) {
     if (window.showToast) {
       window.showToast('La contraseña debe tener al menos 6 caracteres', 'error');
@@ -213,7 +193,6 @@ window.handleSignUp = async function() {
     return;
   }
 
-  // Deshabilitar botón
   if (btn) {
     btn.disabled = true;
     btn.innerText = 'Creando cuenta...';
@@ -226,9 +205,6 @@ window.handleSignUp = async function() {
     });
 
     if (error) {
-      console.error('Error de registro:', error);
-      
-      // Mensajes específicos según el error
       let errorMessage = 'Error al crear la cuenta';
       
       if (error.message.includes('already registered') || 
@@ -248,7 +224,6 @@ window.handleSignUp = async function() {
         alert(errorMessage);
       }
       
-      // Rehabilitar botón
       if (btn) {
         btn.disabled = false;
         btn.innerText = 'Crear Cuenta';
@@ -257,7 +232,6 @@ window.handleSignUp = async function() {
     }
 
     if (data.user) {
-      // Guardar género y nombre en la base de datos
       const { error: profileError } = await window.db
         .from('profiles')
         .insert([{
@@ -272,14 +246,10 @@ window.handleSignUp = async function() {
         console.error('Error al crear perfil:', profileError);
         if (window.showToast) {
           window.showToast('Cuenta creada pero hubo un error en el perfil', 'error');
-        } else {
-          alert('Cuenta creada pero hubo un error en el perfil');
         }
       } else {
         if (window.showToast) {
           window.showToast('Cuenta creada con éxito! Iniciando sesión...', 'success');
-        } else {
-          alert('Cuenta creada con éxito!');
         }
         setTimeout(() => window.location.reload(), 1000);
         return;
@@ -294,7 +264,6 @@ window.handleSignUp = async function() {
       alert('Error de conexión. Intenta de nuevo');
     }
     
-    // Rehabilitar botón
     if (btn) {
       btn.disabled = false;
       btn.innerText = 'Crear Cuenta';
@@ -304,7 +273,6 @@ window.handleSignUp = async function() {
 
 window.handleLogout = async function() {
   try {
-    // Mostrar loader antes de cerrar sesión
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#13151b;color:white;font-size:1.2rem;"><div>Cerrando sesión...</div></div>';
     await window.db.auth.signOut();
     setTimeout(() => window.location.reload(), 500);
