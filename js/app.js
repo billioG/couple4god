@@ -2,17 +2,17 @@
 // LÓGICA PRINCIPAL (ROUTER, ESTADO Y REALTIME)
 // ==========================================
 
-// VARIABLES DE ESTADO
+// VARIABLES DE ESTADO GLOBAL
 window.currentUser = null;
 window.currentProfile = null;
 window.currentCouple = null;
-window.currentSection = 'calendar'; // Sección inicial
+window.currentSection = 'calendar'; // Sección inicial por defecto
 
 // -----------------------------------------------------------
-// 1. LÓGICA DE ONBOARDING (CARRUSEL) - REVISADO Y CORREGIDO
+// 1. LÓGICA DE ONBOARDING (CARRUSEL)
 // -----------------------------------------------------------
 let currentSlide = 0;
-const totalSlides = 6; // Deben coincidir con los divs .slide en HTML
+const totalSlides = 4; // Ajustado a las 4 pantallas del HTML actual
 
 window.nextSlide = function() {
     if (currentSlide < totalSlides - 1) {
@@ -29,15 +29,17 @@ function updateSlider() {
     const btnNext = document.getElementById('btn-ob-next');
     const btnSkip = document.getElementById('btn-ob-skip');
 
-    // 1. Mover el carrusel
+    // 1. Mover el carrusel (CSS Transform)
     if (slider) {
         slider.style.transform = `translateX(-${currentSlide * 100}%)`;
     }
 
-    // 2. Actualizar puntos activos
-    dots.forEach((d, i) => {
-        if(d) d.classList.toggle('active', i === currentSlide);
-    });
+    // 2. Actualizar puntos activos (Indicadores)
+    if (dots.length > 0) {
+        dots.forEach((d, i) => {
+            d.classList.toggle('active', i === currentSlide);
+        });
+    }
 
     // 3. Actualizar textos de botones
     if (btnNext && btnSkip) {
@@ -79,7 +81,7 @@ window.refreshUserProfile = async function() {
             .eq('id', window.currentUser.id)
             .maybeSingle();
 
-        // Auto-crear perfil si falla la primera vez
+        // Auto-crear perfil si falla la primera vez (Safety check)
         if (!data) {
             const { data: newP } = await window.db
                 .from('profiles')
@@ -91,7 +93,7 @@ window.refreshUserProfile = async function() {
 
         window.currentProfile = data;
         
-        // Actualizar Header UI
+        // Actualizar Header UI (Nombre y XP)
         const nameEl = document.getElementById('display-name');
         const xpEl = document.getElementById('user-xp');
         if (nameEl) nameEl.innerText = data.full_name || 'Amor';
@@ -154,7 +156,7 @@ window.checkNotifications = async function() {
 // 4. ROUTER (NAVEGACIÓN ENTRE SECCIONES)
 // -----------------------------------------------------------
 window.showSection = async function(sectionId) {
-    // Actualizar iconos activos
+    // Actualizar iconos activos en el menú
     document.querySelectorAll('.nav-icon').forEach(btn => btn.classList.remove('active'));
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
@@ -172,7 +174,7 @@ window.showSection = async function(sectionId) {
     switch(sectionId) {
         case 'calendar':
             if(title) title.innerText = "Tu Calendario";
-            // Estructura base para evitar saltos visuales
+            // Inyectamos la estructura base para que el grid no se vea gigante
             content.innerHTML = `
                 <div class="progress-container">
                     <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-bottom:5px;">
@@ -198,7 +200,7 @@ window.showSection = async function(sectionId) {
 
         case 'prayer':
             if(title) title.innerText = "Peticiones";
-            // Asegurar perfil para verificar apoyos
+            // Asegurar perfil para verificar estados de peticiones
             if (!window.currentProfile) await window.refreshUserProfile();
             if (window.loadPrayers) await window.loadPrayers();
             break;
@@ -260,7 +262,7 @@ async function initApp() {
             if (window.loadChallengeGrid) await window.loadChallengeGrid();
             await window.checkNotifications();
 
-            // --- REALTIME LISTENERS ---
+            // --- REALTIME LISTENERS (ESCUCHA EVENTOS EN VIVO) ---
             const channel = window.db.channel('app_live_updates');
 
             // A. Cambios en la Pareja (Bandera Blanca)
@@ -269,32 +271,24 @@ async function initApp() {
                 async () => {
                     await window.checkNotifications();
                     if (window.currentSection === 'peace') window.checkWhiteFlagStatus();
-                    window.showToast("🔔 Tu pareja actualizó el estado");
+                    // Solo notificar si cambió el estado a 'sent' o 'accepted'
+                    window.showToast("🔔 Estado de pareja actualizado");
                 }
             );
 
-            // B. Cambios en Contenido (Peticiones, Premios, Preguntas)
+            // B. Cambios en Contenido (Peticiones, Preguntas)
             channel.on('postgres_changes', 
                 { event: '*', schema: 'public', table: 'shared_content', filter: `couple_id=eq.${couple.id}` }, 
                 (payload) => {
-                    // Notificación Específica: Petición Tomada en Cuenta (UPDATE)
+                    // 1. Notificar si mi pareja marcó "Enterado" o "Cumplido" en MI petición
                     if (payload.eventType === 'UPDATE' && payload.new.type === 'request') {
-                        // Si es MI petición y ahora tiene supporters
-                        if (payload.new.user_id === window.currentProfile.id && 
-                            payload.new.supporters && 
-                            payload.new.supporters.length > 0) {
-                            window.showToast("❤️ Tu pareja tomó en cuenta tu petición");
+                        if (payload.new.user_id === window.currentProfile.id) {
+                            if (payload.new.status === 'ack') window.showToast("👁️ Tu pareja vio tu petición");
+                            if (payload.new.status === 'done') window.showToast("🎉 ¡Tu pareja cumplió tu petición!");
                         }
                     }
 
-                    // Notificación Específica: Petición Marcada Cumplida
-                    if (payload.eventType === 'UPDATE' && payload.new.status === 'done') {
-                         if (payload.new.user_id === window.currentProfile.id) {
-                             window.showToast("🎉 ¡Tu petición fue cumplida!");
-                         }
-                    }
-
-                    // Recargar vistas activas
+                    // Recargar vistas activas para reflejar cambios
                     if (window.currentSection === 'prayer') window.loadPrayers();
                     if (window.currentSection === 'questions') window.loadDeepQuestion();
                 }
@@ -304,6 +298,7 @@ async function initApp() {
             channel.on('postgres_changes', 
                 { event: 'INSERT', schema: 'public', table: 'active_redemptions' }, 
                 (payload) => {
+                    // Si el nuevo registro es de mi pareja (user_id !== yo)
                     if (payload.new.couple_id === couple.id && payload.new.user_id !== user.id) {
                         window.showToast("🎁 ¡Tu pareja canjeó un premio!");
                         if (window.currentSection === 'rewards') window.loadRewards();
@@ -320,7 +315,7 @@ async function initApp() {
                 document.getElementById('my-code').innerText = window.currentProfile.share_code;
             }
             
-            // Listener para autoconexión
+            // Listener para autoconexión cuando el otro ingresa el código
             window.db.channel('public:couples').on('postgres_changes', 
                 { event: 'INSERT', schema: 'public', table: 'couples' }, 
                 (payload) => {
@@ -397,5 +392,5 @@ window.closeModal = function() {
     document.getElementById('modal-overlay').classList.add('hidden');
 };
 
-// Arrancar
+// Arrancar la aplicación
 initApp();
