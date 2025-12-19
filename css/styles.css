@@ -15,119 +15,28 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* --- ESTRUCTURA PRINCIPAL (NATIVE FEEL) --- */
 body {
     background-color: var(--bg-dark);
     color: var(--text-white);
-    height: 100vh;
+    min-height: 100vh;
     width: 100vw;
-    overflow: hidden;
-    /* Evita scroll en el body principal */
+    overflow: auto;
     overscroll-behavior: none;
-    /* Evita el rebote elástico en móviles */
 }
 
 #app-container {
     max-width: 480px;
     margin: 0 auto;
-    height: 100%;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     background-color: var(--bg-dark);
     position: relative;
 }
 
-/* --- ONBOARDING ARREGLADO --- */
-#onboarding-view {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-dark);
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-}
-
-.onboarding-slider {
-    flex: 1;
-    display: flex;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    /* Importante para ocultar slides laterales */
-}
-
-.slide {
-    min-width: 100%;
-    /* Forzar ancho completo */
-    width: 100%;
-    flex: 0 0 100%;
-    /* CRÍTICO: Evita que se encojan */
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
-    text-align: center;
-    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    /* Animación más suave */
-}
-
-.slide-icon {
-    font-size: 5rem;
-    margin-bottom: 30px;
-    animation: float 3s infinite ease-in-out;
-}
-
-.slide h2 {
-    color: var(--primary);
-    font-size: 2rem;
-    margin-bottom: 20px;
-}
-
-.slide p {
-    color: #ccc;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    max-width: 85%;
-    margin: 0 auto;
-}
-
-.onboarding-controls {
-    padding: 40px 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: var(--bg-dark);
-    width: 100%;
-}
-
-.dots-container {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 25px;
-}
-
-.dot {
-    width: 10px;
-    height: 10px;
-    background: #333;
-    border-radius: 50%;
-    transition: 0.3s;
-}
-
-.dot.active {
-    background: var(--primary);
-    transform: scale(1.3);
-}
-
 /* --- HEADER & NAV --- */
 .top-bar {
     padding: 15px 25px;
-    /* Más espacio lateral */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -137,18 +46,16 @@ body {
 }
 
 .floating-nav {
-    position: absolute;
+    position: fixed;
     bottom: 25px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(37, 42, 53, 0.95);
-    /* Un poco transparente */
     backdrop-filter: blur(10px);
-    /* Efecto vidrio */
     padding: 12px 25px;
     border-radius: 50px;
     display: flex;
-    gap: 22px;
+    gap: 18px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     border: 1px solid #444;
     z-index: 1000;
@@ -160,7 +67,7 @@ body {
 .nav-icon {
     background: none;
     border: none;
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     cursor: pointer;
     opacity: 0.5;
     position: relative;
@@ -184,38 +91,28 @@ body {
     background: var(--danger);
     border-radius: 50%;
     border: 2px solid #252a35;
+    animation: pulse 2s infinite;
 }
 
-/* --- ÁREA DE CONTENIDO (SCROLL) --- */
+/* --- ÁREA DE CONTENIDO --- */
 #content-area {
     flex: 1;
     overflow-y: auto;
     padding-bottom: 120px;
-    /* Espacio extra para que el menú no tape contenido */
     width: 100%;
     -webkit-overflow-scrolling: touch;
-    /* Scroll suave en iOS */
     padding-top: 10px;
 }
 
-/* Animación de entrada suave */
 .fade-in {
     animation: fadeIn 0.4s ease-out forwards;
     opacity: 0;
     transform: translateY(10px);
 }
 
-@keyframes fadeIn {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* --- COMPONENTES VISUALES --- */
 .garden-card {
     margin: 20px 25px;
-    /* Más margen lateral */
     background: linear-gradient(180deg, rgba(0, 210, 133, 0.1) 0%, rgba(30, 34, 45, 0.5) 100%);
     border: 1px solid var(--accent);
     border-radius: 24px;
@@ -229,6 +126,29 @@ body {
     margin: 15px 0;
     filter: drop-shadow(0 0 15px rgba(0, 210, 133, 0.4));
     animation: float 4s infinite ease-in-out;
+}
+
+/* CORRECCIÓN: Card de ayuda */
+.help-card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #333;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.help-card h3 {
+    color: var(--primary);
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+}
+
+.help-card p {
+    color: #ccc;
+    line-height: 1.6;
+    font-size: 0.9rem;
 }
 
 /* Grid Calendario */
@@ -415,11 +335,9 @@ body {
     background: rgba(0, 210, 133, 0.08);
 }
 
-/* BOTONES DE ACCIÓN (Verde Brillante) */
 .btn-action-green {
     background: linear-gradient(135deg, #00d285, #00a86b);
     color: #fff;
-    /* Texto blanco para mejor lectura sobre verde oscuro o negro */
     padding: 10px 15px;
     border-radius: 12px;
     border: none;
@@ -427,7 +345,6 @@ body {
     font-size: 0.85rem;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0, 210, 133, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .status-badge {
@@ -491,21 +408,33 @@ body {
     animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+
 .toast-container {
     position: fixed;
-    top: 20px;
+    top: auto;
+    bottom: 180px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10000;
     width: 90%;
+    max-width: 400px;
     pointer-events: none;
+}
+
+/* Cuando está en la vista de autenticación */
+#auth-view .toast-container {
+    position: absolute;
+    top: 80px;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .toast {
     background: #333;
     color: white;
     padding: 16px 24px;
-    border-radius: 50px;
+    border-radius: 16px;
     margin-bottom: 10px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -513,6 +442,30 @@ body {
     animation: slideIn 0.3s;
     font-weight: 600;
     border: 1px solid #555;
+}
+
+.toast.error {
+    background: linear-gradient(135deg, #ff4757, #e84118);
+    border-color: #ff4757;
+    box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
+}
+
+.toast.success {
+    background: linear-gradient(135deg, #00d285, #00a86b);
+    border-color: #00d285;
+    box-shadow: 0 10px 30px rgba(0, 210, 133, 0.4);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .sync-card {
@@ -524,38 +477,212 @@ body {
     text-align: center;
 }
 
+.code-display {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 4px;
+    padding: 20px;
+    background: rgba(0, 210, 133, 0.1);
+    border-radius: 16px;
+    margin: 20px 0;
+    cursor: pointer;
+    border: 2px dashed var(--accent);
+}
+
+.sync-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-gray);
+    font-size: 0.9rem;
+    margin-top: 15px;
+}
+
+.divider {
+    text-align: center;
+    color: var(--text-gray);
+    font-size: 0.9rem;
+    margin: 30px 0;
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 35%;
+    height: 1px;
+    background: #333;
+}
+
+.divider::before {
+    left: 0;
+}
+
+.divider::after {
+    right: 0;
+}
+
+.scrollable {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.center-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 30px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.avatars {
+    display: flex;
+    gap: 5px;
+}
+
+.avatars span {
+    font-size: 1.5rem;
+}
+
+.xp-pill {
+    background: rgba(0, 210, 133, 0.15);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    border: 1px solid var(--accent);
+}
+
+.garden-header {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: var(--text-gray);
+    margin-bottom: 15px;
+}
+
+.level-text {
+    font-size: 1.1rem;
+    color: var(--primary);
+    font-weight: 700;
+    margin: 10px 0 5px;
+}
+
+.sub-text {
+    font-size: 0.85rem;
+    color: var(--text-gray);
+}
+
+.section-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 20px 25px 10px;
+    color: white;
+}
+
+.view {
+    width: 100%;
+    height: 100%;
+}
+
+.btn-close-modal {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.btn-close-modal:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.loader {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-gray);
+    font-size: 1.1rem;
+}
+
 @keyframes float {
 
     0%,
     100% {
-        transform: translateY(0)
+        transform: translateY(0);
     }
 
     50% {
-        transform: translateY(-12px)
+        transform: translateY(-12px);
+    }
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
 @keyframes slideIn {
     from {
         transform: translateY(-20px);
-        opacity: 0
+        opacity: 0;
     }
 
     to {
         transform: translateY(0);
-        opacity: 1
+        opacity: 1;
     }
 }
 
 @keyframes pop {
     0% {
         transform: scale(0.8);
-        opacity: 0
+        opacity: 0;
     }
 
     100% {
         transform: scale(1);
-        opacity: 1
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.1);
     }
 }
