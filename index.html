@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Couple Garden - Crecimiento en Pareja</title>
-    
+    <title>Couple Garden</title>
     <link rel="stylesheet" href="css/styles.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -14,93 +12,93 @@
     <div id="app-container">
         
         <section id="auth-view" class="view hidden">
-            <div class="login-container">
-                <div style="margin-bottom: 30px;">
-                    <span style="font-size: 4rem;">🌱</span>
-                    <h1>Couple Garden</h1>
-                    <p style="color: var(--text-gray);">Cultiva tu relación día a día</p>
+            <div class="center-content">
+                <span style="font-size: 4rem;">🌱</span>
+                <h1>Couple Garden</h1>
+                <p style="color: var(--text-gray); margin-bottom: 30px;">Cultiva tu relación día a día</p>
+                
+                <input type="text" id="full-name" class="input-field hidden" placeholder="Tu Nombre (Ej: Juan)">
+                <input type="email" id="email" class="input-field" placeholder="Correo electrónico">
+                <input type="password" id="password" class="input-field" placeholder="Contraseña">
+                
+                <button onclick="handleLogin()" id="btn-login" class="btn-primary">Iniciar Sesión</button>
+                <button onclick="toggleRegisterMode()" id="btn-toggle" class="btn-text">¿No tienes cuenta? Regístrate</button>
+            </div>
+        </section>
+
+        <section id="sync-view" class="view hidden">
+            <div class="center-content">
+                <h2>🔗 Conecta con tu Pareja</h2>
+                <p>Para empezar la aventura, necesitan estar conectados.</p>
+                
+                <div class="sync-box">
+                    <p>Tu Código de Amor:</p>
+                    <div id="my-code" class="code-display" onclick="copyCode()">Cargando...</div>
+                    <small>Toca para copiar y envíaselo a tu pareja</small>
                 </div>
-                
-                <input type="email" id="email" class="login-input" placeholder="Tu correo electrónico">
-                <input type="password" id="password" class="login-input" placeholder="Contraseña">
-                
-                <button onclick="handleLogin()" class="btn-primary">Iniciar Sesión</button>
-                <button onclick="handleSignUp()" class="btn-primary" style="background:transparent; border:1px solid var(--primary); margin-top:10px;">Registrarse</button>
-                
-                <p id="auth-message" style="margin-top: 15px; font-size: 0.9rem; color: var(--danger);"></p>
+
+                <div class="divider">O</div>
+
+                <div class="sync-box">
+                    <p>Ingresa el código de tu pareja:</p>
+                    <input type="text" id="partner-code" class="input-field" placeholder="Pega el código aquí">
+                    <button onclick="connectCouple()" class="btn-primary">Conectar</button>
+                </div>
+
+                <button onclick="handleLogout()" class="btn-text" style="margin-top:20px; color:var(--danger)">Cerrar Sesión</button>
             </div>
         </section>
 
         <section id="main-view" class="view hidden">
-            
             <div class="top-bar">
                 <div class="user-info">
-                    <div class="user-name">Hola, <span id="display-name">Usuario</span></div>
-                    <div class="avatars">
-                        <span>🧔</span> 
-                        <span>👱‍♀️</span> 
-                    </div>
+                    <div class="user-name">Hola, <span id="display-name">...</span></div>
+                    <div class="avatars"><span>🧔</span><span>👱‍♀️</span></div>
                 </div>
-                <div style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 15px; font-weight: bold; border: 1px solid #333;">
-                    ✨ <span id="user-xp">0</span> XP
-                </div>
-                <button onclick="handleLogout()" class="btn-logout" style="margin-left: 10px;">Salir</button>
+                <div class="xp-pill">✨ <span id="user-xp">0</span> XP</div>
+                <button onclick="handleLogout()" class="btn-logout">Salir</button>
             </div>
 
             <div id="content-area">
-                
                 <div class="garden-card">
                     <div class="garden-header">JARDÍN ESPIRITUAL</div>
                     <div class="plant-icon" id="garden-plant">🌱</div>
                     <div class="level-text" id="garden-level">Nivel 1: Semilla</div>
-                    <div class="sub-text" id="garden-next">Cargando progreso...</div>
+                    <div class="sub-text" id="garden-next">Calculando progreso...</div>
                 </div>
 
-                <h2 class="section-title">Tu Calendario</h2>
-
-                <div id="calendar-grid" class="calendar-grid">
-                    <p style="grid-column: 1/-1; text-align: center; color: #666;">Cargando calendario...</p>
-                </div>
-
+                <h2 class="section-title" id="section-title">Tu Calendario</h2>
+                <div id="dynamic-content">
+                    </div>
             </div>
 
             <nav class="floating-nav">
-                <button class="nav-icon" onclick="showSection('rewards')" title="Premios">
-                    ✨
-                </button>
-                
-                <button class="nav-icon" onclick="showSection('peace')" title="Bandera Blanca">
-                    🏳️
-                </button>
-                
-                <button class="nav-icon active" onclick="showSection('calendar')" title="Retos">
-                    📅
-                </button>
-                
-                <button class="nav-icon" onclick="showSection('chat')" title="Chat">
-                    💬
-                </button>
+                <button class="nav-icon" onclick="showSection('prayer')">🙏</button>
+                <button class="nav-icon" onclick="showSection('questions')">✨</button>
+                <button class="nav-icon" onclick="showSection('peace')">🏳️</button>
+                <button class="nav-icon active" id="btn-calendar" onclick="showSection('calendar')">📅</button>
+                <button class="nav-icon" onclick="showSection('tips')">💬</button>
             </nav>
-
         </section>
     </div>
 
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <button onclick="closeModal()" class="btn-close-modal">✕</button>
-            
-            <div style="padding-top: 20px;">
-                <h3 id="modal-title" style="color: var(--primary); margin-bottom: 15px; font-size: 1.4rem;">Título</h3>
-                
-                <div id="modal-body" style="color: #ccc; line-height: 1.6; font-size: 0.95rem; text-align: left;">
-                    Contenido...
-                </div>
-
-                <div id="modal-actions" style="margin-top: 20px;">
-                    </div>
+            <div style="padding-top: 30px;">
+                <h3 id="modal-title">Título</h3>
+                <div id="modal-body">Contenido...</div>
+                <div id="modal-actions"></div>
             </div>
         </div>
     </div>
 
-    <script src="js/config.js"></script>         <script src="js/auth.js"></script>           <script src="js/gamification.js"></script>   <script src="js/challenges.js"></script>     <script src="js/app.js"></script>            </body>
+    <div id="toast-container"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/gamification.js"></script>
+    <script src="js/challenges.js"></script>
+    <script src="js/app.js"></script>
+</body>
 </html>
