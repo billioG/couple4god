@@ -14,7 +14,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-   
+
+    <style>
+        .gender-option.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary) !important;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 
 <body>
@@ -23,22 +31,22 @@
 
         <section id="onboarding-view" class="view hidden">
             <div class="onboarding-slider" id="ob-slider">
-                <div class="slide">
+                <div class="slide" style="display:block;">
                     <div class="slide-icon">🌱</div>
                     <h2>Couple Garden</h2>
                     <p>Bienvenido. Cultiva tu relación día a día con acciones que crean grandes cambios.</p>
                 </div>
-                <div class="slide">
+                <div class="slide" style="display:none;">
                     <div class="slide-icon">🔗</div>
                     <h2>Conéctate</h2>
                     <p>Vincula tu cuenta con tu pareja. Ambos verán el mismo jardín y progresarán juntos.</p>
                 </div>
-                <div class="slide">
+                <div class="slide" style="display:none;">
                     <div class="slide-icon">📅</div>
                     <h2>Reto Diario</h2>
                     <p>Un reto al día para crear el hábito. Compleméntalo con preguntas profundas y peticiones.</p>
                 </div>
-                <div class="slide">
+                <div class="slide" style="display:none;">
                     <div class="slide-icon">🎁</div>
                     <h2>Gana y Canjea</h2>
                     <p>Cada acción suma XP. Canjéalos por premios reales que tu pareja deberá cumplir.</p>
@@ -55,6 +63,7 @@
                 <button onclick="finishOnboarding()" class="btn-text" id="btn-ob-skip">Saltar</button>
             </div>
         </section>
+
         <section id="auth-view" class="view hidden">
             <div class="center-content">
                 <span style="font-size: 4rem;">🏡</span>
@@ -63,7 +72,14 @@
 
                 <input type="text" id="full-name" class="input-field hidden" placeholder="Tu Nombre">
 
-                <input type="hidden" id="selected-gender" value="neutral">
+                <div id="gender-selector" class="hidden"
+                    style="display:flex; gap:10px; margin-bottom:15px; width:100%;">
+                    <button onclick="selectGender('male', this)" class="gender-option btn-text"
+                        style="flex:1; border:1px solid #444; border-radius:10px; padding:10px;">🧔 Él</button>
+                    <button onclick="selectGender('female', this)" class="gender-option btn-text"
+                        style="flex:1; border:1px solid #444; border-radius:10px; padding:10px;">👱‍♀️ Ella</button>
+                </div>
+                <input type="hidden" id="selected-gender" value="">
 
                 <input type="email" id="email" class="input-field" placeholder="Correo electrónico">
                 <input type="password" id="password" class="input-field" placeholder="Contraseña">
@@ -118,19 +134,15 @@
             </div>
 
             <div id="content-area">
-
                 <div class="garden-card">
-                    <div class="garden-header">Crecimiento en Pareja</div>
+                    <div class="garden-header">JARDÍN ESPIRITUAL</div>
                     <div class="plant-icon" id="garden-plant">🌱</div>
                     <div class="level-text" id="garden-level">Nivel 1: Semilla</div>
                     <div class="sub-text" id="garden-next">Cargando...</div>
                 </div>
 
                 <h2 class="section-title" id="section-title">Tu Calendario</h2>
-
-                <div id="dynamic-content">
-                </div>
-
+                <div id="dynamic-content"></div>
             </div>
 
             <nav class="floating-nav">
@@ -140,10 +152,8 @@
                 <button class="nav-icon active" onclick="showSection('calendar')" title="Retos">📅</button>
                 <button class="nav-icon" onclick="showSection('tips')" title="Tips">💡</button>
                 <button class="nav-icon" onclick="showSection('rewards')" title="Premios">🎁</button>
-                <!-- NUEVO BOTÓN DE AYUDA -->
                 <button class="nav-icon" onclick="showSection('help')" title="Ayuda">❓</button>
             </nav>
-
         </section>
     </div>
 
@@ -157,7 +167,6 @@
             </div>
         </div>
     </div>
-
     <div id="toast-container"></div>
 
     <script src="js/config.js"></script>
@@ -169,13 +178,10 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker registrado', reg))
-                    .catch(err => console.log('Error SW:', err));
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('Error SW:', err));
             });
         }
     </script>
-
 </body>
 
 </html>

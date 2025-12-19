@@ -1,5 +1,5 @@
 // ==========================================
-// LÓGICA PRINCIPAL (APP CEREBRO + CACHÉ)
+// LÓGICA PRINCIPAL (APP CEREBRO) - LISTO PROD
 // ==========================================
 
 window.App = {
@@ -11,9 +11,7 @@ window.App = {
         cache: {}
     },
 
-    config: {
-        cacheTTL: 1000 * 60 * 2
-    },
+    config: { cacheTTL: 1000 * 60 * 5 }, // 5 minutos cache
 
     utils: {
         escape: (str) => str ? str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t])) : '',
@@ -65,12 +63,10 @@ window.App = {
                     .single();
 
                 if (!c) return;
-
                 const ad = document.querySelector('.avatars');
                 const old = document.getElementById('flag-ind');
                 if (old) old.remove();
 
-                // CORRECCIÓN 1: Solo mostrar si está "sent" Y no es el emisor
                 if (c.white_flag_status === 'sent' && c.white_flag_sender !== App.state.user.id) {
                     const f = document.createElement('span');
                     f.id = 'flag-ind';
@@ -78,14 +74,9 @@ window.App = {
                     f.style.animation = 'pop 1s infinite';
                     if (ad) ad.appendChild(f);
                 }
-
                 const pb = document.querySelector('button[title="Paz"]');
-                if (pb) {
-                    pb.classList.toggle('has-notification', c.white_flag_status === 'sent' && c.white_flag_sender !== App.state.profile.id);
-                }
-            } catch (e) {
-                console.error('Error updating notifications:', e);
-            }
+                if (pb) pb.classList.toggle('has-notification', c.white_flag_status === 'sent' && c.white_flag_sender !== App.state.profile.id);
+            } catch (e) { console.error(e); }
         },
 
         showSection: async (sid) => {
@@ -103,50 +94,47 @@ window.App = {
             const title = document.getElementById('section-title');
 
             container.style.opacity = '0';
-            container.style.transform = 'translateY(10px)';
 
             setTimeout(async () => {
                 container.innerHTML = '';
                 container.className = 'fade-in';
                 container.style.opacity = '1';
-                container.style.transform = 'translateY(0)';
+
+                const sectionTitles = {
+                    calendar: "Tu Calendario",
+                    peace: "Bandera de Paz",
+                    prayer: "Peticiones",
+                    questions: "Conexión Profunda",
+                    tips: "Consejos",
+                    rewards: "Canjear Premios",
+                    help: "Ayuda"
+                };
+
+                if (title && sectionTitles[sid]) title.innerText = sectionTitles[sid];
 
                 switch (sid) {
                     case 'calendar':
-                        if (title) title.innerText = "Tu Calendario";
                         container.innerHTML = `<div class="progress-container"><div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888"><span>Tu Progreso</span><span id="progress-text">0%</span></div><div class="progress-track"><div class="progress-fill" id="progress-bar"></div><div class="milestone" style="left:33%" id="milestone-7">🌱</div><div class="milestone" style="left:66%" id="milestone-14">🌿</div><div class="milestone" style="left:100%" id="milestone-21">🌳</div></div></div><div id="calendar-grid" class="calendar-grid"></div>`;
                         if (window.loadChallengeGrid) await window.loadChallengeGrid();
                         break;
-
                     case 'peace':
-                        if (title) title.innerText = "Bandera de Paz";
                         container.innerHTML = `<div id="peace-area"></div>`;
                         if (window.checkWhiteFlagStatus) await window.checkWhiteFlagStatus();
                         break;
-
                     case 'prayer':
-                        if (title) title.innerText = "Peticiones";
                         if (window.loadPrayers) await window.loadPrayers();
                         break;
-
                     case 'questions':
-                        if (title) title.innerText = "Conexión Profunda";
                         if (window.loadDeepQuestion) await window.loadDeepQuestion();
                         break;
-
                     case 'tips':
-                        if (title) title.innerText = "Consejos";
                         if (window.loadTips) window.loadTips();
                         break;
-
                     case 'rewards':
-                        if (title) title.innerText = "Canjear Premios";
                         if (window.loadRewards) await window.loadRewards();
                         break;
-
                     case 'help':
-                        if (title) title.innerText = "Ayuda";
-                        window.showHelpGuide();
+                        if (window.showHelpGuide) window.showHelpGuide();
                         break;
                 }
             }, 100);
@@ -156,17 +144,15 @@ window.App = {
     actions: {
         refreshProfile: async () => {
             if (!App.state.user) return;
-
             let { data } = await window.db.from('profiles').select('*').eq('id', App.state.user.id).maybeSingle();
 
             if (!data) {
+                // Autoreparación si el perfil no existe
                 const { data: newP } = await window.db.from('profiles')
                     .insert({ id: App.state.user.id, email: App.state.user.email, xp: 0 })
-                    .select()
-                    .single();
+                    .select().single();
                 data = newP;
             }
-
             App.state.profile = data;
 
             const nameEl = document.getElementById('display-name');
@@ -179,8 +165,8 @@ window.App = {
 
         connectCouple: async () => {
             const code = document.getElementById('partner-code').value.toUpperCase().trim();
-            if (!code) return App.ui.showToast('Falta código', 'error');
-            if (code === App.state.profile.share_code) return App.ui.showToast('No puedes usar tu propio código', 'error');
+            if (!code) return App.ui.showToast('Ingresa un código', 'error');
+            if (code === App.state.profile.share_code) return App.ui.showToast('No uses tu propio código', 'error');
 
             const { data: p } = await window.db.from('profiles').select('id').eq('share_code', code).maybeSingle();
             if (!p) return App.ui.showToast('Código inválido', 'error');
@@ -188,34 +174,41 @@ window.App = {
             const [u1, u2] = [App.state.user.id, p.id].sort();
             const { error } = await window.db.from('couples').insert({ user1_id: u1, user2_id: u2 });
 
-            if (error && error.code !== '23505') {
-                App.ui.showToast('Error al conectar', 'error');
+            if (error) {
+                App.ui.showToast('Error al conectar o ya vinculados', 'error');
             } else {
-                App.ui.showToast('Conectados!', 'success');
+                App.ui.showToast('¡Conectados!', 'success');
                 setTimeout(() => location.reload(), 1000);
             }
         },
 
         logout: async () => {
-            try {
-                // CORRECCIÓN 4: Mostrar loader antes de cerrar sesión
-                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#13151b;color:white;font-size:1.2rem;"><div>Cerrando sesión...</div></div>';
-                await window.db.auth.signOut();
-                setTimeout(() => location.reload(), 500);
-            } catch (e) {
-                console.error(e);
-                location.reload();
-            }
+            // Loader simple al salir
+            document.body.innerHTML = '<div style="display:flex;height:100vh;justify-content:center;align-items:center;background:#13151b;color:white;">Cerrando sesión...</div>';
+            await window.db.auth.signOut();
+            location.reload();
         }
     },
 
     init: async function () {
         if (!window.db) return console.error('Falta DB');
 
+        // Manejo de Onboarding
+        const seenOb = localStorage.getItem('onboarding_seen');
+        if (!seenOb) {
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('onboarding-view').classList.remove('hidden');
+            // La lógica de onboarding está al final del archivo
+            return;
+        }
+
         const { data: { user } } = await window.db.auth.getUser();
 
         if (user) {
             App.state.user = user;
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('onboarding-view').classList.add('hidden');
+
             await App.actions.refreshProfile();
 
             const { data: couple } = await window.db.from('couples')
@@ -223,9 +216,8 @@ window.App = {
                 .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
                 .maybeSingle();
 
-            document.getElementById('auth-view').classList.add('hidden');
-
             if (couple) {
+                // FLUJO: YA TIENE PAREJA
                 App.state.couple = couple;
                 document.getElementById('main-view').classList.remove('hidden');
                 document.getElementById('sync-view').classList.add('hidden');
@@ -233,100 +225,54 @@ window.App = {
                 await App.ui.showSection('calendar');
                 await App.ui.updateNotifications();
 
+                // SUBSCRIPCIÓN REALTIME
                 const ch = window.db.channel('app_live');
-
-                ch.on('postgres_changes',
-                    { event: 'UPDATE', schema: 'public', table: 'couples', filter: `id=eq.${couple.id}` },
+                ch.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'couples', filter: `id=eq.${couple.id}` },
                     async () => {
                         await App.ui.updateNotifications();
                         if (App.state.currentSection === 'peace') window.checkWhiteFlagStatus();
-                        App.ui.showToast('⚡ Actualización');
+                        App.ui.showToast('🔔 Actualización de pareja');
                     }
                 );
-
-                ch.on('postgres_changes',
-                    { event: '*', schema: 'public', table: 'shared_content', filter: `couple_id=eq.${couple.id}` },
+                ch.on('postgres_changes', { event: '*', schema: 'public', table: 'shared_content', filter: `couple_id=eq.${couple.id}` },
                     (pl) => {
-                        App.utils.invalidateCache('all');
-                        if (pl.eventType === 'UPDATE' && pl.new.type === 'request' && pl.new.user_id !== App.state.user.id) {
-                            if (pl.new.status === 'ack') App.ui.showToast('👁️ Visto');
-                            if (pl.new.status === 'done') App.ui.showToast('✅ Cumplido!');
-                        }
+                        if (pl.eventType === 'INSERT' && pl.new.user_id !== App.state.user.id) App.ui.showToast('💬 Nuevo mensaje');
+                        App.utils.invalidateCache('all'); // Limpieza simple
+                        // Recargas en caliente si estás en esa sección
                         if (App.state.currentSection === 'prayer') window.loadPrayers();
                         if (App.state.currentSection === 'questions') window.loadDeepQuestion();
                     }
                 );
-
-                ch.on('postgres_changes',
-                    { event: 'INSERT', schema: 'public', table: 'active_redemptions' },
-                    (pl) => {
-                        if (pl.new.couple_id === couple.id && pl.new.user_id !== user.id) {
-                            App.ui.showToast('🎁 Premio canjeado!');
-                        }
-                        if (App.state.currentSection === 'rewards') window.loadRewards();
-                    }
-                );
-
                 ch.subscribe();
+
             } else {
+                // FLUJO: SIN PAREJA (SYNC)
                 document.getElementById('sync-view').classList.remove('hidden');
-                if (document.getElementById('my-code')) {
-                    document.getElementById('my-code').innerText = App.state.profile.share_code;
+                document.getElementById('main-view').classList.add('hidden');
+                if (document.getElementById('my-code') && App.state.profile) {
+                    document.getElementById('my-code').innerText = App.state.profile.share_code || '...';
                 }
 
+                // Escuchar si alguien se vincula conmigo
                 window.db.channel('public:couples')
                     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'couples' }, (pl) => {
                         if (pl.new.user1_id === user.id || pl.new.user2_id === user.id) {
-                            App.ui.showToast('Pareja encontrada!', 'success');
-                            setTimeout(() => location.reload(), 1000);
+                            App.ui.showToast('¡Pareja encontrada!', 'success');
+                            setTimeout(() => location.reload(), 1500);
                         }
                     })
                     .subscribe();
             }
         } else {
+            // NO LOGUEADO
             document.getElementById('auth-view').classList.remove('hidden');
+            document.getElementById('main-view').classList.add('hidden');
+            document.getElementById('sync-view').classList.add('hidden');
         }
     }
 };
 
-// CORRECCIÓN 2: Agregar guía de ayuda
-window.showHelpGuide = function () {
-    const content = document.getElementById('dynamic-content');
-    content.innerHTML = `
-    <div style="padding:20px 25px 90px;">
-      <div class="help-card">
-        <div style="font-size:3rem;margin-bottom:15px;">🏆</div>
-        <h3>Completa Retos Diarios</h3>
-        <p>Cada día aparece un nuevo reto. Tócalo para ver los detalles y completarlo. Gana XP por cada reto cumplido.</p>
-      </div>
-
-      <div class="help-card">
-        <div style="font-size:3rem;margin-bottom:15px;">🙏</div>
-        <h3>Haz Peticiones</h3>
-        <p>Pide algo específico a tu pareja. Ellos recibirán una notificación y podrán confirmar cuando lo cumplan.</p>
-      </div>
-
-      <div class="help-card">
-        <div style="font-size:3rem;margin-bottom:15px;">🏳️</div>
-        <h3>Bandera de Paz</h3>
-        <p>¿Tuvieron una discusión? Levanta la bandera blanca para pedir paz sin palabras.</p>
-      </div>
-
-      <div class="help-card">
-        <div style="font-size:3rem;margin-bottom:15px;">💬</div>
-        <h3>Pregunta del Día</h3>
-        <p>Cada día una nueva pregunta para conectar profundamente. Responde y lee lo que tu pareja comparte.</p>
-      </div>
-
-      <div class="help-card">
-        <div style="font-size:3rem;margin-bottom:15px;">🎁</div>
-        <h3>Canjea Premios</h3>
-        <p>Usa tus XP acumulados para canjear premios reales que tu pareja deberá cumplir.</p>
-      </div>
-    </div>`;
-};
-
-// BRIDGE
+// --- EXPOSICIÓN GLOBAL (BRIDGE) ---
 window.showSection = App.ui.showSection;
 window.connectCouple = App.actions.connectCouple;
 window.copyCode = () => {
@@ -339,4 +285,54 @@ window.showModal = App.ui.showModal;
 window.closeModal = App.ui.closeModal;
 window.refreshUserProfile = App.actions.refreshProfile;
 
+// --- LÓGICA DE ONBOARDING (Faltante en tu versión anterior) ---
+let currentSlide = 0;
+const slides = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.dot');
+
+window.showSlide = (n) => {
+    // Si no encuentra slides (ej. estamos en main view), salir
+    const sl = document.querySelectorAll('.slide');
+    if (sl.length === 0) return;
+
+    sl.forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+
+    sl[n].style.display = 'block';
+    const allDots = document.querySelectorAll('.dot');
+    if (allDots[n]) allDots[n].classList.add('active');
+
+    const btn = document.getElementById('btn-ob-next');
+    if (btn) {
+        if (n === sl.length - 1) {
+            btn.innerText = "Comenzar";
+            btn.onclick = window.finishOnboarding;
+        } else {
+            btn.innerText = "Siguiente";
+            btn.onclick = window.nextSlide;
+        }
+    }
+};
+
+window.nextSlide = () => {
+    const sl = document.querySelectorAll('.slide');
+    if (currentSlide < sl.length - 1) {
+        currentSlide++;
+        window.showSlide(currentSlide);
+    }
+};
+
+window.finishOnboarding = () => {
+    localStorage.setItem('onboarding_seen', 'true');
+    document.getElementById('onboarding-view').classList.add('hidden');
+    // Reiniciar app para que el Router decida a dónde ir (Auth o Main)
+    App.init();
+};
+
+// Inicializar
 App.init();
+
+// Inicializar slider si está visible
+if (!localStorage.getItem('onboarding_seen')) {
+    setTimeout(() => window.showSlide(0), 100);
+}

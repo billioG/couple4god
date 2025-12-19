@@ -630,6 +630,116 @@ body {
     font-size: 1.1rem;
 }
 
+/* ==========================================
+   ESTILOS DE ONBOARDING (CORREGIDOS)
+   ========================================== */
+
+#onboarding-view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-dark);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* Separa slider de controles */
+    padding: 40px 25px;
+}
+
+/* Área del contenido (Icono, Título, Texto) */
+.onboarding-slider {
+    flex: 1;
+    /* Ocupa todo el espacio disponible */
+    display: flex;
+    align-items: center;
+    /* Centra verticalmente */
+    justify-content: center;
+    overflow: hidden;
+}
+
+.slide {
+    text-align: center;
+    width: 100%;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.slide-icon {
+    font-size: 5rem;
+    margin-bottom: 25px;
+    display: block;
+    animation: float 4s infinite ease-in-out;
+}
+
+.slide h2 {
+    font-size: 2rem;
+    color: var(--primary);
+    /* Azul */
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.slide p {
+    font-size: 1.1rem;
+    color: #ccc;
+    line-height: 1.6;
+    max-width: 90%;
+    margin: 0 auto;
+}
+
+/* Área de botones y puntos (Parte inferior) */
+.onboarding-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+/* Indicadores de página (Puntitos) */
+.dots-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background-color: #333;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background-color: var(--primary);
+    width: 30px;
+    /* Estilo de píldora para el activo */
+    border-radius: 5px;
+}
+
+/* Botón Siguiente */
+#btn-ob-next {
+    width: 100%;
+    /* Botón ancho completo */
+    padding: 18px;
+    font-size: 1.1rem;
+    margin-top: 0;
+    /* Elimina márgenes extraños */
+}
+
+/* Botón Saltar */
+#btn-ob-skip {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+    padding: 10px;
+    border-bottom: none;
+    /* Quitar el subrayado punteado por defecto */
+    margin-top: 5px;
+}
+
 @keyframes float {
 
     0%,
