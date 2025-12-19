@@ -1,112 +1,108 @@
 // js/app.js
 
 async function initApp() {
-    // Verificar conexión
-    if (!window.db) {
-        console.error("⛔ window.db no existe. Revisa config.js");
-        return;
-    }
+    if (!window.db) return console.error("⛔ BD no conectada");
 
     try {
         const { data: { user }, error } = await window.db.auth.getUser();
 
         if (user) {
-            console.log("Sesión activa:", user.email);
             window.currentUser = user;
-            
-            // Cargar datos
+            // Intentar cargar perfil. Si falla, se crea uno nuevo.
             await window.refreshUserProfile();
             
-            // Mostrar UI
             document.getElementById('auth-view').classList.add('hidden');
             document.getElementById('main-view').classList.remove('hidden');
             
-            // Cargar vista inicial (Calendario)
-            if (window.loadChallengeGrid) {
-                window.loadChallengeGrid();
-            }
+            // Cargar calendario por defecto
+            if (window.loadChallengeGrid) window.loadChallengeGrid();
         } else {
-            console.log("No hay sesión.");
             document.getElementById('auth-view').classList.remove('hidden');
             document.getElementById('main-view').classList.add('hidden');
         }
-
     } catch (err) {
-        console.error("Error en initApp:", err);
+        console.error("Error init:", err);
     }
 }
 
-// Cargar perfil (CORREGIDO ERROR 406)
+// CORRECCIÓN PRINCIPAL: Auto-reparación de perfil
 window.refreshUserProfile = async function() {
     if (!window.currentUser) return;
 
     try {
-        // Usamos maybeSingle() para evitar el error 406 si no hay datos o hay multiples
-        const { data, error } = await window.db
+        // 1. Intentamos buscar el perfil
+        let { data, error } = await window.db
             .from('profiles')
             .select('*')
             .eq('id', window.currentUser.id)
-            .maybeSingle(); 
+            .maybeSingle(); // Usar maybeSingle evita el error 406 si está vacío
 
-        if (error) throw error;
-        
-        if (data) {
-            window.currentProfile = data;
+        // 2. Si no existe, LO CREAMOS AUTOMÁTICAMENTE
+        if (!data) {
+            console.log("⚠️ Perfil no encontrado. Creando uno nuevo...");
+            const { data: newProfile, error: createError } = await window.db
+                .from('profiles')
+                .insert([{ 
+                    id: window.currentUser.id, 
+                    email: window.currentUser.email,
+                    xp: 0
+                }])
+                .select()
+                .single();
             
-            // Actualizar Header
-            const nameEl = document.getElementById('display-name');
-            const xpEl = document.getElementById('user-xp');
-            
-            if(nameEl) nameEl.innerText = data.full_name || data.email.split('@')[0];
-            if(xpEl) xpEl.innerText = data.xp;
-        } else {
-            console.warn("Usuario autenticado pero sin perfil en tabla 'profiles'.");
-            // Opcional: Crear perfil aquí si no existe
+            if (createError) throw createError;
+            data = newProfile; // Usamos el perfil recién creado
         }
+        
+        // 3. Guardar en global y actualizar UI
+        window.currentProfile = data;
+        const nameEl = document.getElementById('display-name');
+        if (nameEl) nameEl.innerText = data.full_name || data.email.split('@')[0];
+
+        console.log("✅ Perfil cargado correctamente:", data.id);
+
     } catch (err) {
-        console.error("Error cargando perfil:", err.message);
+        console.error("Error fatal en perfil:", err.message);
+        alert("Error cargando tu perfil. Por favor recarga la página.");
     }
 };
 
-// Navegación del Menú Flotante (CORREGIDO ReferenceError)
-window.showSection = function(section) {
+// Navegación (Corrige el error 'showSection is not defined')
+window.showSection = function(sectionId) {
+    // 1. Manejo visual de botones
+    document.querySelectorAll('.nav-icon').forEach(btn => btn.classList.remove('active'));
+    // (Opcional: añadir clase active al botón presionado)
+
     const contentDiv = document.getElementById('content-area');
     
-    // Resetear botones activos
-    document.querySelectorAll('.nav-icon').forEach(btn => btn.classList.remove('active'));
-    
-    if (section === 'chat') {
-        contentDiv.innerHTML = `
-            <div style="text-align:center; padding:40px; color:#888;">
-                <h2>💬 Chat de Pareja</h2>
-                <p>Próximamente...</p>
-            </div>`;
-    } else if (section === 'prayer') {
-        contentDiv.innerHTML = `
-            <div style="text-align:center; padding:40px; color:#888;">
-                <h2>🙏 Oración / Meditación</h2>
-                <p>Espacio para conectar espiritualmente.</p>
-            </div>`;
+    // 2. Lógica de vistas
+    if (sectionId === 'calendar') {
+        window.loadChallengeGrid();
+    } else if (sectionId === 'rewards') {
+        window.openRewards();
+    } else if (sectionId === 'peace') {
+        window.checkWhiteFlagStatus();
+    } else {
+        contentDiv.innerHTML = `<div style="padding:40px; text-align:center;"><h3>🚧 En construcción</h3><p>Sección: ${sectionId}</p></div>`;
     }
 };
 
-// Modales Globales
+// Modales
 window.showModal = function(title, body) {
-    const overlay = document.getElementById('modal-overlay');
-    const titleEl = document.getElementById('modal-title');
-    const bodyEl = document.getElementById('modal-body');
-    const actionsEl = document.getElementById('modal-actions');
-
-    if(titleEl) titleEl.innerText = title;
-    if(bodyEl) bodyEl.innerHTML = body; // Usar innerHTML para permitir formato
-    if(actionsEl) actionsEl.innerHTML = ''; // Limpiar botones anteriores
-
-    overlay.classList.remove('hidden');
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-body').innerHTML = body;
+    document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
 window.closeModal = function() {
     document.getElementById('modal-overlay').classList.add('hidden');
 }
 
-// Iniciar
+// Logout
+window.handleLogout = async function() {
+    await window.db.auth.signOut();
+    window.location.reload();
+}
+
+// Arrancar
 initApp();
