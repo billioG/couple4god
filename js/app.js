@@ -1,62 +1,94 @@
-// Inicialización
+// js/app.js
+
 async function initApp() {
-    const { data: { user } } = await supabase.auth.getUser();
+    // 1. Verificación de Seguridad
+    if (!window.db) {
+        console.error("⛔ Deteniendo app: 'window.db' no existe. Revisa config.js");
+        return;
+    }
 
-    if (user) {
-        currentUser = user;
-        // Cargar perfil completo (XP, partner, etc)
-        await refreshUserProfile();
+    try {
+        // 2. Usamos 'window.db' en lugar de 'supabase'
+        const { data: { user }, error } = await window.db.auth.getUser();
 
-        // Mostrar vista principal
-        document.getElementById('auth-view').classList.add('hidden');
-        document.getElementById('main-view').classList.remove('hidden');
-        
-        // Cargar reto por defecto
-        loadDailyChallenge();
-    } else {
-        // Mostrar login
-        document.getElementById('auth-view').classList.remove('hidden');
-        document.getElementById('main-view').classList.add('hidden');
+        if (error) {
+            console.log("No hay sesión activa o error:", error.message);
+            showLogin();
+            return;
+        }
+
+        if (user) {
+            console.log("Usuario detectado:", user.email);
+            window.currentUser = user;
+            
+            // Cargar datos del perfil y luego la vista principal
+            await refreshUserProfile();
+            showMainView();
+            loadDailyChallenge();
+        } else {
+            showLogin();
+        }
+
+    } catch (err) {
+        console.error("Error inesperado en initApp:", err);
+        showLogin();
     }
 }
 
-// Actualizar datos del usuario
+// Funciones auxiliares de vista
+function showLogin() {
+    document.getElementById('auth-view').classList.remove('hidden');
+    document.getElementById('main-view').classList.add('hidden');
+}
+
+function showMainView() {
+    document.getElementById('auth-view').classList.add('hidden');
+    document.getElementById('main-view').classList.remove('hidden');
+}
+
+// Actualizar datos del usuario (XP, Pareja)
 async function refreshUserProfile() {
-    if (!currentUser) return;
+    if (!window.currentUser) return;
     
-    const { data } = await supabase
+    // Usamos window.db
+    const { data, error } = await window.db
         .from('profiles')
         .select('*')
-        .eq('id', currentUser.id)
+        .eq('id', window.currentUser.id)
         .single();
     
     if (data) {
-        currentProfile = data;
-        document.getElementById('user-xp').innerText = data.xp;
+        window.currentProfile = data;
+        // Actualizar contador visual de XP si existe el elemento
+        const xpElement = document.getElementById('user-xp');
+        if(xpElement) xpElement.innerText = data.xp;
     }
 }
 
-// SOLUCIÓN PUNTO 5: Inactividad
-// Cuando el usuario vuelve a la app, recargamos datos frescos
+// Solución para recargar al volver a la app (Móvil)
 document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && currentUser) {
-        console.log("App activa: recargando datos...");
+    if (document.visibilityState === "visible" && window.currentUser) {
+        console.log("App activa: refrescando datos...");
         refreshUserProfile();
-        // Si estaba en la pantalla de paz, actualizar estado
-        // (Podrías guardar la vista actual en una variable para ser más preciso)
     }
 });
 
 // Utilidad para Modales
-function showModal(title, body) {
-    document.getElementById('modal-title').innerText = title;
-    document.getElementById('modal-body').innerText = body;
-    document.getElementById('modal-overlay').classList.remove('hidden');
+window.showModal = function(title, body) {
+    const modal = document.getElementById('modal-overlay');
+    if(modal) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerText = body;
+        // Ocultar botón primario por defecto, mostrar solo cerrar
+        document.getElementById('modal-primary-btn').classList.add('hidden');
+        modal.classList.remove('hidden');
+    }
 }
 
-function closeModal() {
-    document.getElementById('modal-overlay').classList.add('hidden');
+window.closeModal = function() {
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.classList.add('hidden');
 }
 
-// Iniciar al cargar
+// Iniciar aplicación
 initApp();
