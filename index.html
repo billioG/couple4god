@@ -12,25 +12,58 @@
     <div id="app-container">
         
         <section id="onboarding-view" class="view hidden">
-            <div class="onboarding-content">
-                <div style="font-size: 5rem; margin-bottom: 20px;">🌱</div>
-                <h1>Bienvenido a Couple Garden</h1>
-                <p>Tu espacio sagrado para cultivar el amor.</p>
+<section id="onboarding-view" class="view hidden">
+            <div class="onboarding-slider" id="ob-slider">
                 
-                <div class="step">
-                    <h3>1. Conecta</h3>
-                    <p>Vincula tu cuenta con tu pareja usando un código único.</p>
-                </div>
-                <div class="step">
-                    <h3>2. Cultiva</h3>
-                    <p>Completa un reto diario. ¡Solo uno por día! La constancia es la clave.</p>
-                </div>
-                <div class="step">
-                    <h3>3. Cosecha</h3>
-                    <p>Gana XP, canjea premios reales y evolucionen su Jardín.</p>
+                <div class="slide">
+                    <div class="slide-icon">🌱</div>
+                    <h2>Couple Garden</h2>
+                    <p>Bienvenido a tu espacio sagrado. Aquí cultivarás tu relación día a día con pequeñas acciones que crean grandes cambios.</p>
                 </div>
 
-                <button onclick="finishOnboarding()" class="btn-primary">¡Comenzar!</button>
+                <div class="slide">
+                    <div class="slide-icon">🔗</div>
+                    <h2>Conéctate</h2>
+                    <p>Vincula tu cuenta con tu pareja usando un código único. Ambos verán el mismo jardín y progresarán juntos.</p>
+                </div>
+
+                <div class="slide">
+                    <div class="slide-icon">📅</div>
+                    <h2>El Reto de 21 Días</h2>
+                    <p>Cada día desbloquean un reto nuevo. Complétalo escribiendo una reflexión. Solo uno al día para crear el hábito real.</p>
+                </div>
+
+                <div class="slide">
+                    <div class="slide-icon">🏳️</div>
+                    <h2>Bandera Blanca</h2>
+                    <p>¿Discutieron? Usa la bandera para pedir una tregua sin palabras. Al aceptarla, ganan XP y restauran la armonía.</p>
+                </div>
+
+                <div class="slide">
+                    <div class="slide-icon">🙏</div>
+                    <h2>Conexión Profunda</h2>
+                    <p>Deja peticiones para que tu pareja las apoye y responde preguntas profundas para redescubrirse mutuamente.</p>
+                </div>
+
+                <div class="slide">
+                    <div class="slide-icon">🎁</div>
+                    <h2>Cosecha Premios</h2>
+                    <p>Gana XP por cada acción positiva y canjéalos por premios reales: masajes, cenas o citas. ¡Empieza ahora!</p>
+                </div>
+
+            </div>
+
+            <div class="onboarding-controls">
+                <div class="dots-container" id="ob-dots">
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <button onclick="nextSlide()" class="btn-primary" id="btn-ob-next">Siguiente</button>
+                <button onclick="finishOnboarding()" class="btn-link" id="btn-ob-skip">Saltar</button>
             </div>
         </section>
 
