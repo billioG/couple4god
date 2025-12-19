@@ -134,4 +134,43 @@ async function initApp() {
         document.getElementById('auth-view').classList.remove('hidden');
     }
 }
+// ==========================================
+// LÓGICA DE ONBOARDING (CARRUSEL)
+// ==========================================
+let currentSlide = 0;
+const totalSlides = 6;
+
+window.nextSlide = function() {
+    if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlider();
+    } else {
+        window.finishOnboarding();
+    }
+};
+
+function updateSlider() {
+    const slider = document.getElementById('ob-slider');
+    const dots = document.querySelectorAll('.dot');
+    const btnNext = document.getElementById('btn-ob-next');
+    const btnSkip = document.getElementById('btn-ob-skip');
+
+    // Mover el slider (Transformación CSS)
+    slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+    // Actualizar puntos
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+
+    // Cambiar texto botón al final
+    if (currentSlide === totalSlides - 1) {
+        btnNext.innerText = "¡Comenzar!";
+        btnSkip.classList.add('hidden');
+    } else {
+        btnNext.innerText = "Siguiente";
+        btnSkip.classList.remove('hidden');
+    }
+}
+
+// Inicialización del Onboarding en initApp
+// ...
 initApp();
